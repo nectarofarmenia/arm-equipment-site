@@ -6,18 +6,18 @@ const IT={
   i_draft:"Սևագիր",i_manager:"Ուղարկված ղեկավարին",i_approved:"Հաստատված",i_accountant:"Ուղարկված հաշվապահին",workDays:"Աշխատանքային օրեր",thisMonth:"այս ամիս",days:"օր",monthWork:"Այս ամսվա աշխատանքները",noWork:"Այս ամիս աշխատանքային օր նշված չէ։",
   yearIncome:"ընդհանուր մուտք",allYears:"Բոլոր տարիները",byMonth:"Ըստ ամիսների",byYear:"Ըստ տարիների",month:"Ամիս",year:"Տարի",sharesT:"Տոկոսների բաշխում",sharesHint:"Տոկոսը հաշվվում է հաշվի ընդհանուր գումարից։ Գումարը պետք է լինի 100%։ Փոփոխությունը վերաբերում է միայն նոր հաշիվներին։",
   person:"Մասնակից",tax:"Հարկ",addPerson:"+ Մասնակից",sum100:"Տոկոսների գումարը պետք է լինի 100%",tplT:"Հաշվի ձևանմուշ",tplClient:"Պատվիրատուի տվյալներ (հաշվի վերևում)",signer:"Ստորագրող",mgrEmail:"Ղեկավարի էլ. հասցե",accEmail:"Հաշվապահի էլ. հասցե",
-  fromOrder:"Ստեղծել հաշիվ",undatedNote:"հաշիվ դեռ ամսաթիվ չունի և ամիսների մեջ չի երևում։",needLine:"Ավելացրեք առնվազն մեկ տող",total:"Ընդամենը",orderRef:"Պատվեր",orgs:"Կազմակերպություններ",nInv:"հաշիվ",client:"Կազմակերպություն",allOrgs:"Բոլորը",byClient:"Ըստ կազմակերպությունների",noInvYear:"Այս տարում հաշիվ չկա։",connectDir:"Միացնել համակարգչի պանակը",changeDir:"Փոխել",allowDir:"Թույլատրել",dirOn:"Համակարգչի պանակ",dirOff:"Համակարգչի պանակը միացված չէ",dirHint:"Ընտրեք «Rent Equipment» պանակը։ Հաստատված հաշիվները ինքնաշխատ կպահվեն՝ Կազմակերպություն / Տարի / Ամիս։",dirNo:"Համակարգչի պանակում ուղղակի պահելը աշխատում է Chrome կամ Edge բրաուզերում։ Այստեղ «Պահել պանակում»-ը ֆայլը կներբեռնի։",saveDir:"Պահել պանակում",savedTo:"Պահված է՝ ",dirWrong:"Ընտրեք ընդհանուր «Rent Equipment» պանակը, ոչ թե կազմակերպության պանակը",dirFail:"Չհաջողվեց պահել պանակում",needMonth:"Նշեք հաշվետու ամիսը կամ ամսաթիվը",toMgr:"Ուղարկել ղեկավարին",toAcc:"Ուղարկել հաշվապահին",noMail:"Լրացրեք էլ. հասցեն «Եկամուտ» → «Հաշվի ձևանմուշ» բաժնում",queued:"Հերթում է, կուղարկվի մի քանի րոպեում",o_queued:"Հերթում",o_sent:"Ուղարկված",o_error:"Սխալ",mailLog:"Նամակներ",emailT:"Email կապ (armequipment@gmail.com)",notifyTo:"Ծանուցումներ ստանալու հասցե",summaryTo:"Ամսվա ամփոփումը ում ուղարկել (մի քանի հասցե՝ ստորակետով)",nClients:"Նոր գրանցումներ",nOrders:"Նոր պատվերներ",nInq:"Հարցումներ կայքից",gImport:"Gmail-ից հաշիվներ ավելացնել",botOk:"Ռոբոտը աշխատում է, վերջին ստուգում՝ ",botNo:"Ռոբոտը դեռ միացված չէ։ Տեղադրեք Google Apps Script-ը (ուղեցույցը README-ում)։",botSecret:"Ռոբոտի գաղտնաբառ (BOT_SECRET)",copy:"Պատճենել",sumNow:"Ուղարկել ամփոփումը հիմա",tInq:"Հարցումներ",noInq:"Կայքից հարցում դեռ չկա։",reply:"Պատասխանել",mailErr:"չուղարկված նամակ, տե՛ս «Email կապ»"},
+  fromOrder:"Ստեղծել հաշիվ",undatedNote:"հաշիվ դեռ ամսաթիվ չունի և ամիսների մեջ չի երևում։",needLine:"Ավելացրեք առնվազն մեկ տող",total:"Ընդամենը",orderRef:"Պատվեր",orgs:"Կազմակերպություններ",nInv:"հաշիվ",client:"Կազմակերպություն",allOrgs:"Բոլորը",byClient:"Ըստ կազմակերպությունների",noInvYear:"Այս տարում հաշիվ չկա։",connectDir:"Միացնել համակարգչի պանակը",changeDir:"Փոխել",allowDir:"Թույլատրել",dirOn:"Համակարգչի պանակ",dirOff:"Համակարգչի պանակը միացված չէ",dirHint:"Ընտրեք «Rent Equipment» պանակը։ Հաստատված հաշիվները ինքնաշխատ կպահվեն՝ Կազմակերպություն / Տարի / Ամիս։",dirNo:"Համակարգչի պանակում ուղղակի պահելը աշխատում է Chrome կամ Edge բրաուզերում։ Այստեղ «Պահել պանակում»-ը ֆայլը կներբեռնի։",saveDir:"Պահել պանակում",savedTo:"Պահված է՝ ",dirWrong:"Ընտրեք ընդհանուր «Rent Equipment» պանակը, ոչ թե կազմակերպության պանակը",dirFail:"Չհաջողվեց պահել պանակում",needMonth:"Նշեք հաշվետու ամիսը կամ ամսաթիվը",toMgr:"Ուղարկել ղեկավարին",toAcc:"Ուղարկել հաշվապահին",noMail:"Լրացրեք էլ. հասցեն «Եկամուտ» → «Հաշվի ձևանմուշ» բաժնում",queued:"Հերթում է, կուղարկվի մի քանի րոպեում",o_queued:"Հերթում",o_sent:"Ուղարկված",o_error:"Սխալ",mailLog:"Նամակներ",emailT:"Email կապ (armequipment@gmail.com)",notifyTo:"Ծանուցումներ ստանալու հասցե",summaryTo:"Ամսվա ամփոփումը ում ուղարկել (մի քանի հասցե՝ ստորակետով)",nClients:"Նոր գրանցումներ",nOrders:"Նոր պատվերներ",nInq:"Հարցումներ կայքից",gImport:"Gmail-ից հաշիվներ ավելացնել",botOk:"Ռոբոտը աշխատում է, վերջին ստուգում՝ ",botNo:"Ռոբոտը դեռ միացված չէ։ Տեղադրեք Google Apps Script-ը (ուղեցույցը README-ում)։",botSecret:"Ռոբոտի գաղտնաբառ (BOT_SECRET)",copy:"Պատճենել",sumNow:"Ուղարկել ամփոփումը հիմա",tInq:"Հարցումներ",noInq:"Կայքից հարցում դեռ չկա։",reply:"Պատասխանել",mailErr:"չուղարկված նամակ, տե՛ս «Email կապ»",nSaved:"հաշիվ պահվեց համակարգչի պանակում",nWaiting:"հաստատված հաշիվ սպասում է պանակում պահվելու",mgrName:"Ղեկավարի անունը (անգլերեն նամակի համար)",accName:"Հաշվապահի անունը",signerEn:"Ստորագրող (անգլերեն)",wfClient:"Ամսական հաստատման կազմակերպությունը",meAuto:"Ամսվա վերջին օրը (18:00) ինքնաշխատ ուղարկել ղեկավարին",accAuto:"Ղեկավարի հաստատումից հետո ինքնաշխատ ուղարկել հաշվապահին",wfTo:"Ղեկավարին՝ հաստատման",wfAcc:"Հաշվապահին՝ դուրս գրելու",r_sent_to_manager:"Սպասում է ղեկավարի հաստատմանը",r_needs_review:"Ղեկավարը պատասխանել է, պետք է նայել",r_sent_to_accountant:"Ուղարկված է հաշվապահին",wfQ:"Ամսական նամակը հերթում է"},
  en:{tInv:"Invoices",tCal:"Calendar",tInc:"Income",newInv:"+ New invoice",invNo:"Invoice",num:"Invoice number",repMonth:"Reporting month",line:"Line",addLine:"+ Line",split:"Split",status:"Status",note:"Notes (manager's corrections etc.)",word:"Word file",copyMail:"Copy email text",copied:"Copied",del:"Delete",delQ:"Delete this invoice?",yes:"Yes, delete",no:"No",noDate:"No date",noInv:"No invoices yet.",
   i_draft:"Draft",i_manager:"Sent to manager",i_approved:"Approved",i_accountant:"Sent to accountant",workDays:"Working days",thisMonth:"this month",days:"days",monthWork:"Work this month",noWork:"No working days this month.",
   yearIncome:"total income",allYears:"All years",byMonth:"By month",byYear:"By year",month:"Month",year:"Year",sharesT:"Partner split",sharesHint:"Percentages are taken from each invoice total and must add up to 100%. Changes apply to new invoices only.",
   person:"Partner",tax:"Tax",addPerson:"+ Partner",sum100:"Percentages must add up to 100%",tplT:"Invoice template",tplClient:"Client details (top of the invoice)",signer:"Signed by",mgrEmail:"Manager's email",accEmail:"Accountant's email",
-  fromOrder:"Create invoice",undatedNote:"invoice(s) have no date yet and are not shown by month.",needLine:"Add at least one line",total:"Total",orderRef:"Order",orgs:"Organizations",nInv:"invoices",client:"Organization",allOrgs:"All",byClient:"By organization",noInvYear:"No invoices this year.",connectDir:"Connect computer folder",changeDir:"Change",allowDir:"Allow",dirOn:"Computer folder",dirOff:"Computer folder not connected",dirHint:"Choose the “Rent Equipment” folder. Approved invoices are saved automatically to Organization / Year / Month.",dirNo:"Saving straight into a computer folder works in Chrome or Edge. Here “Save to folder” downloads the file.",saveDir:"Save to folder",savedTo:"Saved to ",dirWrong:"Choose the main “Rent Equipment” folder, not an organization folder",dirFail:"Could not save to the folder",needMonth:"Set the reporting month or a date",toMgr:"Send to manager",toAcc:"Send to accountant",noMail:"Fill in the email address under Income → Invoice template",queued:"Queued, will be sent within a few minutes",o_queued:"Queued",o_sent:"Sent",o_error:"Error",mailLog:"Emails",emailT:"Email link (armequipment@gmail.com)",notifyTo:"Send notifications to",summaryTo:"Send the month-end summary to (several addresses, comma-separated)",nClients:"New registrations",nOrders:"New orders",nInq:"Requests from the site",gImport:"Add invoices from Gmail",botOk:"Robot is working, last check: ",botNo:"Robot not connected yet. Install the Google Apps Script (see README).",botSecret:"Robot password (BOT_SECRET)",copy:"Copy",sumNow:"Send summary now",tInq:"Requests",noInq:"No requests from the site yet.",reply:"Reply",mailErr:"unsent email(s), see Email link"}
+  fromOrder:"Create invoice",undatedNote:"invoice(s) have no date yet and are not shown by month.",needLine:"Add at least one line",total:"Total",orderRef:"Order",orgs:"Organizations",nInv:"invoices",client:"Organization",allOrgs:"All",byClient:"By organization",noInvYear:"No invoices this year.",connectDir:"Connect computer folder",changeDir:"Change",allowDir:"Allow",dirOn:"Computer folder",dirOff:"Computer folder not connected",dirHint:"Choose the “Rent Equipment” folder. Approved invoices are saved automatically to Organization / Year / Month.",dirNo:"Saving straight into a computer folder works in Chrome or Edge. Here “Save to folder” downloads the file.",saveDir:"Save to folder",savedTo:"Saved to ",dirWrong:"Choose the main “Rent Equipment” folder, not an organization folder",dirFail:"Could not save to the folder",needMonth:"Set the reporting month or a date",toMgr:"Send to manager",toAcc:"Send to accountant",noMail:"Fill in the email address under Income → Invoice template",queued:"Queued, will be sent within a few minutes",o_queued:"Queued",o_sent:"Sent",o_error:"Error",mailLog:"Emails",emailT:"Email link (armequipment@gmail.com)",notifyTo:"Send notifications to",summaryTo:"Send the month-end summary to (several addresses, comma-separated)",nClients:"New registrations",nOrders:"New orders",nInq:"Requests from the site",gImport:"Add invoices from Gmail",botOk:"Robot is working, last check: ",botNo:"Robot not connected yet. Install the Google Apps Script (see README).",botSecret:"Robot password (BOT_SECRET)",copy:"Copy",sumNow:"Send summary now",tInq:"Requests",noInq:"No requests from the site yet.",reply:"Reply",mailErr:"unsent email(s), see Email link",nSaved:"invoices saved to the computer folder",nWaiting:"approved invoice(s) waiting to be saved to the folder",mgrName:"Manager\u2019s name (for the English email)",accName:"Accountant\u2019s name",signerEn:"Signed by (English)",wfClient:"Organization for monthly approval",meAuto:"On the last day of the month (18:00) send to the manager automatically",accAuto:"After the manager approves, send to the accountant automatically",wfTo:"To manager, for approval",wfAcc:"To accountant, to issue",r_sent_to_manager:"Waiting for the manager\u2019s approval",r_needs_review:"Manager replied, needs your review",r_sent_to_accountant:"Sent to the accountant",wfQ:"Monthly email queued"}
 };
 const it=k=>(IT[lang][k]??t(k));
 const MONTHS={hy:["Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս","Օգոստոս","Սեպտեմբեր","Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
 const WD={hy:["Երկ","Երք","Չրք","Հնգ","Ուրբ","Շբթ","Կիր"],en:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]};
 const DEF_SHARES=[{name:"Արմեն",pct:25},{name:"Հարկ",pct:10,tax:true},{name:"Էմմա",pct:20},{name:"Խաչիկ",pct:45}];
-const IS={inv:[],shares:null,tpl:{},edit:null,cal:null,dayPick:null,year:new Date().getFullYear(),pyear:"all",pclient:"all",confirmDel:false,client:null,iyear:null,folders:{},dir:null,dirOk:false,dirInit:false,outbox:[],bot:null,email:{},inq:[],sumMonth:null};
+const IS={inv:[],shares:null,tpl:{},edit:null,cal:null,dayPick:null,year:new Date().getFullYear(),pyear:"all",pclient:"all",confirmDel:false,client:null,iyear:null,folders:{},dir:null,dirOk:false,dirInit:false,since:null,saved:{},syncing:false,runs:[],outbox:[],bot:null,email:{},inq:[],sumMonth:null};
 const FIRST_YEAR=2013;
 const cl=v=>v.client||"Hilton";
 const pad=n=>String(n).padStart(2,"0");
@@ -42,11 +42,12 @@ const ipill=s=>`<span class="pill ist-${esc(s)}">${esc(it("i_"+s))}</span>`;
 
 async function fetchAllInvoices(){const out=[];for(let i=0;i<100000;i+=1000){const {data,error}=await sb.from("invoices").select("*").order("id").range(i,i+999);if(error||!data)break;out.push(...data);if(data.length<1000)break}return out}
 async function loadInvoiceData(){
-  const [inv,{data:st},{data:ob},{data:bc},{data:iq}]=await Promise.all([fetchAllInvoices(),sb.from("settings").select("*"),
+  const [inv,{data:st},{data:ob},{data:bc},{data:iq},{data:ar}]=await Promise.all([fetchAllInvoices(),sb.from("settings").select("*"),
     sb.from("outbox").select("id,kind,to_addr,subject,invoice_id,new_status,status,error,created_at,sent_at").order("id",{ascending:false}).limit(300),
-    sb.from("bot_config").select("secret,last_seen").maybeSingle(),sb.from("inquiries").select("*").order("id",{ascending:false}).limit(200)]);
-  IS.inv=inv;IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};
+    sb.from("bot_config").select("secret,last_seen").maybeSingle(),sb.from("inquiries").select("*").order("id",{ascending:false}).limit(200),sb.from("approval_runs").select("*")]);
+  IS.inv=inv;IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};
   if(!IS.dirInit){IS.dirInit=true;await initDir()}
+  setTimeout(syncDir,0);
 }
 
 /* ----- computer folder (Chrome / Edge: File System Access API) ----- */
@@ -54,23 +55,28 @@ const FS_OK=typeof window.showDirectoryPicker==="function";
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open("ae-fs",1);r.onupgradeneeded=()=>r.result.createObjectStore("h");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function idbGet(k){try{const db=await idb();return await new Promise(res=>{const q=db.transaction("h").objectStore("h").get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(_){return null}}
 async function idbSet(k,v){try{const db=await idb();db.transaction("h","readwrite").objectStore("h").put(v,k)}catch(_){}}
-async function initDir(){if(!FS_OK)return;IS.dir=await idbGet("root");if(IS.dir){try{IS.dirOk=(await IS.dir.queryPermission({mode:"readwrite"}))==="granted"}catch(_){IS.dir=null;IS.dirOk=false}}}
-async function connectDir(){try{const h=await window.showDirectoryPicker({id:"ae-root",mode:"readwrite"});
+async function initDir(){if(!FS_OK)return;IS.since=await idbGet("since");IS.saved=(await idbGet("saved"))||{};if(!IS.since){IS.since=new Date().toISOString();await idbSet("since",IS.since)}IS.dir=await idbGet("root");if(IS.dir){try{IS.dirOk=(await IS.dir.queryPermission({mode:"readwrite"}))==="granted"}catch(_){IS.dir=null;IS.dirOk=false}}}
+async function connectDir(){try{const h=await window.showDirectoryPicker({id:"ae-root",mode:"readwrite",startIn:"desktop"});
   if(Object.values(IS.folders).some(f=>f.trim()===h.name.trim())){toast(it("dirWrong"));return false}
   IS.dir=h;IS.dirOk=true;await idbSet("root",h);render();return true}catch(_){return false}}
+const pendingSave=()=>IS.dir&&IS.since?IS.inv.filter(v=>["approved","accountant"].includes(v.status)&&monthOf(v)&&v.updated_at&&v.updated_at>IS.since&&IS.saved[v.id]!==v.updated_at):[];
+async function syncDir(){if(IS.syncing||!IS.dir||!IS.dirOk)return;const l=pendingSave();if(!l.length)return;IS.syncing=true;let n=0,last="";
+  for(const v of l){try{last=await saveToDir(v);IS.saved[v.id]=v.updated_at;n++}catch(err){console.error(err)}}
+  await idbSet("saved",IS.saved);IS.syncing=false;if(n)toast(n===1?it("savedTo")+last:n+" "+it("nSaved"));if(S.tab==="invoices"&&!IS.edit)render()}
 async function ensureDir(){if(!IS.dir)return false;if(IS.dirOk)return true;try{IS.dirOk=(await IS.dir.requestPermission({mode:"readwrite"}))==="granted"}catch(_){IS.dirOk=false}return IS.dirOk}
 async function subDir(parent,want,match){for await(const [n,h] of parent.entries()){if(h.kind==="directory"&&match(n.trim()))return h}return parent.getDirectoryHandle(want,{create:true})}
 const clientFolder=c=>(IS.folders[c]||c).trim();
-function fileName(v){const s=(v.start_date||(monthOf(v)+"-01")).split("-"),e=(v.end_date||v.start_date||"").split("-");let d=s[1]+"."+s[2];
-  if(e.length===3&&e.join("-")!==s.join("-"))d+=(e[1]===s[1]&&e[0]===s[0])?"-"+e[2]:"-"+e[1]+"."+e[2];
-  return `Invoice ${String(v.num).replace(/[\\/:*?"<>|]/g,"-")} - ${d}.${(e.length===3?e:s)[0]}.doc`}
-function wordBlob(v){return new Blob(["\ufeff"+wordHtml(v)],{type:"application/msword"})}
-function download(v){const a=document.createElement("a");a.href=URL.createObjectURL(wordBlob(v));a.download=fileName(v);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function fileName(v){return docxFileName({...v,month:monthOf(v)})}
+async function wordBlob(v){
+  if(window.JSZip){const z=new JSZip();z.file("[Content_Types].xml",DOCX_CT);z.file("_rels/.rels",DOCX_RELS);z.file("word/document.xml",docxDocumentXml(v,IS.tpl||{}));
+    return z.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"})}
+  return new Blob(["\ufeff"+wordHtml(v)],{type:"application/msword"})}
+async function download(v){const b=await wordBlob(v),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=window.JSZip?fileName(v):fileName(v).replace(/x$/,"");document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
 async function saveToDir(v){const m=monthOf(v);if(!m)throw new Error("nomonth");const [y,mm]=m.split("-"),c=cl(v),cf=clientFolder(c);
   const base=await subDir(IS.dir,cf,n=>n===cf||n.toLowerCase()===c.toLowerCase());
   const yd=await subDir(base,y,n=>n===y);
   const md=await subDir(yd,mm+" "+MONTHS.hy[+mm-1],n=>n===mm||n.startsWith(mm+" "));
-  const fn=fileName(v),fh=await md.getFileHandle(fn,{create:true}),w=await fh.createWritable();await w.write(wordBlob(v));await w.close();
+  const blob=await wordBlob(v),fn=window.JSZip?fileName(v):fileName(v).replace(/x$/,""),fh=await md.getFileHandle(fn,{create:true}),w=await fh.createWritable();await w.write(blob);await w.close();
   return [cf,y,md.name.trim(),fn].join(" / ")}
 async function saveFile(v,quiet){if(!monthOf(v)){toast(it("needMonth"));return}
   if(!FS_OK){if(!quiet)download(v);return}
@@ -86,7 +92,13 @@ function clientStats(){const m={};IS.inv.forEach(v=>{const c=cl(v),o=m[c]=m[c]||
 const clientNames=()=>clientStats().map(c=>c.name);
 function dirBar(){if(!FS_OK)return `<p class="muted dirbar">${it("dirNo")}</p>`;
   if(!IS.dir)return `<div class="dirbar row"><span class="muted">📁 ${it("dirOff")}</span><button class="btn sm" id="dirConnect">${it("connectDir")}</button><span class="muted" style="flex-basis:100%">${it("dirHint")}</span></div>`;
-  return `<div class="dirbar row"><span>📁 ${it("dirOn")}: <b>${esc(IS.dir.name)}</b></span>${IS.dirOk?"":`<button class="btn sm pri" id="dirAllow">${it("allowDir")}</button>`}<button class="btn sm" id="dirConnect">${it("changeDir")}</button></div>`}
+  const pend=pendingSave().length;
+  return `<div class="dirbar row"><span>📁 ${it("dirOn")}: <b>${esc(IS.dir.name)}</b></span>${pend&&!IS.dirOk?`<b>${pend} ${it("nWaiting")}</b>`:""}${IS.dirOk?"":`<button class="btn sm pri" id="dirAllow">${it("allowDir")}</button>`}<button class="btn sm" id="dirConnect">${it("changeDir")}</button></div>`}
+function wfBar(c,ym){const tp=IS.tpl||{};if(c!==(tp.workflowClient||"Hilton"))return"";const r=IS.runs.find(x=>x.client===c&&x.month===ym);
+  const q=IS.outbox.some(o=>o.kind==="workflow"&&o.status==="queued"&&o.subject.endsWith(":"+c+":"+ym));
+  return `<div class="wfbar row">${r?`<span class="pill ist-${r.status==="sent_to_accountant"?"accountant":r.status==="needs_review"?"manager":"approved"}">${esc(it("r_"+r.status))}</span>`:""}${q?`<span class="muted">${it("wfQ")}</span>`:""}
+  ${r&&r.reply_text?`<details style="flex-basis:100%"><summary class="muted" style="cursor:pointer">${esc((tp.managerName?tp.managerName+": ":"")+r.reply_text.slice(0,80))}</summary><pre style="white-space:pre-wrap;font:inherit;margin:6px 0">${esc(r.reply_text)}</pre></details>`:""}
+  <span class="sp" style="flex:1"></span><button class="btn sm" data-wf="manager:${esc(c)}:${ym}">✉ ${it("wfTo")}</button><button class="btn sm" data-wf="accountant:${esc(c)}:${ym}">✉ ${it("wfAcc")}</button></div>`}
 function crumbs(){let h=`<nav class="crumbs"><button data-crumb="root" ${IS.client?"":'aria-current="page"'}>${it("orgs")}</button>`;
   if(IS.client)h+=`<span>›</span><button data-crumb="client" ${IS.iyear?"":'aria-current="page"'}>${esc(IS.client)}</button>`;
   if(IS.iyear)h+=`<span>›</span><button aria-current="page">${IS.iyear}</button>`;return h+`</nav>`}
@@ -106,7 +118,7 @@ function vInvoices(){
   if(!list.length)return h+`<div class="empty">${it("noInvYear")}</div>`;
   const a=agg(list);h+=`<div class="row" style="margin:6px 0 4px"><b class="num" style="font-size:1.6rem">${fmt(a._total)} ${t("amd")}</b><span class="muted">${list.length} ${it("nInv")}</span></div>`+shareCards(a);
   const g={};[...list].sort((a,b)=>(b.start_date||"0").localeCompare(a.start_date||"0")||String(b.num).localeCompare(String(a.num),undefined,{numeric:true})).forEach(v=>{const k=monthOf(v);(g[k]=g[k]||[]).push(v)});
-  return h+Object.keys(g).sort((a,b)=>b.localeCompare(a)).map(k=>`<h2>📁 ${esc(monthLabel(k))} · <span class="num">${fmt(agg(g[k])._total)}</span> ${t("amd")}</h2><div class="list">${g[k].map(v=>invCard(v,1)).join("")}</div>`).join("");
+  return h+Object.keys(g).sort((a,b)=>b.localeCompare(a)).map(k=>`<h2>📁 ${esc(monthLabel(k))} · <span class="num">${fmt(agg(g[k])._total)}</span> ${t("amd")}</h2>${wfBar(IS.client,k)}<div class="list">${g[k].map(v=>invCard(v,1)).join("")}</div>`).join("");
 }
 function lineRow(l){return `<div class="iline"><label class="ln">${it("line")}<input class="lName" list="eqNames" value="${esc(l.name||"")}"></label><label>${t("price")}<input class="lPrice" type="number" min="0" inputmode="numeric" value="${l.price??""}"></label><label>${t("qty")}<input class="lQty" type="number" min="0" inputmode="numeric" value="${l.qty??1}"></label><span class="lt num">${fmt((+l.price||0)*(+l.qty||0))}</span><button type="button" class="btn sm danger lX" aria-label="${it("del")}">✕</button></div>`}
 function vInvEditor(){
@@ -164,7 +176,10 @@ function vIncome(){
   if(und.length)h+=`<p class="msg info">${und.length} ${it("undatedNote")}</p>`;
   h+=`<h2>${it("sharesT")}</h2><p class="muted">${it("sharesHint")}</p><form id="fShares" class="card"><div id="shRows" class="list">${curShares().map(shRow).join("")}</div><div class="row" style="margin-top:10px"><button type="button" class="btn sm" id="shAdd">${it("addPerson")}</button><span class="sp" style="flex:1"></span><span id="shSum" class="num"></span><button class="btn pri">${t("save")}</button></div></form>`;
   const tp=IS.tpl||{};
-  h+=`<h2>${it("tplT")}</h2><form id="fTpl" class="card"><label>${it("tplClient")}<textarea id="tClient" rows="8">${esc(tp.client||"")}</textarea></label><div class="fg"><label>${it("signer")}<input id="tSign" value="${esc(tp.signer||"")}"></label><label>${it("mgrEmail")}<input id="tMgr" type="email" value="${esc(tp.managerEmail||"")}"></label><label>${it("accEmail")}<input id="tAcc" type="email" value="${esc(tp.accountantEmail||"")}"></label></div><div><button class="btn pri">${t("save")}</button></div></form>`;
+  h+=`<h2>${it("tplT")}</h2><form id="fTpl" class="card"><label>${it("tplClient")}<textarea id="tClient" rows="8">${esc(tp.client||"")}</textarea></label><div class="fg"><label>${it("signer")}<input id="tSign" value="${esc(tp.signer||"")}"></label><label>${it("mgrEmail")}<input id="tMgr" type="email" value="${esc(tp.managerEmail||"")}"></label><label>${it("accEmail")}<input id="tAcc" type="email" value="${esc(tp.accountantEmail||"")}"></label><label>${it("mgrName")}<input id="tMgrN" value="${esc(tp.managerName||"")}"></label><label>${it("accName")}<input id="tAccN" value="${esc(tp.accountantName||"")}"></label><label>${it("signerEn")}<input id="tSignEn" value="${esc(tp.signerEn||"")}"></label><label>${it("wfClient")}<input id="tWf" list="clNames2" value="${esc(tp.workflowClient||"Hilton")}"><datalist id="clNames2">${clientNames().map(n=>`<option value="${esc(n)}"></option>`).join("")}</datalist></label></div>
+  <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="tMe" style="width:auto" ${tp.monthEndAuto!==false?"checked":""}>${it("meAuto")}</label>
+  <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="tAccA" style="width:auto" ${tp.accountantAuto!==false?"checked":""}>${it("accAuto")}</label>
+  <div><button class="btn pri">${t("save")}</button></div></form>`;
   h+=vEmail();
   return h;
 }
@@ -188,7 +203,7 @@ async function sendInv(kind){const v=readInv();v.lines=v.lines.filter(l=>l.name)
   const tp=IS.tpl||{},to=((kind==="manager"?tp.managerEmail:tp.accountantEmail)||"").trim();if(!to)return toast(it("noMail"));
   if(!(await storeInv(v)))return toast(t("errGeneric"));
   const dt=dateText(v),body=`Բարև Ձեզ,\n\nԿցված է հաշիվ #${v.num} (${dt})՝ ${fmt(invTotal(v))} դր.։\n\n${mailText(v)}\n\nՀարգանքով՝\n${tp.signer||""}\nArmEquipment · Berry Line ՍՊԸ`;
-  const {error}=await sb.from("outbox").insert({kind:"invoice",to_addr:to,subject:`Հաշիվ #${v.num} — ${dt} — ArmEquipment`,body,att_name:fileName(v),att_html:wordHtml(v),invoice_id:v.id,new_status:kind});
+  const {error}=await sb.from("outbox").insert({kind:"invoice",to_addr:to,subject:`Հաշիվ #${v.num} — ${dt} — ArmEquipment`,body,att_name:fileName(v),invoice_id:v.id,new_status:kind});
   if(error)return toast(t("errGeneric"));toast(it("queued"));IS.edit=null;const m=monthOf(v);IS.client=v.client;IS.iyear=m?+m.slice(0,4):null;await refresh();openInvoice(IS.inv.find(x=>x.id===v.id)||v)}
 
 /* ----- email settings, requests ----- */
@@ -214,8 +229,9 @@ document.addEventListener("click",async e=>{
   if(b.dataset.iy){IS.iyear=+b.dataset.iy;render();scrollTo(0,0);return}
   if(b.dataset.crumb){if(b.dataset.crumb==="root")IS.client=null;IS.iyear=null;render();return}
   if(b.id==="dirConnect"){await connectDir();return}
-  if(b.id==="dirAllow"){await ensureDir();render();return}
+  if(b.id==="dirAllow"){await ensureDir();render();await syncDir();return}
   if(b.id==="iSaveDir"){await saveFile(readInv(),false);return}
+  if(b.dataset.wf){const {error}=await sb.from("outbox").insert({kind:"workflow",to_addr:"-",subject:b.dataset.wf});if(error)return toast(t("errGeneric"));toast(it("queued"));await refresh();return}
   if(b.dataset.send){await sendInv(b.dataset.send);return}
   if(b.id==="eSumNow"){const ym=$("#eMonth").value,to=$("#eSummary").value.trim();IS.sumMonth=ym;if(!ym||!to)return toast(it("noMail"));
     const {error}=await sb.from("outbox").insert({kind:"summary",to_addr:to,subject:ym});if(error)return toast(t("errGeneric"));toast(it("queued"));await refresh();return}
@@ -227,7 +243,7 @@ document.addEventListener("click",async e=>{
   if(b.id==="iAdd"){readInv();IS.edit.lines.push({name:"",price:"",qty:1});render();invTotals();return}
   if(b.classList.contains("lX")){readInv();const i=[...document.querySelectorAll("#iLines .iline")].indexOf(b.closest(".iline"));IS.edit.lines.splice(i,1);render();invTotals();return}
   if(b.dataset.ist){readInv();IS.edit.status=b.dataset.ist;document.querySelectorAll("#iSt button").forEach(x=>x.setAttribute("aria-pressed",x===b));return}
-  if(b.id==="iWord"){download(readInv());return}
+  if(b.id==="iWord"){await download(readInv());return}
   if(b.id==="iCopy"){const txt=mailText(readInv());try{await navigator.clipboard.writeText(txt);toast(it("copied"))}catch(_){const ta=document.createElement("textarea");ta.value=txt;document.body.append(ta);ta.select();try{document.execCommand("copy");toast(it("copied"))}catch(__){}ta.remove()}return}
   if(b.id==="iDel"){$("#iConfirm").innerHTML=`<div class="msg err row">${it("delQ")} <button type="button" class="btn sm danger" id="iDelYes">${it("yes")}</button><button type="button" class="btn sm" id="iDelNo">${it("no")}</button></div>`;return}
   if(b.id==="iDelNo"){$("#iConfirm").innerHTML="";return}
@@ -249,10 +265,10 @@ document.addEventListener("submit",async e=>{
   if(f.id==="fInv"){const v=readInv();v.lines=v.lines.filter(l=>l.name);if(!v.lines.length)return toast(it("needLine"));
     const toDir=FS_OK&&IS.dir&&["approved","accountant"].includes(v.status)&&monthOf(v)&&await ensureDir();
     if(!(await storeInv(v)))return toast(t("errGeneric"));IS.edit=null;const m=monthOf(v);IS.client=v.client;IS.iyear=m?+m.slice(0,4):null;toast(t("saved"));await refresh();
-    if(toDir)try{toast(it("savedTo")+await saveToDir(v))}catch(err){console.error(err);toast(it("dirFail"))}return}
+    return}
   if(f.id==="fEmail"){const val={...IS.email,notifyTo:$("#eNotify").value.trim(),summaryTo:$("#eSummary").value.trim(),notifyClients:$("#eC").checked,notifyOrders:$("#eO").checked,notifyInquiries:$("#eI").checked,gmailImport:$("#eG").checked};
     const {error}=await sb.from("settings").upsert({key:"email",value:val});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(f.id==="fShares"){const sh=readShares();if(Math.abs(sh.reduce((a,x)=>a+x.pct,0)-100)>0.001)return toast(it("sum100"));
     const {error}=await sb.from("settings").upsert({key:"shares",value:sh});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
-  if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:$("#tMgr").value.trim(),accountantEmail:$("#tAcc").value.trim()}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:$("#tMgr").value.trim(),accountantEmail:$("#tAcc").value.trim(),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
 });

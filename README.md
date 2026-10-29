@@ -32,9 +32,9 @@
 
 ## Email (armequipment@gmail.com)
 
-1. Supabase → SQL Editor → paste `supabase/004_email.sql` → Run.
+1. Supabase → SQL Editor → paste `supabase/004_email.sql`, then `supabase/005_workflow.sql` → Run.
 2. Open https://script.google.com while signed in as armequipment@gmail.com → New project → paste `gmail-robot/Code.gs`.
 3. Project Settings (⚙) → Script properties → add `SUPABASE_URL`, `SUPABASE_KEY` (publishable key) and `BOT_SECRET` (copy it from the site: Income → Email link → Robot password).
 4. Choose the function `setup` → Run → allow access.
 
-The robot sends queued emails every 5 minutes, the month-end summary on the 1st at 9:00, and adds invoice .docx files found in Gmail every hour (only emails from the setup day onward).
+The robot sends queued emails every 5 minutes. Every 10 minutes it reads Gmail: invoice .docx files (new or changed) go to the site with a notification, and the hotel manager's reply to the month-end email is checked — approval and/or corrected invoices → invoices updated → sent to the accountant; anything unclear → you get an email. On the last day of the month at 18:00 (Yerevan) it sends all invoices of the month to the manager in English; on the 1st at 9:00 it sends you last month's summary. `gmail-robot/Code.gs` is built from `Code.src.gs` + `invoice-docx.js`.
