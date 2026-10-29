@@ -50,7 +50,9 @@ begin
   return public.email_cfg()
     || jsonb_build_object('clients', (select coalesce(jsonb_agg(distinct client), '[]') from public.invoices))
     || jsonb_build_object('tpl', coalesce((select value from public.settings where key = 'invoice_template'), '{}'))
-    || jsonb_build_object('runs', (select coalesce(jsonb_agg(r), '[]') from public.approval_runs r where status = 'sent_to_manager'));
+    || jsonb_build_object('runs', (select coalesce(jsonb_agg(r), '[]') from public.approval_runs r where status = 'sent_to_manager'))
+    || jsonb_build_object('equipment', (select coalesce(jsonb_agg(jsonb_build_object('name', name_en || ' / ' || name_hy, 'price', price) order by sort), '[]')
+                                        from public.equipment where active));
 end $$;
 
 -- invoices of one organization and month (or a list of ids)
@@ -87,7 +89,7 @@ begin
     invoice_count = case when excluded.invoice_count > 0 then excluded.invoice_count else approval_runs.invoice_count end,
     total = case when excluded.total > 0 then excluded.total else approval_runs.total end,
     reply_text = case when excluded.reply_text <> '' then left(excluded.reply_text, 4000) else approval_runs.reply_text end,
-    log = left(approval_runs.log || case when excluded.log <> '' then to_char(now() at time zone 'Asia/Yerevan','DD.MM HH24:MI') || ' ' || excluded.log || E'\n' else '' end, 8000),
+    log = left(approval_runs.log || excluded.log, 8000),
     updated_at = now();
 end $$;
 

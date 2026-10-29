@@ -2,7 +2,7 @@
  * ArmEquipment — Gmail robot (Google Apps Script inside armequipment@gmail.com)
  *
  *  every 5 min   sends what the website queued (notifications, invoices, summaries)
- *  every 10 min  reads Gmail: new/changed invoices (.docx) → website, with a notification
+ *  every 10 min  reads Gmail: new/changed invoices (.xlsx / .docx) → website, with a notification
  *                checks the manager's reply to the month-end email:
  *                  approval and/or corrected invoices → invoices updated → sent to the accountant
  *                  anything unclear → you get an email and decide on the website
@@ -36,7 +36,7 @@ function setup() {
   ScriptApp.newTrigger('watch').timeBased().everyMinutes(10).create();
   if (!P.getProperty('IMPORT_SINCE')) P.setProperty('IMPORT_SINCE', Utilities.formatDate(new Date(), TZ, 'yyyy/MM/dd'));
   rpc('bot_settings');               // checks the password
-  docxBlob({ num: '000', lines: [] }, {});   // checks that Word files can be made
+  invoiceBlob({ num: '000', lines: [] }, {}, []);   // checks that Excel files can be made
   sendQueue();
   Logger.log('Ready. Reading Gmail from ' + P.getProperty('IMPORT_SINCE') + ' onward.');
 }
@@ -68,28 +68,28 @@ function dateRange(v) { return dmy(v.start_date) + (v.end_date && v.end_date !==
 function ymNow(offsetMonths) {
   var d = new Date(Utilities.formatDate(new Date(), TZ, "yyyy-MM-01'T'12:00:00"));
   d.setMonth(d.getMonth() + (offsetMonths || 0));
-  return d.getFullYear() + '-' + docxPad(d.getMonth() + 1);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1);
 }
 function monthEn(ym) { return MONTHS_EN[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4); }
 function monthHy(ym) { return ym.slice(0, 4) + ' թ. ' + MONTHS_HY_GEN[+ym.slice(5, 7) - 1]; }
 function myEmail() { return (Session.getEffectiveUser().getEmail() || '').toLowerCase(); }
 
-function docxBlob(v, tp) {
-  var name = docxFileName(v);
-  try {
-    var z = Utilities.zip([
-      Utilities.newBlob(DOCX_CT, 'application/xml', '[Content_Types].xml'),
-      Utilities.newBlob(DOCX_RELS, 'application/xml', '_rels/.rels'),
-      Utilities.newBlob(docxDocumentXml(v, tp), 'application/xml', 'word/document.xml')
-    ], name);
-    return z.setContentType('application/vnd.openxmlformats-officedocument.wordprocessingml.document').setName(name);
-  } catch (e) {   // fallback: Word-readable HTML
-    var rows = (v.lines || []).map(function (l) { return '<tr><td>' + esc(l.name) + '</td><td>' + fmt(l.price) + '</td><td>' + l.qty + '</td><td>' + docxDate(v) + '</td><td>' + fmt(l.price * l.qty) + '</td></tr>'; }).join('');
-    var html = '<html><head><meta charset="utf-8"></head><body><p align=center style="font-size:20pt">Հաշիվ # ' + esc(v.num) + '</p><p>' + esc(tp.client || '').replace(/\n/g, '<br>') +
-      '</p><table border=1 cellpadding=6 style="border-collapse:collapse"><tr><th>Անուն</th><th>Գին</th><th>Հատ</th><th>Ամսաթիվ</th><th>Ընդ.</th></tr>' + rows +
-      '<tr><td colspan=3 align=center><b>Ընդ. ' + fmt(invTotal(v)) + ' դր.</b></td></tr></table><p>______________<br>' + esc(tp.signer || '') + '</p></body></html>';
-    return Utilities.newBlob('﻿' + html, 'application/msword', name.replace(/\.docx$/, '.doc'));
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+var LOGO_BLOB = null;
+function logoBlob() {
+  if (LOGO_BLOB === null) {
+    try { var r = UrlFetchApp.fetch('https://www.arm-equipment.com/favicon-192.png', { muteHttpExceptions: true }); LOGO_BLOB = r.getResponseCode() === 200 ? r.getBlob() : false; }
+    catch (e) { LOGO_BLOB = false; }
   }
+  return LOGO_BLOB;
+}
+/* the invoice as a styled Excel file with live formulas */
+function invoiceBlob(v, tp, eq) {
+  var logo = logoBlob(), parts = xlsxParts(v, tp, eq || [], !!logo), blobs = [];
+  for (var k in parts) blobs.push(Utilities.newBlob(parts[k], 'application/xml', k));
+  if (logo) blobs.push(logo.copyBlob().setName('xl/media/logo.png'));
+  var name = xlsxFileName(v);
+  return Utilities.zip(blobs, name).setContentType('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet').setName(name);
 }
 function invoiceTable(invs, lang) {
   var th = 'style="text-align:left;padding:6px 10px;border-bottom:2px solid #c9a24a;font-size:12px;color:#555"';
@@ -133,7 +133,8 @@ function sendQueue() {
         if (m.reply_to) o.replyTo = m.reply_to;
         if (m.invoice_id) {
           var inv = rpc('bot_invoices', { p: { ids: [m.invoice_id] } })[0];
-          if (inv) o.attachments = [docxBlob(inv, rpc('bot_settings').tpl || {})];
+          var st = rpc('bot_settings');
+          if (inv) o.attachments = [invoiceBlob(inv, st.tpl || {}, st.equipment)];
         } else if (m.att_html) {
           o.attachments = [Utilities.newBlob('﻿' + m.att_html, 'application/msword', m.att_name || 'Invoice.doc')];
         }
@@ -181,7 +182,7 @@ function sendToManager(client, ym, cfg) {
   var sign = 'Kind regards,\n' + (tp.signerEn || 'Armen Sargsyan') + '\nArmEquipment · Berry Line LLC\narmequipment@gmail.com';
   var text = greet + '\n\n' + intro + '\n\n' + tb.text + '\n' + ask + '\n\n' + sign;
   var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + greet + '</p><p>' + intro + '</p>' + tb.html + '<p>' + ask + '</p><p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
-  var threadId = sendWithThread(tp.managerEmail, subject, text, html, invs.map(function (v) { return docxBlob(v, tp); }));
+  var threadId = sendWithThread(tp.managerEmail, subject, text, html, invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }));
   rpc('bot_set_status', { ids: invs.map(function (v) { return v.id; }), new_status: 'manager' });
   rpc('bot_run', { p: { client: client, month: ym, status: 'sent_to_manager', thread_id: threadId, invoice_count: invs.length, total: tb.total, log: 'Ուղարկվեց ղեկավարին (' + tp.managerEmail + ')' } });
   P.setProperty('RUN_' + threadId, String(new Date().getTime()));
@@ -201,7 +202,7 @@ function sendToAccountant(client, ym, cfg, why) {
   var subject = client + ' — ' + monthHy(ym) + ' — հաշիվներ դուրս գրելու համար';
   var text = greet + '\n\n' + intro + '\n\n' + tb.text + '\n' + ask + '\n\n' + sign;
   var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + greet + '</p><p>' + intro + '</p>' + tb.html + '<p>' + ask + '</p><p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
-  sendWithThread(tp.accountantEmail, subject, text, html, invs.map(function (v) { return docxBlob(v, tp); }));
+  sendWithThread(tp.accountantEmail, subject, text, html, invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }));
   rpc('bot_set_status', { ids: invs.map(function (v) { return v.id; }), new_status: 'accountant' });
   rpc('bot_run', { p: { client: client, month: ym, status: 'sent_to_accountant', invoice_count: invs.length, total: tb.total, log: 'Ուղարկվեց հաշվապահին (' + tp.accountantEmail + ')' + (why ? '. ' + why : '') } });
   notifyMe('Ուղարկվեց հաշվապահին — ' + client + ' ' + monthHy(ym) + ' — ' + fmt(tb.total) + ' դր.',
@@ -234,9 +235,9 @@ function checkReplies(cfg) {
     news.forEach(function (msg) {
       texts.push(replyText(msg));
       msg.getAttachments().forEach(function (a) {
-        if (!/\.docx$/i.test(a.getName())) return;
+        if (!/\.(docx|xlsx)$/i.test(a.getName())) return;
         try {
-          var p = parseInvoice(docxXml(a), a.getName(), msg.getDate(), run.client, cfg.clients || []);
+          var p = readAttachment(a, msg.getDate(), run.client, cfg.clients || []);
           if (!p) return;
           p.client = run.client;
           p.gmail_id = msg.getId() + '/' + a.getName();
@@ -310,7 +311,7 @@ function importFromGmail(cfg) {
   if (cfg.gmailImport === false) return;
   var label = GmailApp.getUserLabelByName(LABEL) || GmailApp.createLabel(LABEL);
   var runThreads = (cfg.runs || []).map(function (r) { return r.thread_id; });
-  var q = 'has:attachment filename:docx after:' + P.getProperty('IMPORT_SINCE') + ' -label:' + LABEL.replace('/', '-');
+  var q = 'has:attachment {filename:docx filename:xlsx} after:' + P.getProperty('IMPORT_SINCE') + ' -label:' + LABEL.replace('/', '-');
   GmailApp.search(q, 0, 30).forEach(function (th) {
     if (runThreads.indexOf(th.getId()) >= 0) return;          // handled by checkReplies
     var ok = true, me = myEmail();
@@ -318,9 +319,9 @@ function importFromGmail(cfg) {
       var fromMe = String(msg.getFrom()).toLowerCase().indexOf(me) >= 0;
       msg.getAttachments().forEach(function (a) {
         var name = a.getName();
-        if (!/\.docx$/i.test(name) || !/invoice|հաշիվ/i.test(name) || /invoice\s*0+\s*-/i.test(name)) return;
+        if (!/\.(docx|xlsx)$/i.test(name) || !/invoice|հաշիվ/i.test(name) || /invoice\s*0+\s*-/i.test(name)) return;
         try {
-          var p = parseInvoice(docxXml(a), name, msg.getDate(), (msg.getTo() || '') + ' ' + (msg.getFrom() || ''), cfg.clients || []);
+          var p = readAttachment(a, msg.getDate(), (msg.getTo() || '') + ' ' + (msg.getFrom() || ''), cfg.clients || []);
           if (!p) return;
           p.gmail_id = msg.getId() + '/' + name;
           p.note = 'Gmail՝ «' + msg.getSubject() + '», ' + String(msg.getFrom()).replace(/<.*>/, '').trim() + ', ' + Utilities.formatDate(msg.getDate(), TZ, 'dd.MM.yyyy');
@@ -333,6 +334,22 @@ function importFromGmail(cfg) {
   });
 }
 
+/* .xlsx made by this system (read back from its hidden id column) or an older-style .docx */
+function readAttachment(a, sentDate, people, clients) {
+  var name = a.getName();
+  if (/\.xlsx$/i.test(name)) {
+    var files = Utilities.unzip(a.copyBlob().setContentType('application/zip')), sheet = '', shared = '';
+    files.forEach(function (f) {
+      if (f.getName() === 'xl/worksheets/sheet1.xml') sheet = f.getDataAsString('UTF-8');
+      if (f.getName() === 'xl/sharedStrings.xml') shared = f.getDataAsString('UTF-8');
+    });
+    var r = sheet ? xlsxReadInvoice(sheet, shared) : null;
+    if (!r || !r.lines.length) return null;
+    if (!r.client) r.client = clientOf(people + ' ' + name, clients);
+    return r;
+  }
+  return parseInvoice(docxXml(a), name, sentDate, people, clients);
+}
 function docxXml(blob) {
   var files = Utilities.unzip(blob.copyBlob().setContentType('application/zip'));
   for (var i = 0; i < files.length; i++) if (files[i].getName() === 'word/document.xml') return files[i].getDataAsString('UTF-8');
@@ -383,7 +400,7 @@ function parseInvoice(xml, fileName, sentDate, people, knownClients) {
   var d = fileDates(fileName, sentDate);
   return { num: nm ? nm[1] : '', client: clientOf(all + ' ' + fileName + ' ' + people, knownClients), lines: lines,
            start_date: d ? d.start : null, end_date: d ? d.end : null,
-           month: d ? d.start.slice(0, 7) : sentDate.getFullYear() + '-' + docxPad(sentDate.getMonth() + 1) };
+           month: d ? d.start.slice(0, 7) : sentDate.getFullYear() + '-' + pad2(sentDate.getMonth() + 1) };
 }
 function fileDates(fileName, sentDate) {
   var m = fileName.replace(/docx/gi, ' ').match(/(\d{1,2})[.\-](\d{1,2})(?:[.\-](\d{1,2}))?\.?\s*(20\d\d)/);
@@ -405,7 +422,7 @@ function fileDates(fileName, sentDate) {
   if (mon < 1 || mon > 12) return null;
   var last = new Date(y, mon, 0).getDate();
   d1 = Math.min(Math.max(d1, 1), last); d2 = Math.min(Math.max(d2 || d1, d1), last);
-  return { start: y + '-' + docxPad(mon) + '-' + docxPad(d1), end: y + '-' + docxPad(mon) + '-' + docxPad(d2) };
+  return { start: y + '-' + pad2(mon) + '-' + pad2(d1), end: y + '-' + pad2(mon) + '-' + pad2(d2) };
 }
 function clientOf(text, known) {
   var t = text.toLowerCase();
@@ -417,5 +434,5 @@ function clientOf(text, known) {
   return 'Այլ';
 }
 
-/* ---------- Word file (same code as the website's invoice-docx.js) ---------- */
-//@@DOCX@@
+/* ---------- Excel invoice (same code as the website's invoice-xlsx.js) ---------- */
+//@@XLSX@@
