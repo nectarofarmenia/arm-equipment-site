@@ -10,7 +10,7 @@ const IT={
   st1:"Հաշիվներ ամսվա ընթացքում",st2:"Ուղարկված Էմմային (հաստատման)",st3:"Էմմայի պատասխանը",st4:"Ուղարկված Հասմիկին (դուրս գրելու)",st5:"Հասմիկի պատասխանը",
   notYet:"Դեռ ոչ",autoAt:"Ինքնաշխատ՝ ",waitDays:"Սպասում ենք՝ օր",fups:"Հիշեցումներ",nextFup:"Հաջորդ հիշեցումը՝ ",sendNow:"Ուղարկել հիմա",remind:"Ուղարկել հիշեցում",markReplied:"Նշել՝ պատասխանել է",
   replied:"Պատասխանել է",mlog:"Պատմություն",prevMonths:"Նախորդ ամիսներ",stage:"Փուլ",openInv:"Բացել հաշիվները",fupDays:"Հիշեցում՝ քանի օր անպատասխան մնալուց հետո",fupMax:"Առավելագույնը քանի հիշեցում",reqDomains:"Պատվերի նամակներ ընդունել այս հասցեներից (դոմեյն)",
-  r_done:"Ավարտված է",auto:"Ավտոմատ",back:"Հետ",fwd:"Առաջ",allMonths:"Բոլոր ամիսները",mReset:"Վերսկսել ամիսը",mResetHint:"Փորձարկումից հետո՝ ջնջում է այս ամսվա նամակագրության փուլերը, հաշիվները դառնում են սևագիր",mResetQ:"Ջնջե՞լ այս ամսվա փուլերը և հաշիվները դարձնել սևագիր",yes2:"Այո"},
+  r_done:"Ավարտված է",auto:"Ավտոմատ",back:"Հետ",fwd:"Առաջ",allMonths:"Բոլոր ամիսները",monthsHint:"Կարող եք ընտրել մի քանի ամիս",monthsN:"ամիս",mReset:"Վերսկսել ամիսը",mResetHint:"Փորձարկումից հետո՝ ջնջում է այս ամսվա նամակագրության փուլերը, հաշիվները դառնում են սևագիր",mResetQ:"Ջնջե՞լ այս ամսվա փուլերը և հաշիվները դարձնել սևագիր",yes2:"Այո"},
  en:{tInv:"Invoices",tCal:"Calendar",tInc:"Income",newInv:"+ New invoice",invNo:"Invoice",num:"Invoice number",repMonth:"Reporting month",line:"Line",addLine:"+ Line",split:"Split",status:"Status",note:"Notes (manager's corrections etc.)",word:"Excel file",copyMail:"Copy email text",copied:"Copied",del:"Delete",delQ:"Delete this invoice?",yes:"Yes, delete",no:"No",noDate:"No date",noInv:"No invoices yet.",
   i_draft:"Draft",i_manager:"Sent to manager",i_approved:"Approved",i_accountant:"Sent to accountant",workDays:"Working days",thisMonth:"this month",days:"days",monthWork:"Work this month",noWork:"No working days this month.",
   yearIncome:"total income",allYears:"All years",byMonth:"By month",byYear:"By year",month:"Month",year:"Year",sharesT:"Partner split",sharesHint:"Percentages are taken from each invoice total and must add up to 100%. Changes apply to new invoices only.",
@@ -19,7 +19,7 @@ const IT={
   st1:"Invoices during the month",st2:"Sent to Emma (for approval)",st3:"Emma\u2019s reply",st4:"Sent to Hasmik (to issue)",st5:"Hasmik\u2019s reply",
   notYet:"Not yet",autoAt:"Automatically: ",waitDays:"Waiting, days",fups:"Reminders",nextFup:"Next reminder: ",sendNow:"Send now",remind:"Send reminder",markReplied:"Mark as replied",
   replied:"Replied",mlog:"History",prevMonths:"Previous months",stage:"Stage",openInv:"Open invoices",fupDays:"Reminder after how many days without reply",fupMax:"Maximum number of reminders",reqDomains:"Accept request emails from these domains",
-  r_done:"Done",auto:"Auto",back:"Back",fwd:"Forward",allMonths:"All months",mReset:"Restart month",mResetHint:"After testing: clears this month\u2019s stages and sets its invoices back to draft",mResetQ:"Clear this month\u2019s stages and set invoices back to draft?",yes2:"Yes"}
+  r_done:"Done",auto:"Auto",back:"Back",fwd:"Forward",allMonths:"All months",monthsHint:"You can pick several months",monthsN:"months",mReset:"Restart month",mResetHint:"After testing: clears this month\u2019s stages and sets its invoices back to draft",mResetQ:"Clear this month\u2019s stages and set invoices back to draft?",yes2:"Yes"}
 };
 const it=k=>(IT[lang][k]??t(k));
 const MONTHS={hy:["Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս","Օգոստոս","Սեպտեմբեր","Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
@@ -116,8 +116,9 @@ function wfBar(c,ym){const tp=IS.tpl||{};if(c!==(tp.workflowClient||"Hilton"))re
   <span class="sp" style="flex:1"></span><button class="btn sm" data-wf="manager:${esc(c)}:${ym}">✉ ${it("wfTo")}</button><button class="btn sm" data-wf="accountant:${esc(c)}:${ym}">✉ ${it("wfAcc")}</button></div>`}
 function crumbs(){let h=`<nav class="crumbs"><button data-crumb="root" ${IS.client?"":'aria-current="page"'}>${it("orgs")}</button>`;
   if(IS.client)h+=`<span>›</span><button data-crumb="client" ${IS.iyear?"":'aria-current="page"'}>${esc(IS.client)}</button>`;
-  if(IS.iyear)h+=`<span>›</span><button data-crumb="year" ${IS.imonth?"":'aria-current="page"'}>${IS.iyear}</button>`;
-  if(IS.iyear&&IS.imonth)h+=`<span>›</span><button aria-current="page">${esc(MONTHS[lang][IS.imonth-1])}</button>`;return h+`</nav>`}
+  const ms=IS.imonths||[];
+  if(IS.iyear)h+=`<span>›</span><button data-crumb="year" ${ms.length?"":'aria-current="page"'}>${IS.iyear}</button>`;
+  if(IS.iyear&&ms.length)h+=`<span>›</span><button aria-current="page">${esc(ms.length>3?ms.length+" "+it("monthsN"):ms.map(m=>MONTHS[lang][m-1]).join(", "))}</button>`;return h+`</nav>`}
 function vInvoices(){
   if(IS.edit)return vInvEditor();
   let h=`<div class="row" style="margin-bottom:12px">${crumbs()}<span class="sp" style="flex:1"></span><button class="btn pri" id="invNew">${it("newInv")}</button></div>`;
@@ -131,9 +132,11 @@ function vInvoices(){
     const und=mine.filter(v=>!monthOf(v));if(und.length)h+=`<h2>${it("noDate")}</h2><div class="list">${und.map(v=>invCard(v,1)).join("")}</div>`;
     return h}
   const yearList=mine.filter(v=>(monthOf(v)||"").startsWith(IS.iyear+"-"));
-  const mcount=m=>yearList.filter(v=>monthOf(v)===IS.iyear+"-"+pad(m)).length;
-  h+=`<div class="filters mfil"><button data-im="0" aria-pressed="${!IS.imonth}">${it("allMonths")}</button>${MONTHS[lang].map((nm,i)=>{const n=mcount(i+1);return `<button data-im="${i+1}" aria-pressed="${IS.imonth===i+1}" ${n?"":'class="mz"'}>${esc(nm)}${n?` <span class="mc">${n}</span>`:""}</button>`}).join("")}</div>`;
-  const list=IS.imonth?yearList.filter(v=>monthOf(v)===IS.iyear+"-"+pad(IS.imonth)):yearList;
+  const mcount=m=>yearList.filter(v=>monthOf(v)===IS.iyear+"-"+pad(m)).length,sel=IS.imonths||[];
+  const last=Math.max(new Date().getFullYear(),...mine.map(v=>+(monthOf(v)||"0").slice(0,4))),yopts=[];for(let y=last;y>=FIRST_YEAR;y--)yopts.push(y);
+  h+=`<div class="row" style="margin:4px 0 8px"><label class="ysel">${it("year")}<select id="ySel">${yopts.map(y=>`<option value="${y}" ${y===IS.iyear?"selected":""}>${y}</option>`).join("")}</select></label><span class="muted" style="font-size:.85rem">${it("monthsHint")}</span></div>`;
+  h+=`<div class="filters mfil"><button data-im="0" aria-pressed="${!sel.length}">${it("allMonths")}</button>${MONTHS[lang].map((nm,i)=>{const n=mcount(i+1);return `<button data-im="${i+1}" aria-pressed="${sel.includes(i+1)}" ${n?"":'class="mz"'}>${esc(nm)}${n?` <span class="mc">${n}</span>`:""}</button>`}).join("")}</div>`;
+  const list=sel.length?yearList.filter(v=>sel.includes(+String(monthOf(v)).slice(5,7))):yearList;
   if(!list.length)return h+`<div class="empty">${it("noInvYear")}</div>`;
   const a=agg(list);h+=`<div class="row" style="margin:6px 0 4px"><b class="num" style="font-size:1.6rem">${fmt(a._total)} ${t("amd")}</b><span class="muted">${list.length} ${it("nInv")}</span></div>`+shareCards(a);
   const g={};[...list].sort((a,b)=>(b.start_date||"0").localeCompare(a.start_date||"0")||String(b.num).localeCompare(String(a.num),undefined,{numeric:true})).forEach(v=>{const k=monthOf(v);(g[k]=g[k]||[]).push(v)});
@@ -294,9 +297,9 @@ document.addEventListener("click",async e=>{
   if(b.id==="navFwd"){history.forward();return}
   if(b.dataset.inv){const v=IS.inv.find(x=>String(x.id)===b.dataset.inv);if(v)openInvoice(v);return}
   if(b.dataset.org){IS.client=b.dataset.org;IS.iyear=null;render();scrollTo(0,0);return}
-  if(b.dataset.iy){IS.iyear=+b.dataset.iy;IS.imonth=0;render();scrollTo(0,0);return}
-  if(b.dataset.im!=null&&b.closest(".mfil")){IS.imonth=+b.dataset.im;render();return}
-  if(b.dataset.crumb){if(b.dataset.crumb==="root")IS.client=null;if(b.dataset.crumb!=="year")IS.iyear=null;IS.imonth=0;render();return}
+  if(b.dataset.iy){IS.iyear=+b.dataset.iy;IS.imonths=[];render();scrollTo(0,0);return}
+  if(b.dataset.im!=null&&b.closest(".mfil")){const m=+b.dataset.im;if(!m)IS.imonths=[];else{const a=new Set(IS.imonths||[]);a.has(m)?a.delete(m):a.add(m);IS.imonths=[...a].sort((x,y)=>x-y)}render();return}
+  if(b.dataset.crumb){if(b.dataset.crumb==="root")IS.client=null;if(b.dataset.crumb!=="year")IS.iyear=null;IS.imonths=[];render();return}
   if(b.id==="dirConnect"){await connectDir();return}
   if(b.id==="dirAllow"){await ensureDir();render();await syncDir();return}
   if(b.id==="iSaveDir"){await saveFile(readInv(),false);return}
@@ -337,6 +340,7 @@ document.addEventListener("click",async e=>{
   if(b.id==="shAdd"){$("#shRows").insertAdjacentHTML("beforeend",shRow({name:"",pct:0}));updSum();return}
   if(b.classList.contains("shX")){b.closest(".shr").remove();updSum();return}
 });
+document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}});
 document.addEventListener("input",e=>{
   if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
   if(e.target.closest("#shRows"))updSum();
@@ -356,7 +360,7 @@ document.addEventListener("submit",async e=>{
 });
 
 /* ----- browser Back stays inside the admin (and a visible ‹ Back button) ----- */
-const navKey=()=>JSON.stringify({tab:S.tab,client:IS.client,iyear:IS.iyear,imonth:IS.imonth||0,edit:IS.edit?(IS.edit.id||"new"):null,ym:IS.mailYm});
+const navKey=()=>JSON.stringify({tab:S.tab,client:IS.client,iyear:IS.iyear,imonths:(IS.imonths||[]).join(","),edit:IS.edit?(IS.edit.id||"new"):null,ym:IS.mailYm});
 let NAV_LAST=null,NAV_POP=false,NAV_DEPTH=0,NAV_MAX=0;
 const _renderPortal=render;
 render=function(){
@@ -370,6 +374,6 @@ render=function(){
 window.addEventListener("popstate",e=>{
   const st=e.state;if(!st||!st.ae||!S.profile||!S.profile.is_admin)return;
   const o=JSON.parse(st.ae);NAV_POP=true;NAV_DEPTH=st.d||0;
-  S.tab=o.tab;IS.client=o.client;IS.iyear=o.iyear;IS.imonth=o.imonth||0;IS.mailYm=o.ym;
+  S.tab=o.tab;IS.client=o.client;IS.iyear=o.iyear;IS.imonths=o.imonths?String(o.imonths).split(",").map(Number):[];IS.mailYm=o.ym;
   if(o.edit&&o.edit!=="new"){const v=IS.inv.find(x=>String(x.id)===String(o.edit));IS.edit=v?JSON.parse(JSON.stringify(v)):null}else IS.edit=null;
   NAV_LAST=navKey();render();if(IS.edit)invTotals();scrollTo(0,0)});
