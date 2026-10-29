@@ -152,7 +152,9 @@ nav.tabs .navarr button:hover:not(:disabled){background:var(--gold);color:var(--
 nav.tabs .navarr button:disabled{color:rgba(201,162,74,.3);border-color:rgba(201,162,74,.25);cursor:default}
 .totop{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:15;width:42px;height:42px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(8,16,32,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s}
 .totop:hover{transform:translateY(-2px)}.totop.off{opacity:0;transform:translateY(12px);pointer-events:none}
-main .cal{max-width:760px}main .months{max-width:1000px}
+.calwrap{display:grid;grid-template-columns:minmax(0,640px) minmax(260px,1fr);gap:24px;align-items:start;margin-top:14px}
+.calwrap .cal{margin-top:0}.calside .months{grid-template-columns:repeat(3,minmax(0,1fr))}.mo.cur{outline:2px solid var(--gold);outline-offset:-2px}
+@media (max-width:900px){.calwrap{grid-template-columns:1fr}.calside .months{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0 6px}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .kpi span{font-size:.8rem;color:var(--muted)}.kpi b{font-size:1.25rem}.kpi small{font-size:.78rem;color:var(--muted)}.kpi.best{border-color:var(--gold);background:var(--warn-soft)}

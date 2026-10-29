@@ -171,12 +171,12 @@ function vCalendar(){
   const off=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();
   const mDays=Object.keys(byDay).filter(d=>d.startsWith(y+"-"+pad(m+1))),yDays=Object.keys(byDay).filter(d=>d.startsWith(y+"-"));
   let h=`<div class="row"><button class="btn sm" id="cPrev" aria-label="‹">‹</button><h1 style="margin:0;min-width:170px;text-align:center">${MONTHS[lang][m]} ${y}</h1><button class="btn sm" id="cNext" aria-label="›">›</button><span class="sp" style="flex:1"></span><span class="muted">${it("workDays")}: <b>${mDays.length}</b> ${it("thisMonth")} · <b>${yDays.length}</b> ${y}</span></div>
-  <div class="cal">${WD[lang].map(w=>`<div class="dh">${w}</div>`).join("")}${"<div class='c e'></div>".repeat(off)}`;
+  <div class="calwrap"><div class="cal">${WD[lang].map(w=>`<div class="dh">${w}</div>`).join("")}${"<div class='c e'></div>".repeat(off)}`;
   for(let d=1;d<=n;d++){const k=y+"-"+pad(m+1)+"-"+pad(d),w=byDay[k];h+=`<button class="c ${w?"w":""} ${k===todayIso?"today":""}" ${w?`data-day="${k}"`:"tabindex='-1'"}>${d}</button>`}
   h+=`</div>`;
+  h+=`<div class="calside"><h2 style="margin-top:0">${y}</h2><div class="months">${MONTHS[lang].map((nm2,i)=>{const dd=yDays.filter(d=>d.slice(5,7)===pad(i+1)).length;return `<button class="mo ${dd?"has":""} ${i===m?"cur":""}" data-mo="${i}"><b>${nm2}</b><span>${dd} ${it("days")}</span></button>`}).join("")}</div></div></div>`;
   const pick=IS.dayPick&&byDay[IS.dayPick]?IS.dayPick:null;const show=pick?byDay[pick]:[...new Set(mDays.flatMap(d=>byDay[d]))];
   h+=`<h2>${pick?esc(pick):it("monthWork")}</h2>`+(show.length?`<div class="list">${show.map(invCard).join("")}</div>`:`<div class="empty">${it("noWork")}</div>`);
-  h+=`<h2>${y}</h2><div class="months">${MONTHS[lang].map((nm2,i)=>{const dd=yDays.filter(d=>d.slice(5,7)===pad(i+1)).length;return `<button class="mo ${dd?"has":""}" data-mo="${i}"><b>${nm2}</b><span>${dd} ${it("days")}</span></button>`}).join("")}</div>`;
   return h;
 }
 
