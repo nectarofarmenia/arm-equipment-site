@@ -107,8 +107,17 @@ function invoiceTable(invs, lang) {
   t += (en ? 'Total: ' : 'Ընդամենը՝ ') + fmt(tot) + (en ? ' AMD' : ' դր.') + '\n';
   return { html: h, text: t, total: tot };
 }
+/* site-style frame for emails: logo, gold rule, footer */
+function brandWrap(inner) {
+  return '<div style="background:#f3efe3;padding:24px 12px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6dcc3">' +
+    '<tr><td style="padding:18px 24px 14px"><a href="https://www.arm-equipment.com"><img src="https://www.arm-equipment.com/email-logo.png" width="200" height="32" alt="ARMEQUIPMENT" style="display:block;border:0"></a></td></tr>' +
+    '<tr><td style="height:4px;background:#c9a24a;line-height:4px;font-size:0">&nbsp;</td></tr>' +
+    '<tr><td style="padding:22px 24px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#14284b">' + inner + '</td></tr>' +
+    '<tr><td style="background:#14284b;padding:12px 24px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#d9d2bf">Berry Line ՍՊԸ · <a href="mailto:armequipment@gmail.com" style="color:#c9a24a;text-decoration:none">armequipment@gmail.com</a> · <a href="https://www.arm-equipment.com" style="color:#c9a24a;text-decoration:none">arm-equipment.com</a></td></tr>' +
+    '</table></div>';
+}
 function sendWithThread(to, subject, text, html, attachments) {
-  var d = GmailApp.createDraft(to, subject, text, { htmlBody: html, attachments: attachments, name: SENDER_NAME });
+  var d = GmailApp.createDraft(to, subject, text, { htmlBody: brandWrap(html), attachments: attachments, name: SENDER_NAME });
   var m = d.send();
   return m.getThread().getId();
 }
@@ -303,7 +312,7 @@ function summaryEmail(ym) {
   });
   h += '</table><p style="margin-top:20px"><a href="https://www.arm-equipment.com/portal" style="color:#14284b">Բացել կայքում</a></p></div>';
   if (!d.count) { h = '<p style="font-family:Arial">' + esc(title) + '՝ հաշիվներ չկան։</p>'; t = title + ': հաշիվներ չկան։'; }
-  return { subject: 'ArmEquipment — ամսվա ամփոփում ' + title + ' — ' + fmt(d.total) + ' դր.', html: h, text: t };
+  return { subject: 'ArmEquipment — ամսվա ամփոփում ' + title + ' — ' + fmt(d.total) + ' դր.', html: brandWrap(h), text: t };
 }
 
 /* invoices that arrive or are sent by email (mostly from Hilton staff) */
