@@ -133,6 +133,14 @@ th{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;
 .months{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .mo{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;display:flex;flex-direction:column}
 .mo.has{border-color:var(--gold)}.mo span{font-size:.78rem;color:var(--muted)}
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}.crumbs span{color:var(--muted)}
+.crumbs button{background:none;border:0;padding:4px 6px;border-radius:6px;font:600 1rem var(--f-body);color:var(--navy);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.crumbs button[aria-current="page"]{text-decoration:none;color:var(--ink);cursor:default}
+.dirbar{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:.9rem}
+.orgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.org{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:30px 16px 14px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.org:hover{border-color:var(--gold)}.org b{font-size:1.08rem}.org .amt{font-weight:700;font-size:1.05rem;margin-top:4px}
+.org .fold{position:absolute;top:10px;left:16px;width:34px;height:12px;background:var(--gold);border-radius:4px 10px 0 0}
 </style>
 </head>
 <body>

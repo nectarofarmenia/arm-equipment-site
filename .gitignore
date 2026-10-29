@@ -1,3 +1,5 @@
 supabase/import_invoices.sql
 *.zip
 .DS_Store
+supabase/003_import_hilton_folder.sql
+supabase/*import*.sql
