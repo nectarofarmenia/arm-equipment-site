@@ -277,7 +277,66 @@ function vMail(){
 
 /* ----- taxes, analytics (content to be defined) ----- */
 function vTaxes(){return `<h1>${t("tTax")}</h1><div class="empty">${lang==="en"?"This section is being prepared.":"Այս բաժինը պատրաստվում է։"}</div>`}
-function vAnalytics(){return `<h1>${t("tAna")}</h1><div class="empty">${lang==="en"?"This section is being prepared.":"Այս բաժինը պատրաստվում է։"}</div>`}
+/* Analytics: which years earned most, which months are active / quiet.
+   Seasonality index = average revenue of a calendar month (over complete years with work)
+   ÷ average month × 100. ≥120 active, 80–119 normal, <80 quiet. */
+function vAnalytics(){
+  const en=lang==="en",L=(hy,e)=>en?e:hy,org=IS.aorg||"all";
+  const all=IS.inv.filter(v=>monthOf(v));
+  const list=org==="all"?all:all.filter(v=>cl(v)===org);
+  const now=new Date(),cy=now.getFullYear(),cm=now.getMonth()+1;
+  const by={};list.forEach(v=>{const ym=monthOf(v),y=+ym.slice(0,4),m=+ym.slice(5,7);const o=(by[y]=by[y]||{t:0,n:0,m:Array(13).fill(0),c:Array(13).fill(0),days:new Set()});const tt=invTotal(v);o.t+=tt;o.n++;o.m[m]+=tt;o.c[m]++;dayList(v).forEach(d=>o.days.add(d))});
+  const ys=Object.keys(by).map(Number).sort((a,b)=>a-b);
+  let h=`<h1>${t("tAna")}</h1>`;
+  h+=`<div class="filters">${["all",...clientNames()].map(c=>`<button data-aorg="${esc(c)}" aria-pressed="${org===c}">${c==="all"?it("allOrgs"):esc(c)}</button>`).join("")}</div>`;
+  if(!ys.length)return h+`<div class="empty">${it("noInv")}</div>`;
+  const full=ys.filter(y=>y<cy);                       // complete years
+  const total=ys.reduce((a,y)=>a+by[y].t,0);
+  const best=[...ys].filter(y=>y<cy||ys.length===1).sort((a,b)=>by[b].t-by[a].t)[0]??ys[ys.length-1];
+  // same-period comparison for the current year
+  const ytd=y=>{const o=by[y];if(!o)return 0;let s=0;for(let m=1;m<=cm;m++)s+=o.m[m];return s};
+  const cyGrowth=by[cy]&&by[cy-1]&&ytd(cy-1)?Math.round((ytd(cy)/ytd(cy-1)-1)*100):null;
+  // seasonality over complete years that had any work
+  const base=full.length?full:ys;
+  const mAvg=Array(13).fill(0);for(let m=1;m<=12;m++)mAvg[m]=base.reduce((a,y)=>a+by[y].m[m],0)/base.length;
+  const avgMonth=mAvg.slice(1).reduce((a,b)=>a+b,0)/12||1;
+  const idx=m=>Math.round(mAvg[m]/avgMonth*100);
+  const cls=i=>i>=120?"hi":i>=80?"mid":"lo";
+  const lbl=i=>i>=120?L("Ակտիվ","Active"):i>=80?L("Նորմալ","Normal"):L("Պասիվ","Quiet");
+  const order=[...Array(12).keys()].map(i=>i+1).sort((a,b)=>idx(b)-idx(a));
+  const pct=(a,b)=>b?Math.round(a/b*100):0;
+  // KPIs
+  h+=`<div class="kpis">
+   <div class="kpi"><span>${L("Ընդհանուր եկամուտ","Total revenue")}</span><b class="num">${fmt(total)}</b><small>${ys[0]}–${ys[ys.length-1]} · ${list.length} ${it("nInv")}</small></div>
+   <div class="kpi best"><span>${L("Ամենաեկամտաբեր տարին","Best year")}</span><b>${best}</b><small class="num">${fmt(by[best].t)} ${t("amd")}</small></div>
+   <div class="kpi"><span>${L("Ամենաակտիվ ամիսները","Busiest months")}</span><b>${order.slice(0,3).map(m=>MONTHS[lang][m-1]).join(", ")}</b><small>${L("ինդեքս","index")} ${order.slice(0,3).map(idx).join(" / ")}</small></div>
+   <div class="kpi"><span>${L("Ամենապասիվ ամիսները","Quietest months")}</span><b>${order.slice(-3).reverse().map(m=>MONTHS[lang][m-1]).join(", ")}</b><small>${L("ինդեքս","index")} ${order.slice(-3).reverse().map(idx).join(" / ")}</small></div>
+   ${by[cy]?`<div class="kpi"><span>${cy} ${L("(ընթացիկ)","(so far)")}</span><b class="num">${fmt(by[cy].t)}</b><small>${cyGrowth==null?"":(cyGrowth>=0?"▲ +":"▼ ")+cyGrowth+"% "+L("նախորդ տարվա նույն ժամանակահատվածի համեմատ","vs same period last year")}</small></div>`:""}
+  </div>`;
+  // Years ranking
+  const maxY=Math.max(...ys.map(y=>by[y].t))||1;
+  const rank=[...ys].sort((a,b)=>by[b].t-by[a].t);
+  h+=`<h2>${L("Տարիներն ըստ եկամտի","Years by revenue")}</h2><div class="tw"><table class="ana"><thead><tr><th>${it("year")}</th><th>${L("Եկամուտ","Revenue")}</th><th class="r">${L("Հաշիվ","Invoices")}</th><th class="r">${L("Միջին հաշիվ","Avg invoice")}</th><th class="r">${L("Աշխ. օր","Work days")}</th><th class="r">${L("Փոփոխություն","Change")}</th><th class="r">${L("Տեղ","Rank")}</th></tr></thead><tbody>`;
+  for(let y=ys[0];y<=ys[ys.length-1];y++){const o=by[y];
+    if(!o){h+=`<tr class="muted"><td>${y}</td><td colspan="6">${L("աշխատանք չի եղել / տվյալ չկա","no data")}</td></tr>`;continue}
+    const prev=by[y-1],ch=prev&&prev.t?Math.round((o.t/prev.t-1)*100):null,r=rank.indexOf(y)+1;
+    h+=`<tr ${y===best?'class="bestrow"':""}><td><b>${y}</b>${y===cy?` <span class="muted">${L("(ընթացիկ)","(so far)")}</span>`:""}</td>
+     <td style="min-width:220px"><div class="bar"><i style="width:${pct(o.t,maxY)}%"></i><span class="num">${fmt(o.t)}</span></div></td>
+     <td class="r num">${o.n}</td><td class="r num">${fmt(o.t/o.n)}</td><td class="r num">${o.days.size}</td>
+     <td class="r num ${ch==null?"":ch>=0?"up":"down"}">${ch==null||y===cy?"—":(ch>=0?"▲ +":"▼ ")+ch+"%"}</td><td class="r">${y===best?"🏆 ":""}${r}</td></tr>`}
+  h+=`</tbody></table></div>`;
+  // Seasonality
+  h+=`<h2>${L("Սեզոնայնություն՝ ակտիվ և պասիվ ամիսներ","Seasonality: active and quiet months")}</h2>
+   <p class="muted" style="margin-top:-4px">${L(`Ինդեքսը ցույց է տալիս, թե ամիսը միջինից որքան է ավելի կամ պակաս (100 = միջին ամիս)։ Հաշվված է ${base.length} ամբողջական տարվա միջինով (${base[0]}–${base[base.length-1]})։ ≥120՝ ակտիվ, 80–119՝ նորմալ, <80՝ պասիվ։`,`The index shows how a month compares with an average month (100 = average), using ${base.length} complete years (${base[0]}–${base[base.length-1]}). ≥120 active, 80–119 normal, <80 quiet.`)}</p>
+   <div class="season">${[...Array(12).keys()].map(i=>{const m=i+1,x=idx(m);return `<div class="sm ${cls(x)}"><span class="mn">${MONTHS[lang][i]}</span><span class="bars"><i style="height:${Math.min(100,Math.round(x/2))}%"></i></span><b class="num">${x}</b><small>${lbl(x)}</small><small class="num">${L("միջին","avg")} ${fmt(mAvg[m])}</small></div>`}).join("")}</div>`;
+  // Heatmap year × month
+  const maxCell=Math.max(...ys.flatMap(y=>by[y].m.slice(1)))||1;
+  h+=`<h2>${L("Ամիսներն ըստ տարիների","Months by year")}</h2><div class="tw"><table class="heat"><thead><tr><th>${it("year")}</th>${MONTHS[lang].map(n=>`<th>${esc(n.slice(0,3))}</th>`).join("")}<th class="r">${it("total")}</th></tr></thead><tbody>`;
+  ys.slice().reverse().forEach(y=>{const o=by[y];h+=`<tr><td><b>${y}</b></td>${o.m.slice(1).map((v,i)=>{const a=v?0.12+0.88*v/maxCell:0;return `<td class="hc" title="${esc(MONTHS[lang][i])} ${y}: ${fmt(v)} ${t("amd")} · ${o.c[i+1]} ${it("nInv")}" style="background:${v?`rgba(201,162,74,${a.toFixed(2)})`:"transparent"};${a>0.6?"color:#14284b;font-weight:700":""}">${v?fmt(Math.round(v/1000))+"k":"·"}</td>`}).join("")}<td class="r num"><b>${fmt(o.t)}</b></td></tr>`});
+  h+=`</tbody></table></div><p class="muted" style="font-size:.85rem">${L("Թվերը հազար դրամով են։ Որքան մուգ ոսկեգույն, այնքան շատ եկամուտ։","Figures in thousand AMD. Darker gold means more revenue.")}</p>`;
+  // Organizations
+  if(org==="all"){const cs=clientStats();h+=`<h2>${L("Կազմակերպություններ","Organizations")}</h2><div class="tw"><table class="ana"><thead><tr><th>${it("client")}</th><th>${L("Տարիներ","Years")}</th><th>${L("Եկամուտ","Revenue")}</th><th class="r">${it("nInv")}</th><th class="r">${L("Բաժին","Share")}</th></tr></thead><tbody>${cs.map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${c.min&&c.min!==c.max?c.min+"–"+c.max:c.min}</td><td style="min-width:200px"><div class="bar"><i style="width:${pct(c.tot,cs[0]?Math.max(...cs.map(x=>x.tot)):1)}%"></i><span class="num">${fmt(c.tot)}</span></div></td><td class="r num">${c.n}</td><td class="r num">${pct(c.tot,total)}%</td></tr>`).join("")}</tbody></table></div>`}
+  return h}
 
 /* ----- email settings, requests ----- */
 function vEmail(){const e=IS.email||{},b=IS.bot,errs=IS.outbox.filter(o=>o.status==="error").length;
@@ -326,6 +385,7 @@ document.addEventListener("click",async e=>{
     const {error}=await sb.from("outbox").insert({kind:"summary",to_addr:to,subject:ym});if(error)return toast(t("errGeneric"));toast(it("queued"));await refresh();return}
   if(b.id==="eCopySecret"){try{await navigator.clipboard.writeText(IS.bot.secret);toast(it("copied"))}catch(_){}return}
   if(b.dataset.pc){IS.pclient=b.dataset.pc;render();return}
+  if(b.dataset.aorg){IS.aorg=b.dataset.aorg;render();return}
   if(b.id==="invNew"){openInvoice({client:IS.client||"Hilton",num:nextNum(IS.client||"Hilton"),start_date:todayIso,end_date:todayIso,month:null,lines:[{name:"",price:"",qty:1}],status:"draft",note:""});return}
   if(b.dataset.mkinv){const o=S.orders.find(x=>x.id===+b.dataset.mkinv);if(!o)return;const oc=(S.clients.find(c=>c.id===o.client_id)||{}).org||"";openInvoice({client:oc,num:nextNum(oc),start_date:o.start_date,end_date:o.end_date||o.start_date,month:null,order_id:o.id,status:"draft",note:"",lines:(S.items[o.id]||[]).map(i=>({name:i.name_en&&i.name_hy?i.name_en+" / "+i.name_hy:i.name_hy,price:i.price||0,qty:i.qty}))});return}
   if(b.id==="invBack"){IS.edit=null;render();return}
