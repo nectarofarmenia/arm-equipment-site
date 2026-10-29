@@ -275,6 +275,58 @@ function vMail(){
   if(prev.length)h+=`<h2>${it("prevMonths")}</h2><div class="list">${prev.map(x=>`<button class="inv" data-mym="${x.month}"><span class="ttl">${esc(monthLabel(x.month))}</span><span class="num ttl">${fmt(x.total)} ${t("amd")}</span><span class="sub">${x.invoice_count} ${it("nInv")}</span><span><span class="pill ist-${x.status==="done"?"accountant":x.status==="needs_review"?"manager":"approved"}">${esc(it("r_"+x.status))}</span></span></button>`).join("")}</div>`;
   return h}
 
+/* ----- admin home: welcome, urgent notices, key figures ----- */
+function vHome(){
+  const en=lang==="en",L=(hy,e)=>en?e:hy,tp=IS.tpl||{},now=new Date(),ym=todayIso.slice(0,7),cy=now.getFullYear();
+  const name=(S.profile.full_name||"").split(/\s+/)[0]||"";
+  const hr=now.getHours(),greet=hr<12?L("Բարի լույս","Good morning"):hr<18?L("Բարի օր","Good afternoon"):L("Բարի երեկո","Good evening");
+  const WDL=en?["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]:["Կիրակի","Երկուշաբթի","Երեքշաբթի","Չորեքշաբթի","Հինգշաբթի","Ուրբաթ","Շաբաթ"];
+  const dstr=WDL[now.getDay()]+", "+now.getDate()+" "+MONTHS[lang][now.getMonth()]+" "+cy;
+  const A=[];const add=(lvl,ic,title,sub,go)=>A.push({lvl,ic,title,sub,go});
+  // urgent
+  const errs=IS.outbox.filter(o=>o.status==="error").length;
+  const bot=IS.bot,botAge=bot&&bot.last_seen?(now-new Date(bot.last_seen))/36e5:999;
+  if(!bot||botAge>2)add("red","🤖",L("Ռոբոտը չի աշխատում","The robot is not running"),bot&&bot.last_seen?L("Վերջին ստուգումը՝ ","Last check: ")+dtm(bot.last_seen):L("Gmail ռոբոտը դեռ միացված չէ","The Gmail robot is not connected"),"income");
+  if(errs)add("red","✉",errs+" "+L("նամակ չի ուղարկվել","email(s) failed to send"),L("Տե՛ս Եկամուտ → Email կապ","See Income → Email link"),"income");
+  const nr=IS.runs.filter(r=>r.status==="needs_review");
+  nr.forEach(r=>add("red","!",L("Էմման պատասխանել է, պետք է նայել","Manager replied, needs your review")+" — "+monthLabel(r.month),(r.reply_text||"").slice(0,120),"mail:"+r.month));
+  const pend=S.clients.filter(c=>c.status==="pending");
+  if(pend.length)add("gold","👤",pend.length+" "+L("նոր պատվիրատու սպասում է հաստատման","new client(s) waiting for approval"),pend.slice(0,3).map(c=>c.org||c.full_name||c.email).join(", "),"clients");
+  const newO=S.orders.filter(o=>o.status==="new");
+  if(newO.length)add("gold","📦",newO.length+" "+L("նոր պատվեր","new order(s)"),newO.slice(0,3).map(o=>"#"+o.id+" · "+(o.start_date||"")).join(", "),"orders");
+  const unc=IS.inv.filter(v=>v.checked===false);
+  if(unc.length)add("gold","⚠",unc.length+" "+L("չստուգված հաշիվ (նամակներից)","unchecked invoice(s) from emails"),L("Բացեք, ստուգեք և պահպանեք","Open, check and save them"),"mail:"+(monthOf(unc[0])||ym));
+  const lastDay=new Date(now.getFullYear(),now.getMonth()+1,0),daysLeft=lastDay.getDate()-now.getDate();
+  const curRun=IS.runs.find(r=>r.client===(tp.workflowClient||"Hilton")&&r.month===ym);
+  if(daysLeft<=3&&!curRun)add(unc.length?"red":"blue","📅",daysLeft===0?L("Այսօր ամսվա վերջին օրն է","Today is the last day of the month"):L(`Ամսվա վերջին ${daysLeft} օր է մնացել`,`${daysLeft} day(s) to month end`),tp.monthEndAuto!==false?L("18:00-ին հաշիվները ինքնաշխատ կգնան Էմմային","At 18:00 invoices go to the manager automatically")+(unc.length?L(" — նախ ստուգեք չստուգվածները"," — check the unchecked ones first"):""):L("Ուղարկեք հաշիվները Էմմային","Send the invoices to the manager"),"mail:"+ym);
+  const fd=+(tp.followupDays||5);
+  IS.runs.forEach(r=>{
+    if(r.status==="sent_to_manager"&&!r.manager_reply_at&&daysSince(r.manager_sent_at||r.sent_at)>=fd)add("blue","⏳",L("Էմման դեռ չի պատասխանել","No reply from the manager yet")+" — "+monthLabel(r.month),L(`${daysSince(r.manager_sent_at||r.sent_at)} օր · հիշեցումներ՝ ${r.manager_followups||0}`,`${daysSince(r.manager_sent_at||r.sent_at)} days · reminders: ${r.manager_followups||0}`),"mail:"+r.month);
+    if(r.status==="sent_to_accountant"&&!r.accountant_reply_at&&daysSince(r.accountant_sent_at)>=fd)add("blue","⏳",L("Հասմիկը դեռ չի պատասխանել","No reply from the accountant yet")+" — "+monthLabel(r.month),L(`${daysSince(r.accountant_sent_at)} օր · հիշեցումներ՝ ${r.accountant_followups||0}`,`${daysSince(r.accountant_sent_at)} days · reminders: ${r.accountant_followups||0}`),"mail:"+r.month)});
+  const inq=IS.inq.filter(q=>now-new Date(q.created_at)<3*864e5);
+  if(inq.length)add("blue","💬",inq.length+" "+L("նոր հարցում կայքից","new request(s) from the website"),inq.slice(0,3).map(q=>q.org||q.name).join(", "),"inquiries");
+  const order={red:0,gold:1,blue:2};A.sort((a,b)=>order[a.lvl]-order[b.lvl]);
+  // figures
+  const monthInv=IS.inv.filter(v=>monthOf(v)===ym),ma=agg(monthInv);
+  const yearInv=IS.inv.filter(v=>(monthOf(v)||"").startsWith(cy+"-")),ya=agg(yearInv);
+  const cm=now.getMonth()+1,pyYtd=agg(IS.inv.filter(v=>{const m=monthOf(v)||"";return m.startsWith((cy-1)+"-")&&+m.slice(5,7)<=cm}))._total;
+  const g=pyYtd?Math.round((ya._total/pyYtd-1)*100):null;
+  const days=new Set(monthInv.flatMap(dayList)).size;
+  const st=curRun?it("r_"+curRun.status):L("Դեռ չի ուղարկվել","Not sent yet");
+  const upc=S.orders.filter(o=>o.status!=="cancelled"&&o.start_date>=todayIso).sort((a,b)=>a.start_date.localeCompare(b.start_date)).slice(0,5);
+  let h=`<div class="hello"><h1>${greet}${name?", "+esc(name):""} 👋</h1><span class="muted">${esc(dstr)}</span></div>`;
+  h+=`<h2 style="margin-top:0">${L("Հրատապ","Needs attention")}${A.length?` <span class="pill ist-manager">${A.length}</span>`:""}</h2>`;
+  h+=A.length?`<div class="alerts">${A.map(x=>`<button class="alert ${x.lvl}" data-hgo="${esc(x.go)}"><span class="ic">${x.ic}</span><span class="tx"><b>${esc(x.title)}</b>${x.sub?`<span>${esc(x.sub)}</span>`:""}</span><span class="go">›</span></button>`).join("")}</div>`:`<div class="ok-all">✓ ${L("Հրատապ ոչինչ չկա։ Ամեն ինչ կարգին է։","Nothing urgent. All good.")}</div>`;
+  h+=`<div class="kpis">
+    <div class="kpi"><span>${esc(monthLabel(ym))}</span><b class="num">${fmt(ma._total)} ${t("amd")}</b><small>${monthInv.length} ${it("nInv")} · ${days} ${L("աշխ. օր","work days")}</small></div>
+    <div class="kpi"><span>${cy} ${L("տարին","year")}</span><b class="num">${fmt(ya._total)} ${t("amd")}</b><small>${g==null?"":(g>=0?"▲ +":"▼ ")+g+"% "+L("նախորդ տարվա նույն ժամանակահատվածի համեմատ","vs same period last year")}</small></div>
+    <div class="kpi"><span>${L("Ամսվա նամակագրություն","This month’s emails")}</span><b style="font-size:1rem">${esc(st)}</b><small>${tp.workflowClient||"Hilton"}</small></div>
+    <div class="kpi"><span>${L("Իմ բաժինը այս ամիս","My share this month")}</span><b class="num">${fmt(ma[(curShares()[0]||{}).name]||0)} ${t("amd")}</b><small>${esc((curShares()[0]||{}).name||"")}</small></div>
+  </div>`;
+  h+=`<h2>${L("Մոտակա աշխատանքներ","Upcoming work")}</h2>`+(upc.length?`<div class="upc">${upc.map(o=>{const c=S.clients.find(x=>x.id===o.client_id)||{};return `<button class="alert blue" data-hgo="orders"><span class="ic">📅</span><span class="tx"><b>${esc(dateText(o))} · ${esc(c.org||c.full_name||"")}</b><span>${esc([o.venue,o.event_type,o.guests?o.guests+" "+L("մասնակից","guests"):""].filter(Boolean).join(" · "))}</span></span><span class="go">›</span></button>`}).join("")}</div>`:`<p class="muted">${L("Կայքից եկած մոտակա պատվերներ չկան։","No upcoming orders from the website.")}</p>`);
+  h+=`<h2>${L("Արագ անցում","Quick links")}</h2><div class="quick">${[["mail","✉ "+t("tMail")],["invoices","🧾 "+t("tInv")],["calendar","📅 "+t("tCal")],["income","💰 "+t("tInc")],["analytics","📊 "+t("tAna")],["prices","🏷 "+t("tPrices")]].map(([k,l])=>`<button data-hgo="${k}">${esc(l)}</button>`).join("")}</div>`;
+  return h}
+
 /* ----- taxes, analytics (content to be defined) ----- */
 function vTaxes(){return `<h1>${t("tTax")}</h1><div class="empty">${lang==="en"?"This section is being prepared.":"Այս բաժինը պատրաստվում է։"}</div>`}
 /* Analytics: which years earned most, which months are active / quiet.
@@ -386,6 +438,7 @@ document.addEventListener("click",async e=>{
   if(b.id==="eCopySecret"){try{await navigator.clipboard.writeText(IS.bot.secret);toast(it("copied"))}catch(_){}return}
   if(b.dataset.pc){IS.pclient=b.dataset.pc;render();return}
   if(b.dataset.aorg){IS.aorg=b.dataset.aorg;render();return}
+  if(b.dataset.hgo){const g=b.dataset.hgo;if(g.startsWith("mail:")){S.tab="mail";IS.mailYm=g.slice(5)}else S.tab=g;IS.edit=null;render();scrollTo(0,0);return}
   if(b.id==="invNew"){openInvoice({client:IS.client||"Hilton",num:nextNum(IS.client||"Hilton"),start_date:todayIso,end_date:todayIso,month:null,lines:[{name:"",price:"",qty:1}],status:"draft",note:""});return}
   if(b.dataset.mkinv){const o=S.orders.find(x=>x.id===+b.dataset.mkinv);if(!o)return;const oc=(S.clients.find(c=>c.id===o.client_id)||{}).org||"";openInvoice({client:oc,num:nextNum(oc),start_date:o.start_date,end_date:o.end_date||o.start_date,month:null,order_id:o.id,status:"draft",note:"",lines:(S.items[o.id]||[]).map(i=>({name:i.name_en&&i.name_hy?i.name_en+" / "+i.name_hy:i.name_hy,price:i.price||0,qty:i.qty}))});return}
   if(b.id==="invBack"){IS.edit=null;render();return}
