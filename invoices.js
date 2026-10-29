@@ -67,7 +67,9 @@ async function initDir(){if(!FS_OK)return;IS.since=await idbGet("since");IS.save
 async function connectDir(){try{const h=await window.showDirectoryPicker({id:"ae-root",mode:"readwrite",startIn:"desktop"});
   if(Object.values(IS.folders).some(f=>f.trim()===h.name.trim())){toast(it("dirWrong"));return false}
   IS.dir=h;IS.dirOk=true;await idbSet("root",h);render();return true}catch(_){return false}}
-const pendingSave=()=>IS.dir&&IS.since?IS.inv.filter(v=>["approved","accountant"].includes(v.status)&&monthOf(v)&&v.updated_at&&v.updated_at>IS.since&&IS.saved[v.id]!==v.updated_at):[];
+/* imported from the computer folder and never edited since → the file is already there */
+const fromFolderUntouched=v=>v.source_file&&v.created_at&&Math.abs(new Date(v.updated_at)-new Date(v.created_at))<120000;
+const pendingSave=()=>IS.dir&&IS.since?IS.inv.filter(v=>["approved","accountant"].includes(v.status)&&monthOf(v)&&v.updated_at&&v.updated_at>IS.since&&!fromFolderUntouched(v)&&IS.saved[v.id]!==v.updated_at):[];
 async function syncDir(){if(IS.syncing||!IS.dir||!IS.dirOk)return;const l=pendingSave();if(!l.length)return;IS.syncing=true;let n=0,last="";
   for(const v of l){try{last=await saveToDir(v);IS.saved[v.id]=v.updated_at;n++}catch(err){console.error(err)}}
   await idbSet("saved",IS.saved);IS.syncing=false;if(n)toast(n===1?it("savedTo")+last:n+" "+it("nSaved"));if(S.tab==="invoices"&&!IS.edit)render()}
