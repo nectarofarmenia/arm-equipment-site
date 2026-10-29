@@ -10,7 +10,7 @@ const IT={
   st1:"Հաշիվներ ամսվա ընթացքում",st2:"Ուղարկված Էմմային (հաստատման)",st3:"Էմմայի պատասխանը",st4:"Ուղարկված Հասմիկին (դուրս գրելու)",st5:"Հասմիկի պատասխանը",
   notYet:"Դեռ ոչ",autoAt:"Ինքնաշխատ՝ ",waitDays:"Սպասում ենք՝ օր",fups:"Հիշեցումներ",nextFup:"Հաջորդ հիշեցումը՝ ",sendNow:"Ուղարկել հիմա",remind:"Ուղարկել հիշեցում",markReplied:"Նշել՝ պատասխանել է",
   replied:"Պատասխանել է",mlog:"Պատմություն",prevMonths:"Նախորդ ամիսներ",stage:"Փուլ",openInv:"Բացել հաշիվները",fupDays:"Հիշեցում՝ քանի օր անպատասխան մնալուց հետո",fupMax:"Առավելագույնը քանի հիշեցում",reqDomains:"Պատվերի նամակներ ընդունել այս հասցեներից (դոմեյն)",
-  r_done:"Ավարտված է",auto:"Ավտոմատ",back:"Հետ",fwd:"Առաջ"},
+  r_done:"Ավարտված է",auto:"Ավտոմատ",back:"Հետ",fwd:"Առաջ",mReset:"Վերսկսել ամիսը",mResetHint:"Փորձարկումից հետո՝ ջնջում է այս ամսվա նամակագրության փուլերը, հաշիվները դառնում են սևագիր",mResetQ:"Ջնջե՞լ այս ամսվա փուլերը և հաշիվները դարձնել սևագիր",yes2:"Այո"},
  en:{tInv:"Invoices",tCal:"Calendar",tInc:"Income",newInv:"+ New invoice",invNo:"Invoice",num:"Invoice number",repMonth:"Reporting month",line:"Line",addLine:"+ Line",split:"Split",status:"Status",note:"Notes (manager's corrections etc.)",word:"Excel file",copyMail:"Copy email text",copied:"Copied",del:"Delete",delQ:"Delete this invoice?",yes:"Yes, delete",no:"No",noDate:"No date",noInv:"No invoices yet.",
   i_draft:"Draft",i_manager:"Sent to manager",i_approved:"Approved",i_accountant:"Sent to accountant",workDays:"Working days",thisMonth:"this month",days:"days",monthWork:"Work this month",noWork:"No working days this month.",
   yearIncome:"total income",allYears:"All years",byMonth:"By month",byYear:"By year",month:"Month",year:"Year",sharesT:"Partner split",sharesHint:"Percentages are taken from each invoice total and must add up to 100%. Changes apply to new invoices only.",
@@ -19,7 +19,7 @@ const IT={
   st1:"Invoices during the month",st2:"Sent to Emma (for approval)",st3:"Emma\u2019s reply",st4:"Sent to Hasmik (to issue)",st5:"Hasmik\u2019s reply",
   notYet:"Not yet",autoAt:"Automatically: ",waitDays:"Waiting, days",fups:"Reminders",nextFup:"Next reminder: ",sendNow:"Send now",remind:"Send reminder",markReplied:"Mark as replied",
   replied:"Replied",mlog:"History",prevMonths:"Previous months",stage:"Stage",openInv:"Open invoices",fupDays:"Reminder after how many days without reply",fupMax:"Maximum number of reminders",reqDomains:"Accept request emails from these domains",
-  r_done:"Done",auto:"Auto",back:"Back",fwd:"Forward"}
+  r_done:"Done",auto:"Auto",back:"Back",fwd:"Forward",mReset:"Restart month",mResetHint:"After testing: clears this month\u2019s stages and sets its invoices back to draft",mResetQ:"Clear this month\u2019s stages and set invoices back to draft?",yes2:"Yes"}
 };
 const it=k=>(IT[lang][k]??t(k));
 const MONTHS={hy:["Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս","Օգոստոս","Սեպտեմբեր","Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
@@ -194,7 +194,7 @@ function vIncome(){
   h+=`<h2>${it("tplT")}</h2><form id="fTpl" class="card"><label>${it("tplClient")}<textarea id="tClient" rows="8">${esc(tp.client||"")}</textarea></label><div class="fg"><label>${it("signer")}<input id="tSign" value="${esc(tp.signer||"")}"></label><label>${it("mgrEmail")}<input id="tMgr" type="email" value="${esc(tp.managerEmail||"")}"></label><label>${it("accEmail")}<input id="tAcc" type="email" value="${esc(tp.accountantEmail||"")}"></label><label>${it("mgrName")}<input id="tMgrN" value="${esc(tp.managerName||"")}"></label><label>${it("accName")}<input id="tAccN" value="${esc(tp.accountantName||"")}"></label><label>${it("signerEn")}<input id="tSignEn" value="${esc(tp.signerEn||"")}"></label><label>${it("wfClient")}<input id="tWf" list="clNames2" value="${esc(tp.workflowClient||"Hilton")}"><datalist id="clNames2">${clientNames().map(n=>`<option value="${esc(n)}"></option>`).join("")}</datalist></label></div>
   <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="tMe" style="width:auto" ${tp.monthEndAuto!==false?"checked":""}>${it("meAuto")}</label>
   <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="tAccA" style="width:auto" ${tp.accountantAuto!==false?"checked":""}>${it("accAuto")}</label>
-  <div class="fg"><label>${it("fupDays")}<input id="tFd" type="number" min="1" max="30" value="${esc(tp.followupDays||3)}"></label><label>${it("fupMax")}<input id="tFm" type="number" min="0" max="10" value="${esc(tp.followupMax??2)}"></label><label>${it("reqDomains")}<input id="tRd" value="${esc(tp.requestDomains||"hilton.com")}"></label></div>
+  <div class="fg"><label>${it("fupDays")}<input id="tFd" type="number" min="1" max="30" value="${esc(tp.followupDays||5)}"></label><label>${it("fupMax")}<input id="tFm" type="number" min="0" max="10" value="${esc(tp.followupMax??6)}"></label><label>${it("reqDomains")}<input id="tRd" value="${esc(tp.requestDomains||"hilton.com")}"></label></div>
   <div><button class="btn pri">${t("save")}</button></div></form>`;
   h+=vEmail();
   return h;
@@ -234,7 +234,7 @@ function vMail(){
   const list=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym).sort((a,b)=>(a.start_date||"").localeCompare(b.start_date||"")||String(a.num).localeCompare(String(b.num),undefined,{numeric:true}));
   const a=agg(list),unc=list.filter(v=>v.checked===false),r=IS.runs.find(x=>x.client===c&&x.month===ym)||null;
   const q=k=>IS.outbox.some(o=>o.kind==="workflow"&&o.status==="queued"&&o.subject===k+":"+c+":"+ym);
-  const fd=+(tp.followupDays||3),fm=+(tp.followupMax??2);
+  const fd=+(tp.followupDays||5),fm=+(tp.followupMax??6);
   const lastDay=new Date(+ym.slice(0,4),+ym.slice(5,7),0);
   const wf=(k,label,cls)=>`<button class="btn sm ${cls||""}" data-wf="${k}:${esc(c)}:${ym}">${label}</button>`;
   let h=`<div class="row" style="margin-bottom:10px"><button class="btn sm" id="mPrev" aria-label="‹">‹</button><h1 style="margin:0;min-width:200px;text-align:center">${esc(c)} · ${esc(monthLabel(ym))}</h1><button class="btn sm" id="mNext" aria-label="›">›</button></div>`;
@@ -263,6 +263,7 @@ function vMail(){
   // invoices of the month
   h+=`<h2>${it("tInv")} · ${esc(monthLabel(ym))}</h2>`+(list.length?`<div class="tw"><table><thead><tr><th>#</th><th>${lang==="en"?"Date":"Ամսաթիվ"}</th><th>${t("items")}</th><th class="r">${it("total")}</th><th>${it("status")}</th></tr></thead><tbody>${list.map(v=>`<tr class="clickrow" data-inv="${v.id}"><td>${esc(v.num)}</td><td>${esc(dateText(v))}</td><td class="muted" style="max-width:340px">${esc((v.lines||[]).map(l=>l.qty+"× "+String(l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0]).join(", "))}</td><td class="r num">${fmt(invTotal(v))}</td><td>${v.checked===false?`<span class="pill ist-manager">⚠ ${esc(it("unchecked"))}</span> `:""}${ipill(v.status)}</td></tr>`).join("")}<tr><td colspan="3"><b>${it("total")}</b></td><td class="r num"><b>${fmt(a._total)}</b></td><td></td></tr></tbody></table></div>`:`<div class="empty">${it("noInvYear")}</div>`);
   if(r&&r.log)h+=`<details style="margin-top:14px"><summary class="muted" style="cursor:pointer">${it("mlog")}</summary><pre class="pre">${esc(r.log)}</pre></details>`;
+  if(r)h+=`<div class="row" style="margin-top:10px"><button class="btn sm danger" id="mReset">↺ ${it("mReset")}</button><span class="muted" style="font-size:.85rem">${it("mResetHint")}</span></div><div id="mResetQ"></div>`;
   const prev=IS.runs.filter(x=>x.client===c&&x.month!==ym).sort((a,b)=>b.month.localeCompare(a.month)).slice(0,8);
   if(prev.length)h+=`<h2>${it("prevMonths")}</h2><div class="list">${prev.map(x=>`<button class="inv" data-mym="${x.month}"><span class="ttl">${esc(monthLabel(x.month))}</span><span class="num ttl">${fmt(x.total)} ${t("amd")}</span><span class="sub">${x.invoice_count} ${it("nInv")}</span><span><span class="pill ist-${x.status==="done"?"accountant":x.status==="needs_review"?"manager":"approved"}">${esc(it("r_"+x.status))}</span></span></button>`).join("")}</div>`;
   return h}
@@ -299,6 +300,12 @@ document.addEventListener("click",async e=>{
   if(b.id==="mPrev"||b.id==="mNext"){IS.mailYm=ymAdd(IS.mailYm||todayIso.slice(0,7),b.id==="mNext"?1:-1);render();return}
   if(b.dataset.mym){IS.mailYm=b.dataset.mym;render();scrollTo(0,0);return}
   if(b.dataset.mopen){const tp=IS.tpl||{};IS.client=tp.workflowClient||"Hilton";IS.iyear=+(IS.mailYm||todayIso).slice(0,4);IS.edit=null;S.tab="invoices";render();scrollTo(0,0);return}
+  if(b.id==="mReset"){$("#mResetQ").innerHTML=`<div class="msg err row" style="margin-top:8px">${it("mResetQ")} <button class="btn sm danger" id="mResetYes">${it("yes2")}</button><button class="btn sm" id="mResetNo">${it("no")}</button></div>`;return}
+  if(b.id==="mResetNo"){$("#mResetQ").innerHTML="";return}
+  if(b.id==="mResetYes"){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,r=IS.runs.find(x=>x.client===c&&x.month===ym);if(!r)return;
+    const ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym&&["manager","accountant","approved"].includes(v.status)).map(v=>v.id);
+    if(ids.length){const {error:e1}=await sb.from("invoices").update({status:"draft",updated_at:new Date().toISOString()}).in("id",ids);if(e1)return toast(t("errGeneric"))}
+    const {error}=await sb.from("approval_runs").delete().eq("id",r.id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(b.dataset.mrep){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,who=b.dataset.mrep,now=new Date().toISOString();
     const r=IS.runs.find(x=>x.client===c&&x.month===ym);if(!r)return;
     const upd=who==="manager"?{manager_reply_at:now}:{accountant_reply_at:now,status:"done"};
@@ -340,7 +347,7 @@ document.addEventListener("submit",async e=>{
     const {error}=await sb.from("settings").upsert({key:"email",value:val});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(f.id==="fShares"){const sh=readShares();if(Math.abs(sh.reduce((a,x)=>a+x.pct,0)-100)>0.001)return toast(it("sum100"));
     const {error}=await sb.from("settings").upsert({key:"shares",value:sh});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
-  if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:$("#tMgr").value.trim(),accountantEmail:$("#tAcc").value.trim(),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked,followupDays:+$("#tFd").value||3,followupMax:+$("#tFm").value,requestDomains:$("#tRd").value.trim()||"hilton.com"}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:$("#tMgr").value.trim(),accountantEmail:$("#tAcc").value.trim(),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked,followupDays:+$("#tFd").value||5,followupMax:+$("#tFm").value,requestDomains:$("#tRd").value.trim()||"hilton.com"}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
 });
 
 /* ----- browser Back stays inside the admin (and a visible ‹ Back button) ----- */

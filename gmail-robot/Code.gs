@@ -318,7 +318,7 @@ function followUps(cfg) {
   });
 }
 function followUp(who, client, ym, cfg, force, run) {
-  var tp = cfg.tpl || {}, days = +(tp.followupDays || 3), max = +(tp.followupMax || 2);
+  var tp = cfg.tpl || {}, days = +(tp.followupDays || 5), max = +(tp.followupMax != null ? tp.followupMax : 6);
   run = run || (cfg.runs || []).filter(function (r) { return r.client === client && r.month === ym; })[0];
   if (!run) throw new Error('no run for ' + client + ' ' + ym);
   var mgr = who === 'manager', lastAt = new Date(run[who + '_last_at'] || run[who + '_sent_at'] || run.sent_at).getTime(), n = +(run[who + '_followups'] || 0);
