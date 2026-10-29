@@ -191,7 +191,7 @@ const T={
   s_new:"Նոր",s_confirmed:"Հաստատված",s_done:"Կատարված",s_cancelled:"Չեղարկված",s_pending:"Սպասում է",s_approved:"Հաստատված",s_rejected:"Մերժված",
   save:"Պահպանել",saved:"Պահպանված է",client:"Պատվիրատու",adminNote:"Նշում պատվիրատուի համար",all:"Բոլորը",approve:"Հաստատել",reject:"Մերժել",registered:"Գրանցվել է",noClients:"Պատվիրատուներ դեռ չկան։",
   name_hy:"Անվանում (հայ)",name_en:"Անվանում (անգլ)",active:"Ակտիվ",addItem:"Ավելացնել տեխնիկա",priceHint:"Թողեք դատարկ «ըստ հարցման» գնի համար",
-  notConfigured:"Կայքը դեռ միացված չէ տվյալների բազային։ Լրացրեք config.js ֆայլը (տես README)։",errGeneric:"Չհաջողվեց։ Փորձեք նորից։",errLogin:"Էլ. փոստը կամ գաղտնաբառը սխալ է։",fillAll:"Լրացրեք բոլոր դաշտերը։",
+  notConfigured:"Կայքը դեռ միացված չէ տվյալների բազային։ Լրացրեք config.js ֆայլը (տես README)։",errGeneric:"Չհաջողվեց։ Փորձեք նորից։",errLogin:"Էլ. փոստը կամ գաղտնաբառը սխալ է։",errNotConfirmed:"Էլ. հասցեն դեռ հաստատված չէ։ Գրանցվելուց հետո ձեր փոստին նամակ է ուղարկվել հաստատման հղումով (ստուգեք նաև Spam թղթապանակը)։ Սեղմեք հղմանը, հետո նորից մուտք գործեք։",errTooMany:"Չափազանց շատ փորձեր։ Սպասեք մի քանի րոպե և փորձեք նորից։",errNetwork:"Կապ չկա։ Ստուգեք ինտերնետը և փորձեք նորից։",resend:"Կրկին ուղարկել հաստատման նամակը",resent:"Հաստատման նամակը ուղարկված է։ Ստուգեք փոստը (նաև Spam)։",fillAll:"Լրացրեք բոլոր դաշտերը։",
   lay_theatre:"Թատերական",lay_classroom:"Դասարանային",lay_ushape:"U-ձև",lay_boardroom:"Բանակցային սեղան",lay_banquet:"Կլոր սեղաններ",lay_other:"Այլ / չգիտեմ",amd:"դր."},
  en:{loading:"Loading…",signOut:"Sign out",signIn:"Sign in",register:"Register",forgot:"Forgot your password?",email:"Email",password:"Password",pw8:"Password (at least 8 characters)",fullName:"Full name",org:"Organisation",phone:"Phone",
   welcomeTitle:"Client sign in",welcomeSub:"Sign in to order equipment and follow your orders.",
@@ -207,7 +207,7 @@ const T={
   s_new:"New",s_confirmed:"Confirmed",s_done:"Done",s_cancelled:"Cancelled",s_pending:"Pending",s_approved:"Approved",s_rejected:"Rejected",
   save:"Save",saved:"Saved",client:"Client",adminNote:"Note for the client",all:"All",approve:"Approve",reject:"Reject",registered:"Registered",noClients:"No clients yet.",
   name_hy:"Name (Armenian)",name_en:"Name (English)",active:"Active",addItem:"Add equipment",priceHint:"Leave empty for “price on request”",
-  notConfigured:"The site is not connected to its database yet. Fill in config.js (see README).",errGeneric:"Something went wrong. Please try again.",errLogin:"Wrong email or password.",fillAll:"Please fill in all fields.",
+  notConfigured:"The site is not connected to its database yet. Fill in config.js (see README).",errGeneric:"Something went wrong. Please try again.",errLogin:"Wrong email or password.",errNotConfirmed:"Your email is not confirmed yet. After signing up we sent you an email with a confirmation link (check Spam too). Click the link, then sign in again.",errTooMany:"Too many attempts. Wait a few minutes and try again.",errNetwork:"No connection. Check the internet and try again.",resend:"Resend the confirmation email",resent:"Confirmation email sent. Check your inbox (and Spam).",fillAll:"Please fill in all fields.",
   lay_theatre:"Theatre",lay_classroom:"Classroom",lay_ushape:"U-shape",lay_boardroom:"Boardroom",lay_banquet:"Round tables",lay_other:"Other / not sure",amd:"AMD"}
 };
 const CITIES=["Երևան / Yerevan","Գյումրի / Gyumri","Վանաձոր / Vanadzor","Դիլիջան / Dilijan","Ծաղկաձոր / Tsaghkadzor","Ջերմուկ / Jermuk","Սևան / Sevan","Այլ քաղաք Հայաստանում / Other town in Armenia"];
@@ -260,7 +260,7 @@ function vAuth(){
   if(m==="reset")h+=`<form id="fReset"><label>${t("email")}<input id="xe" type="email" autocomplete="email" required></label>${msgHtml()}<button class="btn pri">${t("sendReset")}</button><button type="button" class="link" data-mode="in">${t("back")}</button></form>`;
   return h+`</div>`;
 }
-function msgHtml(){return S.msg?`<div class="msg ${S.msg.k}">${esc(S.msg.m)}</div>`:""}
+function msgHtml(){return S.msg?`<div class="msg ${S.msg.k}">${esc(S.msg.m)}${S.msg.resend?`<div style="margin-top:8px"><button type="button" class="btn sm" id="resendBtn">${t("resend")}</button></div>`:""}</div>`:""}
 
 function vPending(){const r=S.profile.status==="rejected";return `<div class="card narrow"><h1>${t(r?"rejectedTitle":"pendingTitle")}</h1><p class="muted">${t(r?"rejectedSub":"pendingSub")}</p></div>`}
 
@@ -351,6 +351,8 @@ async function busy(btn,fn){if(btn)btn.disabled=true;try{await fn()}finally{if(b
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button,[data-mode]");if(!b)return;
   if(b.dataset.mode){S.authMode=b.dataset.mode;S.msg=null;render();return}
+  if(b.id==="resendBtn"&&S.msg&&S.msg.resend){b.disabled=true;const {error}=await sb.auth.resend({type:"signup",email:S.msg.resend,options:{emailRedirectTo:location.origin+"/portal"}});
+    S.msg=error?{k:"err",m:/rate|429/i.test((error.code||"")+error.message)?t("errTooMany"):t("errGeneric")}:{k:"ok",m:t("resent")};render();return}
   if(b.dataset.tab){S.tab=b.dataset.tab;S.msg=null;render();scrollTo(0,0);return}
   if(b.id==="out"){await sb.auth.signOut();return}
   if(b.dataset.inc||b.dataset.dec){const id=+(b.dataset.inc||b.dataset.dec);S.cart[id]=Math.max(0,(S.cart[id]||0)+(b.dataset.inc?1:-1));const i=document.querySelector(`[data-q="${id}"]`);if(i)i.value=S.cart[id];updTotals();return}
@@ -367,7 +369,13 @@ document.addEventListener("submit",async e=>{
   e.preventDefault();const f=e.target;const btn=f.querySelector("button:not([type=button])");S.msg=null;
   const v=id=>($("#"+id)?.value||"").trim();
   await busy(btn,async()=>{
-  if(f.id==="fIn"){const {error}=await sb.auth.signInWithPassword({email:v("em"),password:$("#pw").value});if(error){S.msg={k:"err",m:t("errLogin")};render()}return}
+  if(f.id==="fIn"){const em=v("em").trim().toLowerCase();const {error}=await sb.auth.signInWithPassword({email:em,password:$("#pw").value});
+    if(error){const c=(error.code||"")+" "+(error.message||"");
+      if(/not.?confirmed/i.test(c)){S.msg={k:"err",m:t("errNotConfirmed"),resend:em}}
+      else if(/rate|too many|429/i.test(c)){S.msg={k:"err",m:t("errTooMany")}}
+      else if(/fetch|network/i.test(c)){S.msg={k:"err",m:t("errNetwork")}}
+      else S.msg={k:"err",m:t("errLogin")};
+      render();$("#em")&&($("#em").value=em)}return}
   if(f.id==="fUp"){if(!v("rn")||!v("rp")||!v("re")||$("#rw").value.length<8){S.msg={k:"err",m:t("fillAll")};return render()}
     const {data,error}=await sb.auth.signUp({email:v("re"),password:$("#rw").value,options:{data:{full_name:v("rn"),org:v("ro"),phone:v("rp")},emailRedirectTo:location.origin+location.pathname}});
     if(error){S.msg={k:"err",m:error.message};return render()}
