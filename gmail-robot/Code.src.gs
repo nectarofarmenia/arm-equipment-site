@@ -2,10 +2,12 @@
  * ArmEquipment — Gmail robot (Google Apps Script inside armequipment@gmail.com)
  *
  *  every 5 min   sends what the website queued (notifications, invoices, summaries)
- *  every 10 min  reads Gmail: new/changed invoices (.xlsx / .docx) → website, with a notification
+ *  every 10 min  reads Gmail: equipment requests from Hilton staff → draft invoices (unchecked) on the website;
+ *                new/changed invoices (.xlsx / .docx) → website, with a notification
  *                checks the manager's reply to the month-end email:
  *                  approval and/or corrected invoices → invoices updated → sent to the accountant
  *                  anything unclear → you get an email and decide on the website
+ *                the accountant's reply → marked done; no reply after N days → polite reminder (follow-up)
  *  last day of the month, 18:00 Yerevan   all invoices of the month → manager, for approval (English)
  *  1st of the month, 9:00 Yerevan         last month's summary → you
  *
@@ -35,6 +37,7 @@ function setup() {
   ScriptApp.newTrigger('sendQueue').timeBased().everyMinutes(5).create();
   ScriptApp.newTrigger('watch').timeBased().everyMinutes(10).create();
   if (!P.getProperty('IMPORT_SINCE')) P.setProperty('IMPORT_SINCE', Utilities.formatDate(new Date(), TZ, 'yyyy/MM/dd'));
+  if (!P.getProperty('REQ_SINCE')) P.setProperty('REQ_SINCE', Utilities.formatDate(new Date(), TZ, 'yyyy/MM/01'));
   rpc('bot_settings');               // checks the password
   invoiceBlob({ num: '000', lines: [] }, {}, []);   // checks that Excel files can be made
   sendQueue();
@@ -135,6 +138,8 @@ function sendQueue() {
         var cfg = rpc('bot_settings');
         if (p[0] === 'manager') sendToManager(p[1], p[2], cfg);
         else if (p[0] === 'accountant') sendToAccountant(p[1], p[2], cfg, '');
+        else if (p[0] === 'followup_manager') followUp('manager', p[1], p[2], cfg, true);
+        else if (p[0] === 'followup_accountant') followUp('accountant', p[1], p[2], cfg, true);
       } else {
         var o = { name: SENDER_NAME };
         if (m.html) o.htmlBody = m.html;
@@ -160,6 +165,9 @@ function sendQueue() {
 function watch() {
   var cfg = rpc('bot_settings');
   try { checkReplies(cfg); } catch (e) { Logger.log('checkReplies: ' + e); }
+  try { checkAccountantReplies(cfg); } catch (e) { Logger.log('accountant replies: ' + e); }
+  try { followUps(cfg); } catch (e) { Logger.log('followUps: ' + e); }
+  try { importRequests(cfg); } catch (e) { Logger.log('requests: ' + e); }
   try { importFromGmail(cfg); } catch (e) { Logger.log('import: ' + e); }
   try { monthEnd(cfg); } catch (e) { Logger.log('monthEnd: ' + e); notifyMe('ArmEquipment — սխալ ամսվա վերջի նամակում', String(e)); }
   try { monthStartSummary(cfg); } catch (e) { Logger.log('summary: ' + e); }
@@ -174,6 +182,13 @@ function monthEnd(cfg) {
   var ym = Utilities.formatDate(now, TZ, 'yyyy-MM'), client = tp.workflowClient || 'Hilton', key = 'ME_' + client + '_' + ym;
   if (P.getProperty(key)) return;
   P.setProperty(key, '1');
+  var unchecked = (rpc('bot_invoices', { p: { client: client, month: ym } }) || []).filter(function (v) { return v.checked === false; });
+  if (unchecked.length) {
+    notifyMe('Ամսվա վերջ՝ ' + unchecked.length + ' հաշիվ դեռ չստուգված — ' + client + ' ' + monthHy(ym),
+      'Էմմային դեռ չեմ ուղարկել, որովհետև ' + unchecked.length + ' հաշիվ ստեղծվել է նամակներից և դեռ չեք ստուգել (' +
+      unchecked.map(function (v) { return '#' + v.num; }).join(', ') + ')։\nԲացեք կայքը → Նամակագրություն, ստուգեք և սեղմեք «Ուղարկել Էմմային»։\nhttps://www.arm-equipment.com/portal');
+    return;
+  }
   sendToManager(client, ym, cfg);
 }
 
@@ -193,7 +208,9 @@ function sendToManager(client, ym, cfg) {
   var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + greet + '</p><p>' + intro + '</p>' + tb.html + '<p>' + ask + '</p><p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
   var threadId = sendWithThread(tp.managerEmail, subject, text, html, invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }));
   rpc('bot_set_status', { ids: invs.map(function (v) { return v.id; }), new_status: 'manager' });
-  rpc('bot_run', { p: { client: client, month: ym, status: 'sent_to_manager', thread_id: threadId, invoice_count: invs.length, total: tb.total, log: 'Ուղարկվեց ղեկավարին (' + tp.managerEmail + ')' } });
+  var nowIso = new Date().toISOString();
+  rpc('bot_run', { p: { client: client, month: ym, status: 'sent_to_manager', thread_id: threadId, invoice_count: invs.length, total: tb.total,
+    manager_sent_at: nowIso, manager_last_at: nowIso, manager_followups: 0, log: 'Ուղարկվեց ղեկավարին (' + tp.managerEmail + ')' } });
   P.setProperty('RUN_' + threadId, String(new Date().getTime()));
 }
 
@@ -211,9 +228,12 @@ function sendToAccountant(client, ym, cfg, why) {
   var subject = client + ' — ' + monthHy(ym) + ' — հաշիվներ դուրս գրելու համար';
   var text = greet + '\n\n' + intro + '\n\n' + tb.text + '\n' + ask + '\n\n' + sign;
   var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + greet + '</p><p>' + intro + '</p>' + tb.html + '<p>' + ask + '</p><p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
-  sendWithThread(tp.accountantEmail, subject, text, html, invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }));
+  var accThread = sendWithThread(tp.accountantEmail, subject, text, html, invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }));
   rpc('bot_set_status', { ids: invs.map(function (v) { return v.id; }), new_status: 'accountant' });
-  rpc('bot_run', { p: { client: client, month: ym, status: 'sent_to_accountant', invoice_count: invs.length, total: tb.total, log: 'Ուղարկվեց հաշվապահին (' + tp.accountantEmail + ')' + (why ? '. ' + why : '') } });
+  var nowIso = new Date().toISOString();
+  P.setProperty('ARUN_' + accThread, String(new Date().getTime()));
+  rpc('bot_run', { p: { client: client, month: ym, status: 'sent_to_accountant', invoice_count: invs.length, total: tb.total, accountant_thread_id: accThread,
+    accountant_sent_at: nowIso, accountant_last_at: nowIso, accountant_followups: 0, log: 'Ուղարկվեց հաշվապահին (' + tp.accountantEmail + ')' + (why ? '. ' + why.split('\n')[0] : '') } });
   notifyMe('Ուղարկվեց հաշվապահին — ' + client + ' ' + monthHy(ym) + ' — ' + fmt(tb.total) + ' դր.',
     (why ? why + '\n\n' : '') + invs.length + ' հաշիվ ուղարկվեց ' + (tp.accountantName || '') + ' <' + tp.accountantEmail + '>-ին։\n\n' + tb.text +
     '\nՀաստատված հաշիվները կպահվեն համակարգչի պանակում, երբ բացեք կայքը Chrome-ով։');
@@ -233,7 +253,7 @@ function replyText(msg) {
 function checkReplies(cfg) {
   var me = myEmail();
   (cfg.runs || []).forEach(function (run) {
-    if (!run.thread_id) return;
+    if (run.status !== 'sent_to_manager' || !run.thread_id) return;
     var th = GmailApp.getThreadById(run.thread_id);
     if (!th) return;
     var seenKey = 'SEEN_' + run.thread_id, seen = +(P.getProperty(seenKey) || P.getProperty('RUN_' + run.thread_id) || new Date(run.sent_at).getTime());
@@ -258,18 +278,209 @@ function checkReplies(cfg) {
         } catch (e) { Logger.log(a.getName() + ': ' + e); }
       });
     });
-    var text = texts.join('\n---\n'), tp = cfg.tpl || {};
+    var text = texts.join('\n---\n'), tp = cfg.tpl || {}, replyAt = news[news.length - 1].getDate().toISOString();
     var approved = APPROVE_RE.test(text), changes = CHANGE_RE.test(text);
     var summary = (updated.length ? 'Ուղղված հաշիվներ՝ ' + updated.join(', ') + '\n' : '') + 'Պատասխան՝\n' + (text || '(առանց տեքստի)');
     if ((approved || updated.length) && !(changes && !updated.length) && tp.accountantAuto !== false) {
-      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'sent_to_manager', reply_text: text, log: 'Ղեկավարը հաստատեց' + (updated.length ? ', ուղղումներ՝ ' + updated.join(', ') : '') } });
+      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'sent_to_manager', reply_text: text, manager_reply_at: replyAt, log: 'Ղեկավարը հաստատեց' + (updated.length ? ', ուղղումներ՝ ' + updated.join(', ') : '') } });
       sendToAccountant(run.client, run.month, cfg, 'Ղեկավարը հաստատեց։ ' + summary);
     } else {
-      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'needs_review', reply_text: text, log: 'Ղեկավարի պատասխանը պետք է դիտել' } });
+      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'needs_review', reply_text: text, manager_reply_at: replyAt, log: 'Ղեկավարի պատասխանը պետք է դիտել' } });
       notifyMe('Պետք է նայել՝ ' + (tp.managerName || 'ղեկավարը') + '-ը պատասխանել է — ' + run.client + ' ' + monthHy(run.month),
         summary + '\n\nՀաշիվները դեռ չեմ ուղարկել հաշվապահին։ Ուղղեք կայքում (Հաշիվներ → ' + run.client + ' → ' + run.month.slice(0, 4) + ') և սեղմեք «Ուղարկել հաշվապահին»։\nhttps://www.arm-equipment.com/portal');
     }
   });
+}
+
+/* the accountant's reply → the month is done */
+function checkAccountantReplies(cfg) {
+  var me = myEmail(), tp = cfg.tpl || {};
+  (cfg.runs || []).forEach(function (run) {
+    if (run.status !== 'sent_to_accountant' || !run.accountant_thread_id || run.accountant_reply_at) return;
+    var th = GmailApp.getThreadById(run.accountant_thread_id);
+    if (!th) return;
+    var since = +(P.getProperty('ARUN_' + run.accountant_thread_id) || new Date(run.accountant_sent_at).getTime());
+    var news = th.getMessages().filter(function (m) { return m.getDate().getTime() > since && String(m.getFrom()).toLowerCase().indexOf(me) < 0; });
+    if (!news.length) return;
+    var last = news[news.length - 1], text = replyText(last);
+    rpc('bot_run', { p: { client: run.client, month: run.month, status: 'done', accountant_reply_at: last.getDate().toISOString(), accountant_reply_text: text, log: 'Հաշվապահը պատասխանեց' } });
+    notifyMe('Հաշվապահը պատասխանեց — ' + run.client + ' ' + monthHy(run.month), (tp.accountantName || 'Հաշվապահ') + '՝\n\n' + (text || '(առանց տեքստի)'));
+  });
+}
+
+/* no answer after N days → polite reminder in the same conversation (weekdays, 10:00–18:00 Yerevan) */
+function followUps(cfg) {
+  var now = new Date(), dow = +Utilities.formatDate(now, TZ, 'u'), hr = +Utilities.formatDate(now, TZ, 'H');
+  if (dow > 5 || hr < 10 || hr >= 18) return;
+  (cfg.runs || []).forEach(function (run) {
+    if (run.status === 'sent_to_manager' && !run.manager_reply_at) followUp('manager', run.client, run.month, cfg, false, run);
+    if (run.status === 'sent_to_accountant' && !run.accountant_reply_at) followUp('accountant', run.client, run.month, cfg, false, run);
+  });
+}
+function followUp(who, client, ym, cfg, force, run) {
+  var tp = cfg.tpl || {}, days = +(tp.followupDays || 3), max = +(tp.followupMax || 2);
+  run = run || (cfg.runs || []).filter(function (r) { return r.client === client && r.month === ym; })[0];
+  if (!run) throw new Error('no run for ' + client + ' ' + ym);
+  var mgr = who === 'manager', lastAt = new Date(run[who + '_last_at'] || run[who + '_sent_at'] || run.sent_at).getTime(), n = +(run[who + '_followups'] || 0);
+  if (!force) {
+    if (Date.now() - lastAt < days * 24 * 3600 * 1000) return;
+    if (n >= max) {
+      var key = 'GIVEUP_' + who + '_' + client + '_' + ym;
+      if (!P.getProperty(key)) {
+        P.setProperty(key, '1');
+        notifyMe('Պատասխան չկա՝ ' + (mgr ? tp.managerName || 'ղեկավար' : tp.accountantName || 'հաշվապահ') + ' — ' + client + ' ' + monthHy(ym),
+          n + ' հիշեցումից հետո էլ պատասխան չկա։ Կարող եք զանգել կամ կայքում «Նամակագրություն» էջից ուղարկել ևս մեկ հիշեցում։');
+      }
+      return;
+    }
+  }
+  var to = mgr ? tp.managerEmail : tp.accountantEmail;
+  if (!to) throw new Error((mgr ? 'manager' : 'accountant') + ' email is empty');
+  var invs = (rpc('bot_invoices', { p: { client: client, month: ym } }) || []).filter(function (v) { return mgr ? v.status !== 'accountant' : v.status !== 'draft'; });
+  var tb = invoiceTable(invs, mgr ? 'en' : 'hy'), subject, text, html, sign;
+  if (mgr) {
+    var last = String(tp.managerName || '').trim().split(/\s+/).pop();
+    subject = 'Re: ArmEquipment — ' + monthEn(ym) + ' invoices for your review and approval';
+    sign = 'Kind regards,\n' + (tp.signerEn || 'Armen Sargsyan') + '\nArmEquipment · Berry Line LLC';
+    var body = (last ? 'Dear Ms. ' + last + ',' : 'Dear Madam or Sir,') + '\n\nA gentle reminder about our invoices for ' + monthEn(ym) + ' (' + invs.length + ' invoices, total ' + fmt(tb.total) +
+      ' AMD), sent on ' + dmy(run.manager_sent_at || run.sent_at) + '. Could you please review and confirm your approval, or let us know if anything needs to be changed? The invoices are attached again for your convenience.';
+    text = body + '\n\n' + tb.text + '\n' + sign;
+    html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + esc(body).replace(/\n/g, '<br>') + '</p>' + tb.html + '<p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
+  } else {
+    var first = String(tp.accountantName || '').trim().split(/\s+/)[0];
+    subject = 'Re: ' + client + ' — ' + monthHy(ym) + ' — հաշիվներ դուրս գրելու համար';
+    sign = 'Շնորհակալություն,\n' + (tp.signer || 'Արմեն Սարգսյան') + '\nArmEquipment · Berry Line ՍՊԸ';
+    var bodyHy = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\nՀիշեցնում եմ ' + client + '-ի ' + monthHy(ym) + ' ամսվա հաշիվների մասին (' + invs.length + ' հաշիվ, ընդհանուր՝ ' + fmt(tb.total) +
+      ' դր.), որոնք ուղարկել էի ' + dmy(run.accountant_sent_at) + '-ին։ Խնդրում եմ տեղեկացնել, երբ հաշիվները դուրս գրվեն։ Հաշիվները կրկին կցված են։';
+    text = bodyHy + '\n\n' + tb.text + '\n' + sign;
+    html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + esc(bodyHy).replace(/\n/g, '<br>') + '</p>' + tb.html + '<p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
+  }
+  GmailApp.sendEmail(to, subject, text, { htmlBody: brandWrap(html), name: SENDER_NAME, attachments: invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }) });
+  var f = {}; f.client = client; f.month = ym; f[who + '_followups'] = n + 1; f[who + '_last_at'] = new Date().toISOString();
+  f.log = 'Հիշեցում #' + (n + 1) + ' ուղարկվեց ' + (mgr ? 'ղեկավարին' : 'հաշվապահին') + ' (' + to + ')';
+  rpc('bot_run', { p: f });
+  run[who + '_followups'] = n + 1; run[who + '_last_at'] = f[who + '_last_at'];
+}
+
+/* ---------- equipment requests (text emails from Hilton staff) → draft invoices ---------- */
+var REQ_ITEMS = [
+  { code: 'tv',       name: 'TV Հեռուստացույց',                    re: /\btv\b|television|հեռուստացույց|телевизор/i },
+  { code: 'tmic',     name: 'Table microphone Սեղանի միկրոֆոն',     re: /table\s*mic|desk\s*mic|conference\s*mic|gooseneck|սեղանի\s*միկր|լարով\s*միկր|wired\s*mic|настольн/i },
+  { code: 'hmic',     name: 'Clip microphone Կլիպ միկրոֆոն',        re: /clip|lapel|lavalier|lavalier|head\s*(set\s*)?mic|headset\s*mic|կլիպ|գլխի\s*միկր|петличк/i },
+  { code: 'wmic',     name: 'Wireless microphone Անլար միկրոֆոն',   re: /wireless\s*mic|hand\s*held|radio\s*mic|cordless\s*mic|անլար\s*միկր|беспроводн|радиомикр/i },
+  { code: 'rx',       name: 'Headphone Ականջակալ',                  re: /head\s*phone|receiver|ear\s*phone|ականջակալ|ընդունիչ|наушник|приемник/i },
+  { code: 'booth',    name: 'Interpreter booth Թարգմանչական խցիկ',   re: /booth|խցիկ|кабин/i },
+  { code: 'sound',    name: 'Sound system/ ձայնային համակարգ',      re: /sound\s*system|speaker|pa\s*system|ձայնային\s*համակարգ|բարձրախոս|звук|колонк/i },
+  { code: 'zoom',     name: 'Zoom system',                          re: /zoom|online\s*(meeting|conference)|hybrid/i },
+  { code: 'cam',      name: 'HD camera Տեսախցիկ',                   re: /camera|տեսախցիկ|камер/i },
+  { code: 'proj',     name: 'Projector Պրոյեկտոր',                  re: /projector|պրոյեկտոր|проектор/i },
+  { code: 'screen',   name: 'Screen Էկրան',                         re: /screen|էկրան|экран/i },
+  { code: 'pc',       name: 'Laptop Նոութբուք',                     re: /laptop|notebook|computer|նոութբուք|համակարգիչ|ноутбук/i },
+  { code: 'rec',      name: 'Audio recording Ձայնագրություն',       re: /record|ձայնագր|запис/i },
+  { code: 'prompter', name: 'Teleprompter Սուֆլոր',                 re: /prompter|սուֆլոր|суфлер/i },
+  { code: 'tmic',     name: 'Table microphone Սեղանի միկրոֆոն',     re: /\bmic(rophone)?s?\b|միկրոֆոն|микрофон/i }
+];
+var REQ_HINT = /equipment|provide|arrange|request|order|booking|interpret|headphone|microphone|sound|booth|projector|screen|zoom|camera|սարքավոր|տեխնիկա|պատվեր|оборудован/i;
+var MONTH_WORDS = [
+  ['jan', 'հունվ', 'январ', 'янв'], ['feb', 'փետր', 'феврал', 'фев'], ['mar', 'մարտ', 'март', 'мар'], ['apr', 'ապրիլ', 'апрел', 'апр'],
+  ['may', 'մայիս', 'ма[йя]'], ['jun', 'հունիս', 'июн'], ['jul', 'հուլիս', 'июл'], ['aug', 'օգոստ', 'август', 'авг'],
+  ['sep', 'սեպտ', 'сентябр', 'сен'], ['oct', 'հոկտ', 'октябр', 'окт'], ['nov', 'նոյեմ', 'ноябр', 'ноя'], ['dec', 'դեկտ', 'декабр', 'дек']];
+
+function reqDates(text, sentDate) {
+  var found = [], t = ' ' + String(text).toLowerCase() + ' ';
+  MONTH_WORDS.forEach(function (w, mi) {
+    var mw = '(?:' + w.join('|') + ')[\\wա-ֆа-я]*';
+    var d = '(\\d{1,2})(?:st|nd|rd|th)?', rng = d + '(?:\\s*(?:-|–|/|&|,|and|և|и)\\s*' + d + ')?';
+    var a = new RegExp(mw + '\\.?\\s+' + rng + '(?!\\d)', 'g'), b = new RegExp('(?:^|[^\\d])' + rng + '\\s+' + mw, 'g'), m;
+    while ((m = a.exec(t))) { found.push([mi + 1, +m[1]]); if (m[2]) found.push([mi + 1, +m[2]]); }
+    while ((m = b.exec(t))) { found.push([mi + 1, +m[1]]); if (m[2]) found.push([mi + 1, +m[2]]); }
+  });
+  var re = /(?:^|[^\d.:])(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?(?![\d:])/g, m2;
+  while ((m2 = re.exec(t))) { var dd = +m2[1], mm = +m2[2]; if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) found.push([mm, dd, m2[3] ? (m2[3].length === 2 ? 2000 + +m2[3] : +m2[3]) : null]); }
+  found = found.filter(function (f) { return f[1] >= 1 && f[1] <= 31; });
+  if (!found.length) return null;
+  var cnt = {}; found.forEach(function (f) { cnt[f[0]] = (cnt[f[0]] || 0) + 1; });
+  var mon = +Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a]; })[0];
+  var days = found.filter(function (f) { return f[0] === mon; }).map(function (f) { return f[1]; });
+  var yr = (found.filter(function (f) { return f[0] === mon && f[2]; })[0] || [])[2];
+  var sy = sentDate.getFullYear(), sm = sentDate.getMonth() + 1;
+  if (!yr) yr = mon < sm - 6 ? sy + 1 : (mon > sm + 6 ? sy - 1 : sy);
+  var last = new Date(yr, mon, 0).getDate();
+  var d1 = Math.min(Math.min.apply(null, days), last), d2 = Math.min(Math.max.apply(null, days), last);
+  if (d2 - d1 > 10) d2 = d1;
+  return { start: yr + '-' + pad2(mon) + '-' + pad2(d1), end: yr + '-' + pad2(mon) + '-' + pad2(d2), month: yr + '-' + pad2(mon) };
+}
+
+function parseRequest(subject, body, sentDate, equipment, lastPrices) {
+  var priceOf = {}; (equipment || []).forEach(function (e) { if (e.price != null) priceOf[e.code] = e.price; });
+  var monRe = new RegExp('(?:' + MONTH_WORDS.map(function (w) { return w.join('|'); }).join('|') + ')[\\wա-ֆа-я]*\\.?\\s*\\d{1,2}(?:\\s*[-–]\\s*\\d{1,2})?|\\d{1,2}(?:\\s*[-–]\\s*\\d{1,2})?\\s+(?:' + MONTH_WORDS.map(function (w) { return w.join('|'); }).join('|') + ')[\\wա-ֆа-я]*', 'ig');
+  var dated = false;
+  var segs = String(body || '').split(/\r?\n|;|,(?!\d)|\s+and\s+|\s+և\s+/i), lines = [], seen = {};
+  segs.forEach(function (seg) {
+    var s = seg.trim(); if (!s || s.length > 220) return;
+    var it = null;
+    for (var i = 0; i < REQ_ITEMS.length; i++) if (REQ_ITEMS[i].re.test(s)) { it = REQ_ITEMS[i]; break; }
+    if (!it) return;
+    var price = null, pm = s.match(/(?:amd|դր\.?|dram|драм)\s*([\d][\d\s.,]*\d|\d)/i) || s.match(/([\d][\d\s.,]*\d|\d)\s*(?:amd|դր|dram|драм)/i);
+    if (pm) price = toInt(pm[1]);
+    var hasDate = monRe.test(s) || /\b\d{1,2}\.\d{1,2}\b/.test(s); monRe.lastIndex = 0;
+    if (hasDate) dated = true;
+    var rest = s.replace(monRe, ' ').replace(/(?:amd|դր\.?|dram|драм)\s*[\d][\d\s.,]*/ig, ' ').replace(/[\d][\d\s.,]*\s*(?:amd|դր|dram|драм)/ig, ' ')
+      .replace(/\d{1,2}[.:]\d{2}(?:[.:]\d{2,4})?/g, ' ').replace(/\b20\d\d\b/g, ' ');
+    var qm = rest.match(/(\d+)\s*(?:pcs|pieces|items|units|sets|հատ|шт|x\b|×)/i) || rest.match(/(?:x|×|qty:?|quantity:?)\s*(\d+)/i) || rest.match(/(\d+)/);
+    var qty = qm ? +qm[1] : 1; if (!(qty > 0 && qty <= 2000)) qty = 1;
+    if (price == null) price = priceOf[it.code] != null ? priceOf[it.code] : ((lastPrices || {})[it.name.toLowerCase()] || 0);
+    var key = it.code + '|' + price;
+    if (seen[key] != null) { var L = lines[seen[key]]; L.qty = (hasDate || L.dated) ? L.qty + qty : Math.max(L.qty, qty); return; }
+    seen[key] = lines.length;
+    lines.push({ name: it.name, price: price, qty: qty, dated: hasDate });
+  });
+  var d = reqDates(subject, sentDate) || reqDates(body, sentDate);
+  var k = d ? Math.round((new Date(d.end) - new Date(d.start)) / 864e5) + 1 : 1;
+  lines.forEach(function (l) {
+    if (k > 1 && !dated) { l.qty *= k; l.name += ' (×' + k + ' օր)'; }
+    delete l.dated;
+  });
+  return { lines: lines, dates: d };
+}
+
+function importRequests(cfg) {
+  var tp = cfg.tpl || {}, me = myEmail();
+  if (!P.getProperty('REQ_SINCE')) P.setProperty('REQ_SINCE', Utilities.formatDate(new Date(), TZ, 'yyyy/MM/01'));
+  var domains = String(tp.requestDomains || 'hilton.com').split(/[\s,]+/).filter(String);
+  if (!domains.length) return;
+  var runThreads = (cfg.runs || []).map(function (r) { return r.thread_id; });
+  var q = '(' + domains.map(function (d) { return 'from:' + d; }).join(' OR ') + ') after:' + P.getProperty('REQ_SINCE') + ' -subject:invoice -subject:invoices';
+  var added = [];
+  GmailApp.search(q, 0, 40).forEach(function (th) {
+    if (runThreads.indexOf(th.getId()) >= 0) return;
+    var key = 'REQT_' + th.getId(), lastSeen = +(P.getProperty(key) || 0);
+    var ext = th.getMessages().filter(function (m) {
+      var f = String(m.getFrom()).toLowerCase();
+      return f.indexOf(me) < 0 && domains.some(function (d) { return f.indexOf(d.toLowerCase()) >= 0; });
+    });
+    if (!ext.length || ext[ext.length - 1].getDate().getTime() <= lastSeen) return;
+    var subject = th.getFirstMessageSubject() || '', best = null;
+    for (var i = ext.length - 1; i >= 0; i--) {
+      var body = replyText(ext[i]);
+      if (!REQ_HINT.test(subject + ' ' + body)) continue;
+      var r = parseRequest(subject, body, ext[i].getDate(), cfg.equipment, cfg.lastPrices);
+      if (r.lines.length) { best = { r: r, msg: ext[i] }; break; }
+    }
+    P.setProperty(key, String(ext[ext.length - 1].getDate().getTime()));
+    if (!best) return;
+    var d = best.r.dates, sd = best.msg.getDate();
+    var from = String(best.msg.getFrom()).replace(/<.*>/, '').replace(/"/g, '').trim();
+    var p = { thread_id: th.getId(), client: clientOf(from + ' ' + best.msg.getFrom(), cfg.clients || []) === 'Այլ' ? (tp.workflowClient || 'Hilton') : clientOf(from + ' ' + best.msg.getFrom(), cfg.clients || []),
+      start_date: d ? d.start : Utilities.formatDate(sd, TZ, 'yyyy-MM-dd'), end_date: d ? d.end : Utilities.formatDate(sd, TZ, 'yyyy-MM-dd'),
+      month: d ? d.month : Utilities.formatDate(sd, TZ, 'yyyy-MM'), lines: best.r.lines,
+      note: 'Ավտոմատ՝ պատվերի նամակից, չստուգված։ «' + subject + '», ' + from + ', ' + Utilities.formatDate(sd, TZ, 'dd.MM.yyyy') +
+            (best.r.lines.some(function (l) { return !l.price; }) ? '։ Ուշադրություն՝ որոշ տողերի գինը հայտնի չէ։' : '') };
+    var res = rpc('bot_add_request', { p: p });
+    if (/^(added|updated)/.test(res)) added.push((/^added/.test(res) ? 'Նոր' : 'Թարմացված') + ' #' + res.split(':')[1] + ' — ' + dmy(p.start_date) + ' — ' + fmt(invTotal(p)) + ' դր. — «' + subject + '»');
+  });
+  if (added.length) notifyMe('Հաշվի սևագրեր պատվերի նամակներից (' + added.length + ')',
+    added.join('\n') + '\n\nՍտուգեք և պահպանեք կայքում (Նամակագրություն կամ Հաշիվներ)՝ https://www.arm-equipment.com/portal');
 }
 
 /* 1st of the month after 9:00 Yerevan → last month's summary */
