@@ -305,16 +305,19 @@ textarea{resize:vertical}
         <label class="f"><span><span class="hy">Տևողությունը, ժամերը, տեղադրման ժամը, հատուկ պահանջներ</span><span class="en">Hours, set-up time, special requirements</span></span><textarea id="fNotes" rows="4"></textarea></label>
       </fieldset>
       <div class="err" id="errMain" style="margin-top:12px"></div>
+      <input type="text" id="fWebsite" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
     </form>
     <div class="dlg-body done" id="done" hidden>
-      <p style="margin:16px 0 0"><b><span class="hy">Հարցումը պատրաստ է։</span><span class="en">Your request is ready.</span></b> <span class="hy">Ուղարկեք այս տեքստը մեզ <b>armequipment@gmail.com</b> հասցեով։ Պատճենեք այն կամ բացեք ձեր փոստը։</span><span class="en">Send this text to <b>armequipment@gmail.com</b>. Copy it or open your mail app.</span></p>
+      <p style="margin:16px 0 0" id="doneMsg"><b><span class="hy">Հարցումը պատրաստ է։</span><span class="en">Your request is ready.</span></b> <span class="hy">Սեղմեք «Ուղարկել», և այն անմիջապես կհասնի մեզ։ Կարող եք նաև պատճենել տեքստը կամ ուղարկել ձեր փոստից՝ <b>armequipment@gmail.com</b>։</span><span class="en">Press “Send” and it reaches us straight away. You can also copy the text or send it from your own mail to <b>armequipment@gmail.com</b>.</span></p>
+      <div class="err" id="errSend" style="margin-top:8px"></div>
       <pre id="out"></pre>
     </div>
     <div class="dlg-foot" id="footForm"><button class="btn2" type="button" id="cancel"><span class="hy">Չեղարկել</span><span class="en">Cancel</span></button><button class="cta" type="submit" form="form"><span class="hy">Պատրաստել հարցումը</span><span class="en">Prepare request</span></button></div>
-    <div class="dlg-foot" id="footDone" hidden><button class="btn2" type="button" id="back"><span class="hy">Խմբագրել</span><span class="en">Edit</span></button><a class="btn2" id="mailto" href="#"><span class="hy">Բացել փոստում</span><span class="en">Open in mail</span></a><button class="cta" type="button" id="copyOut"><span class="hy">Պատճենել տեքստը</span><span class="en">Copy text</span></button></div>
+    <div class="dlg-foot" id="footDone" hidden><button class="btn2" type="button" id="back"><span class="hy">Խմբագրել</span><span class="en">Edit</span></button><a class="btn2" id="mailto" href="#"><span class="hy">Բացել փոստում</span><span class="en">Open in mail</span></a><button class="btn2" type="button" id="copyOut"><span class="hy">Պատճենել</span><span class="en">Copy</span></button><button class="cta" type="button" id="sendNow"><span class="hy">Ուղարկել</span><span class="en">Send</span></button></div>
   </div>
 </dialog>
 
+<script src="config.js"></script>
 <script>
 const EQ=[
  {id:"rx",hy:"Անլար ընդունիչ ականջակալով",en:"Wireless interpretation receiver",sub:"Wireless receivers for simultaneous interpretation",svg:'<path d="M58 40 A26 26 0 0 1 110 40" fill="none" stroke="#14284b" stroke-width="5" stroke-linecap="round"/><rect x="50" y="36" width="12" height="20" rx="5" fill="#c9a24a"/><rect x="106" y="36" width="12" height="20" rx="5" fill="#c9a24a"/><path d="M56 56 Q56 78 70 80" fill="none" stroke="#14284b" stroke-width="2.5"/><rect x="66" y="62" width="34" height="50" rx="7" fill="#14284b"/><rect x="72" y="70" width="22" height="10" rx="2" fill="#c9a24a"/><circle cx="83" cy="96" r="6" fill="none" stroke="#f3efe3" stroke-width="2.5"/><path d="M94 62 L94 50" stroke="#14284b" stroke-width="3" stroke-linecap="round"/>'},
@@ -413,8 +416,18 @@ $("#form").addEventListener("submit",e=>{e.preventDefault();
   lastText=lines.join("\n");
   $("#out").textContent=lastText;
   $("#mailto").href="mailto:armequipment@gmail.com?subject="+encodeURIComponent("Հարցում / Request — "+v("fName")+" — "+v("fStart"))+"&body="+encodeURIComponent(lastText);
+  $("#errSend").textContent="";$("#sendNow").hidden=false;$("#sendNow").disabled=false;
   $("#form").hidden=true;$("#footForm").hidden=true;$("#done").hidden=false;$("#footDone").hidden=false;$("#done").scrollTop=0;
 });
+$("#sendNow").onclick=async e=>{const b=e.currentTarget,en=root.lang==="en",v=id=>$("#"+id).value.trim(),cfg=window.AE_CONFIG||{};
+  if(!cfg.supabaseUrl){$("#errSend").textContent=en?"Please use Copy or Open in mail.":"Օգտվեք «Պատճենել» կամ «Բացել փոստում» կոճակից։";return}
+  b.disabled=true;$("#errSend").textContent="";
+  try{const r=await fetch(cfg.supabaseUrl+"/rest/v1/rpc/submit_inquiry",{method:"POST",headers:{"Content-Type":"application/json",apikey:cfg.supabaseAnonKey},
+      body:JSON.stringify({p:{name:v("fName"),org:v("fOrg"),email:v("fEmail"),phone:v("fPhone"),details:lastText,website:$("#fWebsite").value}})});
+    if(!r.ok)throw new Error(r.status);
+    $("#doneMsg").innerHTML="<b>"+t("Շնորհակալություն, հարցումն ուղարկված է։","Thank you, your request has been sent.")+"</b> "+t("Մենք շուտով կկապվենք ձեզ հետ։","We will get back to you shortly.");
+    b.hidden=true}
+  catch(_){b.disabled=false;$("#errSend").textContent=en?"Could not send. Please use Copy or Open in mail.":"Չհաջողվեց ուղարկել։ Օգտվեք «Պատճենել» կամ «Բացել փոստում» կոճակից։"}};
 $("#copyOut").onclick=async e=>{const b=e.currentTarget;
   try{await navigator.clipboard.writeText(lastText)}catch(_){const r=document.createRange();r.selectNodeContents($("#out"));const s=getSelection();s.removeAllRanges();s.addRange(r)}
   const old=b.innerHTML;b.innerHTML=t("Պատճենված է","Copied");setTimeout(()=>b.innerHTML=old,1800)};

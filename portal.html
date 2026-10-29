@@ -172,7 +172,7 @@ const T={
   resetSent:"Գաղտնաբառի վերականգնման հղումն ուղարկվել է ձեր էլ. փոստին։",sendReset:"Ուղարկել հղումը",back:"Հետ",newPw:"Նոր գաղտնաբառ",savePw:"Պահպանել գաղտնաբառը",pwSaved:"Գաղտնաբառը փոխված է։",
   pendingTitle:"Ձեր հաշիվը սպասում է հաստատման",pendingSub:"Մենք կստուգենք ձեր տվյալները և կհաստատենք հաշիվը։ Հաստատումից հետո կկարողանաք պատվիրել։ Հարցերի համար՝ armequipment@gmail.com",
   rejectedTitle:"Հաշիվը չի հաստատվել",rejectedSub:"Կապվեք մեզ հետ՝ armequipment@gmail.com",
-  tNew:"Նոր պատվեր",tInv:"Հաշիվներ",tCal:"Կալենդար",tInc:"Եկամուտ",tMine:"Իմ պատվերները",tProfile:"Իմ տվյալները",tOrders:"Պատվերներ",tClients:"Պատվիրատուներ",tPrices:"Գնացուցակ",
+  tNew:"Նոր պատվեր",tInv:"Հաշիվներ",tCal:"Կալենդար",tInc:"Եկամուտ",tInq:"Հարցումներ",tMine:"Իմ պատվերները",tProfile:"Իմ տվյալները",tOrders:"Պատվերներ",tClients:"Պատվիրատուներ",tPrices:"Գնացուցակ",
   event:"Միջոցառումը",start:"Սկիզբ",end:"Ավարտ",city:"Քաղաք",venue:"Վայրը (հյուրանոց, դահլիճ)",type:"Միջոցառման տեսակը",guests:"Մասնակիցների թիվը",speakers:"Խոսնակների թիվը",langs:"Թարգմանության լեզուներ",layout:"Դասավորություն",notes:"Այլ մանրամասներ (ժամեր, տեղադրման ժամ, պահանջներ)",
   equipment:"Տեխնիկա և քանակ",perUnit:"մեկ միավոր",onRequest:"գինը՝ ըստ հարցման",estTotal:"Մոտավոր արժեք",unpricedNote:"+ «ըստ հարցման» դիրքերի գինը կճշտենք",submit:"Ուղարկել պատվերը",
   needStart:"Նշեք սկզբի ամսաթիվը։",needItems:"Ընտրեք առնվազն մեկ տեխնիկա։",endBefore:"Ավարտը սկզբից շուտ է։",placed:"Պատվերն ուղարկված է։ Կհաստատենք շուտով։",
@@ -188,7 +188,7 @@ const T={
   resetSent:"A password reset link has been sent to your email.",sendReset:"Send link",back:"Back",newPw:"New password",savePw:"Save password",pwSaved:"Password changed.",
   pendingTitle:"Your account is waiting for approval",pendingSub:"We will check your details and approve your account. After that you can place orders. Questions: armequipment@gmail.com",
   rejectedTitle:"Account not approved",rejectedSub:"Please contact us at armequipment@gmail.com",
-  tNew:"New order",tInv:"Invoices",tCal:"Calendar",tInc:"Income",tMine:"My orders",tProfile:"My details",tOrders:"Orders",tClients:"Clients",tPrices:"Price list",
+  tNew:"New order",tInv:"Invoices",tCal:"Calendar",tInc:"Income",tInq:"Requests",tMine:"My orders",tProfile:"My details",tOrders:"Orders",tClients:"Clients",tPrices:"Price list",
   event:"The event",start:"Start date",end:"End date",city:"City",venue:"Venue (hotel, hall)",type:"Type of event",guests:"Number of guests",speakers:"Number of speakers",langs:"Interpretation languages",layout:"Layout",notes:"Other details (hours, set-up time, requirements)",
   equipment:"Equipment and quantity",perUnit:"per unit",onRequest:"price on request",estTotal:"Estimated cost",unpricedNote:"+ we will confirm prices for “on request” items",submit:"Send order",
   needStart:"Enter the start date.",needItems:"Choose at least one item.",endBefore:"The end date is before the start date.",placed:"Order sent. We will confirm soon.",
@@ -307,7 +307,7 @@ function vPrices(){
    <tr><td><input id="nhN" placeholder="${t("name_hy")}"></td><td><input id="neN" placeholder="${t("name_en")}"></td><td class="r"><input class="pricein" id="prN" type="number" min="0" inputmode="numeric"></td><td></td><td><button class="btn sm" id="eAdd">${t("addItem")}</button></td></tr></tbody></table></div>`;
 }
 
-function tabsFor(){const p=S.profile;if(!p)return[];if(p.is_admin)return[["orders","tOrders",S.orders.filter(o=>o.status==="new").length],["clients","tClients",S.clients.filter(c=>c.status==="pending").length],["invoices","tInv"],["calendar","tCal"],["income","tInc"],["prices","tPrices"]];if(p.status==="approved")return[["new","tNew"],["mine","tMine",0],["profile","tProfile"]];return[]}
+function tabsFor(){const p=S.profile;if(!p)return[];if(p.is_admin)return[["orders","tOrders",S.orders.filter(o=>o.status==="new").length],["clients","tClients",S.clients.filter(c=>c.status==="pending").length],["invoices","tInv"],["calendar","tCal"],["income","tInc"],["inquiries","tInq",IS.inq.filter(q=>Date.now()-new Date(q.created_at)<7*864e5).length],["prices","tPrices"]];if(p.status==="approved")return[["new","tNew"],["mine","tMine",0],["profile","tProfile"]];return[]}
 function render(){
   applyStatic();
   const main=$("#main");
@@ -319,7 +319,7 @@ function render(){
   if(!S.user||S.recovery){main.innerHTML=vAuth();return}
   if(!S.profile){main.innerHTML=`<p class="muted">${t("loading")}</p>`;return}
   if(!S.profile.is_admin&&S.profile.status!=="approved"){main.innerHTML=vPending();return}
-  const V={new:vNew,mine:vMine,profile:vProfile,orders:vOrdersAdmin,clients:vClients,prices:vPrices,invoices:vInvoices,calendar:vCalendar,income:vIncome}[S.tab];
+  const V={new:vNew,mine:vMine,profile:vProfile,orders:vOrdersAdmin,clients:vClients,prices:vPrices,invoices:vInvoices,calendar:vCalendar,income:vIncome,inquiries:vInquiries}[S.tab];
   main.innerHTML=V?V():"";
   if(S.tab==="invoices")invTotals();
   if(S.tab==="income")updSum();

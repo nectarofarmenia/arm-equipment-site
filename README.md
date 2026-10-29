@@ -29,3 +29,12 @@
 
 ## Կարևոր
 - `anon public` բանալին կարելի է հրապարակել։ **`service_role` բանալին երբեք մի դրեք** կայքում կամ GitHub-ում։
+
+## Email (armequipment@gmail.com)
+
+1. Supabase → SQL Editor → paste `supabase/004_email.sql` → Run.
+2. Open https://script.google.com while signed in as armequipment@gmail.com → New project → paste `gmail-robot/Code.gs`.
+3. Project Settings (⚙) → Script properties → add `SUPABASE_URL`, `SUPABASE_KEY` (publishable key) and `BOT_SECRET` (copy it from the site: Income → Email link → Robot password).
+4. Choose the function `setup` → Run → allow access.
+
+The robot sends queued emails every 5 minutes, the month-end summary on the 1st at 9:00, and adds invoice .docx files found in Gmail every hour (only emails from the setup day onward).
