@@ -354,7 +354,7 @@ render=function(){
   if(NAV_LAST===null){history.replaceState({ae:k,d:0},"");NAV_LAST=k}
   else if(k!==NAV_LAST&&!NAV_POP){NAV_DEPTH++;NAV_MAX=NAV_DEPTH;history.pushState({ae:k,d:NAV_DEPTH},"");NAV_LAST=k}
   NAV_POP=false;
-  const nav=$("#tabs");if(nav&&!nav.querySelector(".navarr"))nav.insertAdjacentHTML("afterbegin",`<span class="navarr"><button id="navBack" title="${esc(it("back"))}" aria-label="${esc(it("back"))}" ${NAV_DEPTH>0?"":"disabled"}>‹</button><button id="navFwd" title="${esc(it("fwd"))}" aria-label="${esc(it("fwd"))}" ${NAV_DEPTH<NAV_MAX?"":"disabled"}>›</button></span>`)};
+  const nav=$("#tabs");if(nav&&!nav.querySelector(".navarr"))nav.insertAdjacentHTML("afterbegin",`<span class="navarr"><button id="navBack" title="${esc(it("back"))}" aria-label="${esc(it("back"))}" ${NAV_DEPTH>0?"":"disabled"}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 L8 12 L15 19"/></svg></button><button id="navFwd" title="${esc(it("fwd"))}" aria-label="${esc(it("fwd"))}" ${NAV_DEPTH<NAV_MAX?"":"disabled"}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5 L16 12 L9 19"/></svg></button></span>`)};
 window.addEventListener("popstate",e=>{
   const st=e.state;if(!st||!st.ae||!S.profile||!S.profile.is_admin)return;
   const o=JSON.parse(st.ae);NAV_POP=true;NAV_DEPTH=st.d||0;
