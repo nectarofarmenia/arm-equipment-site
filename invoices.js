@@ -10,7 +10,7 @@ const IT={
   st1:"Հաշիվներ ամսվա ընթացքում",st2:"Ուղարկված Էմմային (հաստատման)",st3:"Էմմայի պատասխանը",st4:"Ուղարկված Հասմիկին (դուրս գրելու)",st5:"Հասմիկի պատասխանը",
   notYet:"Դեռ ոչ",autoAt:"Ինքնաշխատ՝ ",waitDays:"Սպասում ենք՝ օր",fups:"Հիշեցումներ",nextFup:"Հաջորդ հիշեցումը՝ ",sendNow:"Ուղարկել հիմա",remind:"Ուղարկել հիշեցում",markReplied:"Նշել՝ պատասխանել է",
   replied:"Պատասխանել է",mlog:"Պատմություն",prevMonths:"Նախորդ ամիսներ",stage:"Փուլ",openInv:"Բացել հաշիվները",fupDays:"Հիշեցում՝ քանի օր անպատասխան մնալուց հետո",fupMax:"Առավելագույնը քանի հիշեցում",reqDomains:"Պատվերի նամակներ ընդունել այս հասցեներից (դոմեյն)",
-  r_done:"Ավարտված է",auto:"Ավտոմատ",back:"Հետ"},
+  r_done:"Ավարտված է",auto:"Ավտոմատ",back:"Հետ",fwd:"Առաջ"},
  en:{tInv:"Invoices",tCal:"Calendar",tInc:"Income",newInv:"+ New invoice",invNo:"Invoice",num:"Invoice number",repMonth:"Reporting month",line:"Line",addLine:"+ Line",split:"Split",status:"Status",note:"Notes (manager's corrections etc.)",word:"Excel file",copyMail:"Copy email text",copied:"Copied",del:"Delete",delQ:"Delete this invoice?",yes:"Yes, delete",no:"No",noDate:"No date",noInv:"No invoices yet.",
   i_draft:"Draft",i_manager:"Sent to manager",i_approved:"Approved",i_accountant:"Sent to accountant",workDays:"Working days",thisMonth:"this month",days:"days",monthWork:"Work this month",noWork:"No working days this month.",
   yearIncome:"total income",allYears:"All years",byMonth:"By month",byYear:"By year",month:"Month",year:"Year",sharesT:"Partner split",sharesHint:"Percentages are taken from each invoice total and must add up to 100%. Changes apply to new invoices only.",
@@ -19,7 +19,7 @@ const IT={
   st1:"Invoices during the month",st2:"Sent to Emma (for approval)",st3:"Emma\u2019s reply",st4:"Sent to Hasmik (to issue)",st5:"Hasmik\u2019s reply",
   notYet:"Not yet",autoAt:"Automatically: ",waitDays:"Waiting, days",fups:"Reminders",nextFup:"Next reminder: ",sendNow:"Send now",remind:"Send reminder",markReplied:"Mark as replied",
   replied:"Replied",mlog:"History",prevMonths:"Previous months",stage:"Stage",openInv:"Open invoices",fupDays:"Reminder after how many days without reply",fupMax:"Maximum number of reminders",reqDomains:"Accept request emails from these domains",
-  r_done:"Done",auto:"Auto",back:"Back"}
+  r_done:"Done",auto:"Auto",back:"Back",fwd:"Forward"}
 };
 const it=k=>(IT[lang][k]??t(k));
 const MONTHS={hy:["Հունվար","Փետրվար","Մարտ","Ապրիլ","Մայիս","Հունիս","Հուլիս","Օգոստոս","Սեպտեմբեր","Հոկտեմբեր","Նոյեմբեր","Դեկտեմբեր"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
@@ -286,6 +286,7 @@ function vInquiries(){if(!IS.inq.length)return `<div class="empty">${it("noInq")
 document.addEventListener("click",async e=>{
   const b=e.target.closest("button,tr[data-inv]");if(!b||!S.profile||!S.profile.is_admin)return;
   if(b.id==="navBack"){history.back();return}
+  if(b.id==="navFwd"){history.forward();return}
   if(b.dataset.inv){const v=IS.inv.find(x=>String(x.id)===b.dataset.inv);if(v)openInvoice(v);return}
   if(b.dataset.org){IS.client=b.dataset.org;IS.iyear=null;render();scrollTo(0,0);return}
   if(b.dataset.iy){IS.iyear=+b.dataset.iy;render();scrollTo(0,0);return}
@@ -344,16 +345,16 @@ document.addEventListener("submit",async e=>{
 
 /* ----- browser Back stays inside the admin (and a visible ‹ Back button) ----- */
 const navKey=()=>JSON.stringify({tab:S.tab,client:IS.client,iyear:IS.iyear,edit:IS.edit?(IS.edit.id||"new"):null,ym:IS.mailYm});
-let NAV_LAST=null,NAV_POP=false,NAV_DEPTH=0;
+let NAV_LAST=null,NAV_POP=false,NAV_DEPTH=0,NAV_MAX=0;
 const _renderPortal=render;
 render=function(){
   _renderPortal();
   if(!S.profile||!S.profile.is_admin)return;
   const k=navKey();
   if(NAV_LAST===null){history.replaceState({ae:k,d:0},"");NAV_LAST=k}
-  else if(k!==NAV_LAST&&!NAV_POP){NAV_DEPTH++;history.pushState({ae:k,d:NAV_DEPTH},"");NAV_LAST=k}
+  else if(k!==NAV_LAST&&!NAV_POP){NAV_DEPTH++;NAV_MAX=NAV_DEPTH;history.pushState({ae:k,d:NAV_DEPTH},"");NAV_LAST=k}
   NAV_POP=false;
-  const nav=$("#tabs");if(nav&&NAV_DEPTH>0&&!nav.querySelector("#navBack"))nav.insertAdjacentHTML("afterbegin",`<button id="navBack" aria-label="${esc(it("back"))}">‹ ${esc(it("back"))}</button>`)};
+  const nav=$("#tabs");if(nav&&!nav.querySelector(".navarr"))nav.insertAdjacentHTML("afterbegin",`<span class="navarr"><button id="navBack" title="${esc(it("back"))}" aria-label="${esc(it("back"))}" ${NAV_DEPTH>0?"":"disabled"}>‹</button><button id="navFwd" title="${esc(it("fwd"))}" aria-label="${esc(it("fwd"))}" ${NAV_DEPTH<NAV_MAX?"":"disabled"}>›</button></span>`)};
 window.addEventListener("popstate",e=>{
   const st=e.state;if(!st||!st.ae||!S.profile||!S.profile.is_admin)return;
   const o=JSON.parse(st.ae);NAV_POP=true;NAV_DEPTH=st.d||0;
