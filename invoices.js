@@ -275,6 +275,10 @@ function vMail(){
   if(prev.length)h+=`<h2>${it("prevMonths")}</h2><div class="list">${prev.map(x=>`<button class="inv" data-mym="${x.month}"><span class="ttl">${esc(monthLabel(x.month))}</span><span class="num ttl">${fmt(x.total)} ${t("amd")}</span><span class="sub">${x.invoice_count} ${it("nInv")}</span><span><span class="pill ist-${x.status==="done"?"accountant":x.status==="needs_review"?"manager":"approved"}">${esc(it("r_"+x.status))}</span></span></button>`).join("")}</div>`;
   return h}
 
+/* ----- taxes, analytics (content to be defined) ----- */
+function vTaxes(){return `<h1>${t("tTax")}</h1><div class="empty">${lang==="en"?"This section is being prepared.":"Այս բաժինը պատրաստվում է։"}</div>`}
+function vAnalytics(){return `<h1>${t("tAna")}</h1><div class="empty">${lang==="en"?"This section is being prepared.":"Այս բաժինը պատրաստվում է։"}</div>`}
+
 /* ----- email settings, requests ----- */
 function vEmail(){const e=IS.email||{},b=IS.bot,errs=IS.outbox.filter(o=>o.status==="error").length;
   const now=new Date(),pm=new Date(now.getFullYear(),now.getMonth()-1,1),def=pm.getFullYear()+"-"+pad(pm.getMonth()+1);
