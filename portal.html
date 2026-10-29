@@ -145,11 +145,11 @@ th{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;
 .wstep .sb{min-width:0;flex:1}.wstep .stt{display:block;margin-bottom:2px}.wstep .row .btn{white-space:nowrap;flex:0 0 auto}.wstep .dot{margin-top:2px}
 .pre{white-space:pre-wrap;font:inherit;font-size:.88rem;margin:6px 0;background:var(--field);padding:8px 10px;border-radius:8px}
 .clickrow{cursor:pointer}.clickrow:hover td{background:var(--field)}
-.navarr{display:flex;gap:8px;padding:4px 0;align-items:center;flex:0 0 auto;margin-right:6px}
-nav.tabs .navarr button{width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);background:var(--gold);color:var(--navy);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:transform .12s}
-nav.tabs .navarr button:hover:not(:disabled){transform:scale(1.08);background:#e0bd62}
-nav.tabs .navarr button:disabled{background:transparent;color:rgba(243,239,227,.35);border-color:rgba(243,239,227,.25);box-shadow:none;cursor:default}
-.totop{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:15;width:52px;height:52px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(8,16,32,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s}
+.navarr{display:flex;gap:6px;padding:4px 0;align-items:center;flex:0 0 auto;margin-right:6px}
+nav.tabs .navarr button{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+nav.tabs .navarr button:hover:not(:disabled){background:var(--gold);color:var(--navy)}
+nav.tabs .navarr button:disabled{color:rgba(201,162,74,.3);border-color:rgba(201,162,74,.25);cursor:default}
+.totop{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:15;width:42px;height:42px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(8,16,32,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s}
 .totop:hover{transform:translateY(-2px)}.totop.off{opacity:0;transform:translateY(12px);pointer-events:none}
 main .cal{max-width:760px}main .months{max-width:1000px}
 .wfbar{background:var(--surface);border:1px dashed var(--gold);border-radius:12px;padding:8px 12px;margin:-4px 0 10px;font-size:.88rem}
@@ -175,7 +175,7 @@ main .cal{max-width:760px}main .months{max-width:1000px}
   <div class="in"><nav class="tabs" id="tabs" hidden></nav></div>
 </header>
 <main class="in" id="main"><p class="muted" data-i="loading"></p></main>
-<button class="totop off" id="toTop" aria-label="Վերև / Back to top"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19 V5 M5 12 L12 5 L19 12"/></svg></button>
+<button class="totop off" id="toTop" aria-label="Վերև / Back to top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19 V5 M5 12 L12 5 L19 12"/></svg></button>
 <div class="toast" id="toast" hidden></div>
 
 <script src="config.js"></script>
