@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ArmEquipment — Մուտք</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20140%20120%22%3E%3Cpath%20d%3D%22M20%2060%20L70%2026%20L120%2060%20Z%22%20fill%3D%22%23c9a24a%22/%3E%3Crect%20x%3D%2232%22%20y%3D%2212%22%20width%3D%2276%22%20height%3D%2280%22%20rx%3D%225%22%20fill%3D%22%23fdfaf1%22/%3E%3Crect%20x%3D%2262%22%20y%3D%2218%22%20width%3D%2216%22%20height%3D%2226%22%20rx%3D%228%22%20fill%3D%22%2314284b%22/%3E%3Cpath%20d%3D%22M18%2060%20L70%2094%20L122%2060%20L122%20102%20Q122%20110%20114%20110%20L26%20110%20Q18%20110%2018%20102%20Z%22%20fill%3D%22%2314284b%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Sans+Armenian:wght@400;500;700&display=swap">
+<style>
+/* Layout: navy header, tab strip, one working column. Same tokens as the public site. */
+:root{
+  --navy:#14284b; --gold:#c9a24a; --gold-deep:#a8832c;
+  --bg:#f3f5f9; --surface:#ffffff; --line:#dbe1ea; --ink:#14284b; --muted:#566381; --tile:#e9eef6; --field:#f6f8fb;
+  --ok:#2f7d4f; --ok-soft:#dcefe3; --warn:#7a5a12; --warn-soft:#f3e9cf; --bad:#b3261e; --bad-soft:#f8e1df; --info:#1f4a8a; --info-soft:#e3ebf7;
+  --f-latin:"Plus Jakarta Sans","Noto Sans Armenian",system-ui,sans-serif;
+  --f-body:"Noto Sans Armenian","Plus Jakarta Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0c1424; --surface:#131e33; --line:#24324c; --ink:#e9edf4; --muted:#9aa7bf; --tile:#1a2843; --field:#0f182b; --gold-deep:#d8b45e;
+  --ok:#6cc391; --ok-soft:#173226; --warn:#e2c27a; --warn-soft:#352b14; --bad:#f2a49d; --bad-soft:#3a1a18; --info:#9cc0f2; --info-soft:#18294a; color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.55}
+[hidden]{display:none!important}
+.in{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+header{background:var(--navy);color:#f3efe3;position:sticky;top:0;z-index:5;padding-top:env(safe-area-inset-top,0px)}
+header .in{display:flex;align-items:center;gap:10px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.word{font-family:var(--f-latin);letter-spacing:.06em;white-space:nowrap}
+.word b{color:var(--gold);font-weight:800}
+.sp{flex:1}
+.lang{display:flex;border:1px solid rgba(243,239,227,.35);border-radius:999px;overflow:hidden}
+.lang button{font:600 .78rem var(--f-latin);background:transparent;color:#cfd6e4;border:0;padding:6px 11px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+.hbtn{font:600 .85rem var(--f-body);color:#f3efe3;background:transparent;border:1px solid rgba(243,239,227,.35);border-radius:9px;padding:7px 12px;cursor:pointer}
+.who{font-size:.82rem;color:#c7cfdf;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.who{display:none}}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;border-top:1px solid rgba(243,239,227,.12)}
+nav.tabs button{flex:0 0 auto;font:500 .92rem var(--f-body);background:transparent;color:#aab5ca;border:0;border-bottom:3px solid transparent;padding:10px 12px;cursor:pointer}
+nav.tabs button[aria-current="page"]{color:#f3efe3;border-color:var(--gold)}
+nav.tabs .cnt{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--gold);color:var(--navy);font:700 .72rem/18px var(--f-latin);text-align:center}
+main{padding-block:22px 60px}
+h1{font-size:1.5rem;margin:0 0 6px;line-height:1.25}
+h2{font-size:1.15rem;margin:22px 0 10px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.narrow{max-width:460px;margin:24px auto 0}
+.seg{display:flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px;margin-bottom:16px}
+.seg button{flex:1;font:600 .9rem var(--f-body);border:0;background:transparent;color:var(--muted);padding:8px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+form{display:flex;flex-direction:column;gap:12px}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:600px){.fg{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+label{display:flex;flex-direction:column;gap:5px;font-size:.84rem;color:var(--muted);min-width:0}
+input,select,textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea{resize:vertical}
+.btn{font:600 .92rem var(--f-body);border-radius:10px;padding:10px 16px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.pri{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.btn.sm{padding:6px 11px;font-size:.84rem}
+.btn.danger{color:var(--bad)}
+.btn.ok{color:var(--ok)}
+.btn:disabled{opacity:.6;cursor:progress}
+.link{background:none;border:0;color:var(--gold-deep);font:600 .88rem var(--f-body);cursor:pointer;padding:0;text-decoration:underline}
+.msg{border-radius:10px;padding:10px 14px;font-size:.9rem}
+.msg.err{background:var(--bad-soft);color:var(--bad)}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.info{background:var(--info-soft);color:var(--info)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-block;font:600 .74rem var(--f-body);padding:2px 9px;border-radius:99px;white-space:nowrap}
+.st-new,.st-pending{background:var(--warn-soft);color:var(--warn)}
+.st-confirmed,.st-approved{background:var(--ok-soft);color:var(--ok)}
+.st-done{background:var(--info-soft);color:var(--info)}
+.st-cancelled,.st-rejected{background:var(--bad-soft);color:var(--bad)}
+.num{font-family:var(--f-latin);font-variant-numeric:tabular-nums;white-space:nowrap}
+.eq{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.eqr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.eqr:last-child{border-bottom:0}
+.eqr .nm{font-weight:600;font-size:.94rem}
+.eqr .pr{font-size:.82rem;color:var(--muted)}
+.eqr .lt{min-width:84px;text-align:right;font-weight:700}
+@media (max-width:520px){.eqr{grid-template-columns:minmax(0,1fr) auto}.eqr .lt{grid-column:1/-1;text-align:left;min-width:0}}
+.step{display:flex;align-items:center;gap:3px}
+.step button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.step input{width:60px;text-align:center;padding:6px;font-family:var(--f-latin)}
+.totalbar{position:sticky;bottom:0;margin-top:16px;background:var(--navy);color:#f3efe3;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:env(safe-area-inset-bottom,0px)}
+.totalbar .t{font:800 1.4rem var(--f-latin);color:var(--gold)}
+.totalbar .s{font-size:.8rem;color:#c7cfdf}
+.list{display:flex;flex-direction:column;gap:10px}
+.ord{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.ord summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}
+.ord summary::-webkit-details-marker{display:none}
+.ord .ttl{font-weight:700}
+.ord .sub{font-size:.85rem;color:var(--muted);min-width:0}
+.ord .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 16px;font-size:.88rem}
+.kv div span{display:block;color:var(--muted);font-size:.76rem}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+td,th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+td.r,th.r{text-align:right}
+th{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filters button{font:600 .82rem var(--f-body);border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:99px;padding:6px 12px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--navy);color:#f3efe3;border-color:var(--navy)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--navy);color:#f3efe3;padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:20;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.pricein{width:110px;text-align:right;font-family:var(--f-latin)}
+.shares{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:10px 0}
+.share{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.share .nm{font-weight:700}.share .pc{color:var(--muted);font-size:.8rem}.share .amt{font-size:1.1rem;font-weight:700}
+.share.tax{background:var(--warn-soft);border-color:transparent}.share.tax .nm,.share.tax .amt{color:var(--warn)}
+.inv{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.inv:hover{border-color:var(--gold)}.inv .ttl{font-weight:700}.inv .sub{color:var(--muted);font-size:.85rem;min-width:0}
+.ist-draft{background:var(--field);color:var(--muted);border:1px solid var(--line)}.ist-manager{background:var(--warn-soft);color:var(--warn)}.ist-approved{background:var(--info-soft);color:var(--info)}.ist-accountant{background:var(--ok-soft);color:var(--ok)}
+.ilines{display:flex;flex-direction:column;gap:8px}
+.iline{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr) minmax(0,.7fr) auto auto;gap:8px;align-items:end}
+.iline .lt{padding-bottom:10px;text-align:right;min-width:80px}
+@media (max-width:600px){.iline{grid-template-columns:1fr 1fr auto}.iline .ln{grid-column:1/-1}.iline .lt{grid-column:1/3;text-align:left;padding:0}}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:14px}
+.cal .dh{text-align:center;font-size:.74rem;color:var(--muted);padding:4px 0;font-weight:600}
+.cal .c{aspect-ratio:1/1;max-width:100%;border-radius:8px;background:var(--surface);border:1px solid var(--line);font:500 .9rem var(--f-latin);color:var(--ink);padding:0;cursor:default}
+.cal .c.e{background:transparent;border:0}
+.cal .c.w{background:var(--warn-soft);border-color:var(--gold);color:var(--ink);font-weight:800;cursor:pointer}
+.cal .c.today{outline:2px solid var(--navy);outline-offset:-2px}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.mo{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;color:var(--ink);font:inherit;cursor:pointer;display:flex;flex-direction:column}
+.mo.has{border-color:var(--gold)}.mo span{font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="in">
+    <a class="brand" href="/" aria-label="ArmEquipment">
+      <svg width="40" height="34" viewBox="0 0 140 120" aria-hidden="true"><path d="M20 60 L70 26 L120 60 Z" fill="#c9a24a" stroke="#c9a24a" stroke-width="6" stroke-linejoin="round"/><rect x="32" y="12" width="76" height="80" rx="5" fill="#fdfaf1"/><rect x="62" y="18" width="16" height="26" rx="8" fill="#14284b"/><path d="M56 36 A14 14 0 0 0 84 36" fill="none" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M70 50 L70 58 M62 58 L78 58" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M18 60 L70 94 L122 60 L122 102 Q122 110 114 110 L26 110 Q18 110 18 102 Z" fill="#c9a24a"/><path d="M18 60 L70 94 L122 60" fill="none" stroke="#14284b" stroke-width="3" stroke-linejoin="round"/></svg>
+      <span class="word"><b>ARM</b>EQUIPMENT</span>
+    </a>
+    <span class="sp"></span>
+    <span class="who" id="who"></span>
+    <div class="lang" role="group" aria-label="Language"><button id="lhy" aria-pressed="true">ՀԱՅ</button><button id="len" aria-pressed="false">ENG</button></div>
+    <button class="hbtn" id="out" hidden data-i="signOut"></button>
+  </div>
+  <div class="in"><nav class="tabs" id="tabs" hidden></nav></div>
+</header>
+<main class="in" id="main"><p class="muted" data-i="loading"></p></main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+"use strict";
+/* ---------- text ---------- */
+const T={
+ hy:{loading:"Բեռնվում է…",signOut:"Ելք",signIn:"Մուտք",register:"Գրանցում",forgot:"Մոռացե՞լ եք գաղտնաբառը",email:"Էլ. փոստ",password:"Գաղտնաբառ",pw8:"Գաղտնաբառ (առնվազն 8 նիշ)",fullName:"Անուն, ազգանուն",org:"Կազմակերպություն",phone:"Հեռախոս",
+  welcomeTitle:"Պատվիրատուի մուտք",welcomeSub:"Մուտք գործեք՝ տեխնիկա պատվիրելու և ձեր պատվերները տեսնելու համար։",
+  checkEmail:"Գրանցումն ընդունված է։ Ստուգեք ձեր էլ. փոստը և հաստատեք հասցեն, ապա մուտք գործեք։",
+  resetSent:"Գաղտնաբառի վերականգնման հղումն ուղարկվել է ձեր էլ. փոստին։",sendReset:"Ուղարկել հղումը",back:"Հետ",newPw:"Նոր գաղտնաբառ",savePw:"Պահպանել գաղտնաբառը",pwSaved:"Գաղտնաբառը փոխված է։",
+  pendingTitle:"Ձեր հաշիվը սպասում է հաստատման",pendingSub:"Մենք կստուգենք ձեր տվյալները և կհաստատենք հաշիվը։ Հաստատումից հետո կկարողանաք պատվիրել։ Հարցերի համար՝ armequipment@gmail.com",
+  rejectedTitle:"Հաշիվը չի հաստատվել",rejectedSub:"Կապվեք մեզ հետ՝ armequipment@gmail.com",
+  tNew:"Նոր պատվեր",tInv:"Հաշիվներ",tCal:"Կալենդար",tInc:"Եկամուտ",tMine:"Իմ պատվերները",tProfile:"Իմ տվյալները",tOrders:"Պատվերներ",tClients:"Պատվիրատուներ",tPrices:"Գնացուցակ",
+  event:"Միջոցառումը",start:"Սկիզբ",end:"Ավարտ",city:"Քաղաք",venue:"Վայրը (հյուրանոց, դահլիճ)",type:"Միջոցառման տեսակը",guests:"Մասնակիցների թիվը",speakers:"Խոսնակների թիվը",langs:"Թարգմանության լեզուներ",layout:"Դասավորություն",notes:"Այլ մանրամասներ (ժամեր, տեղադրման ժամ, պահանջներ)",
+  equipment:"Տեխնիկա և քանակ",perUnit:"մեկ միավոր",onRequest:"գինը՝ ըստ հարցման",estTotal:"Մոտավոր արժեք",unpricedNote:"+ «ըստ հարցման» դիրքերի գինը կճշտենք",submit:"Ուղարկել պատվերը",
+  needStart:"Նշեք սկզբի ամսաթիվը։",needItems:"Ընտրեք առնվազն մեկ տեխնիկա։",endBefore:"Ավարտը սկզբից շուտ է։",placed:"Պատվերն ուղարկված է։ Կհաստատենք շուտով։",
+  noOrders:"Դեռ պատվեր չկա։",order:"Պատվեր",items:"Տեխնիկա",qty:"Քանակ",price:"Գին",sum:"Գումար",total:"Ընդամենը",finalTotal:"Վերջնական գին",cancelOrder:"Չեղարկել պատվերը",cancelled:"Պատվերը չեղարկված է",
+  s_new:"Նոր",s_confirmed:"Հաստատված",s_done:"Կատարված",s_cancelled:"Չեղարկված",s_pending:"Սպասում է",s_approved:"Հաստատված",s_rejected:"Մերժված",
+  save:"Պահպանել",saved:"Պահպանված է",client:"Պատվիրատու",adminNote:"Նշում պատվիրատուի համար",all:"Բոլորը",approve:"Հաստատել",reject:"Մերժել",registered:"Գրանցվել է",noClients:"Պատվիրատուներ դեռ չկան։",
+  name_hy:"Անվանում (հայ)",name_en:"Անվանում (անգլ)",active:"Ակտիվ",addItem:"Ավելացնել տեխնիկա",priceHint:"Թողեք դատարկ «ըստ հարցման» գնի համար",
+  notConfigured:"Կայքը դեռ միացված չէ տվյալների բազային։ Լրացրեք config.js ֆայլը (տես README)։",errGeneric:"Չհաջողվեց։ Փորձեք նորից։",errLogin:"Էլ. փոստը կամ գաղտնաբառը սխալ է։",fillAll:"Լրացրեք բոլոր դաշտերը։",
+  lay_theatre:"Թատերական",lay_classroom:"Դասարանային",lay_ushape:"U-ձև",lay_boardroom:"Բանակցային սեղան",lay_banquet:"Կլոր սեղաններ",lay_other:"Այլ / չգիտեմ",amd:"դր."},
+ en:{loading:"Loading…",signOut:"Sign out",signIn:"Sign in",register:"Register",forgot:"Forgot your password?",email:"Email",password:"Password",pw8:"Password (at least 8 characters)",fullName:"Full name",org:"Organisation",phone:"Phone",
+  welcomeTitle:"Client sign in",welcomeSub:"Sign in to order equipment and follow your orders.",
+  checkEmail:"Registration received. Check your email to confirm your address, then sign in.",
+  resetSent:"A password reset link has been sent to your email.",sendReset:"Send link",back:"Back",newPw:"New password",savePw:"Save password",pwSaved:"Password changed.",
+  pendingTitle:"Your account is waiting for approval",pendingSub:"We will check your details and approve your account. After that you can place orders. Questions: armequipment@gmail.com",
+  rejectedTitle:"Account not approved",rejectedSub:"Please contact us at armequipment@gmail.com",
+  tNew:"New order",tInv:"Invoices",tCal:"Calendar",tInc:"Income",tMine:"My orders",tProfile:"My details",tOrders:"Orders",tClients:"Clients",tPrices:"Price list",
+  event:"The event",start:"Start date",end:"End date",city:"City",venue:"Venue (hotel, hall)",type:"Type of event",guests:"Number of guests",speakers:"Number of speakers",langs:"Interpretation languages",layout:"Layout",notes:"Other details (hours, set-up time, requirements)",
+  equipment:"Equipment and quantity",perUnit:"per unit",onRequest:"price on request",estTotal:"Estimated cost",unpricedNote:"+ we will confirm prices for “on request” items",submit:"Send order",
+  needStart:"Enter the start date.",needItems:"Choose at least one item.",endBefore:"The end date is before the start date.",placed:"Order sent. We will confirm soon.",
+  noOrders:"No orders yet.",order:"Order",items:"Equipment",qty:"Qty",price:"Price",sum:"Amount",total:"Total",finalTotal:"Final price",cancelOrder:"Cancel order",cancelled:"Order cancelled",
+  s_new:"New",s_confirmed:"Confirmed",s_done:"Done",s_cancelled:"Cancelled",s_pending:"Pending",s_approved:"Approved",s_rejected:"Rejected",
+  save:"Save",saved:"Saved",client:"Client",adminNote:"Note for the client",all:"All",approve:"Approve",reject:"Reject",registered:"Registered",noClients:"No clients yet.",
+  name_hy:"Name (Armenian)",name_en:"Name (English)",active:"Active",addItem:"Add equipment",priceHint:"Leave empty for “price on request”",
+  notConfigured:"The site is not connected to its database yet. Fill in config.js (see README).",errGeneric:"Something went wrong. Please try again.",errLogin:"Wrong email or password.",fillAll:"Please fill in all fields.",
+  lay_theatre:"Theatre",lay_classroom:"Classroom",lay_ushape:"U-shape",lay_boardroom:"Boardroom",lay_banquet:"Round tables",lay_other:"Other / not sure",amd:"AMD"}
+};
+const CITIES=["Երևան / Yerevan","Գյումրի / Gyumri","Վանաձոր / Vanadzor","Դիլիջան / Dilijan","Ծաղկաձոր / Tsaghkadzor","Ջերմուկ / Jermuk","Սևան / Sevan","Այլ քաղաք Հայաստանում / Other town in Armenia"];
+const TYPES=["Կոնֆերանս / Conference","Սեմինար / Seminar","Բանակցություններ / Negotiations","Համաժողով / Summit","Շնորհանդես / Presentation","Բանկետ / Banquet","Համերգ / Concert","Zoom / հիբրիդ / Zoom or hybrid","Այլ / Other"];
+const LAYS=["theatre","classroom","ushape","boardroom","banquet","other"];
+
+let lang="hy";try{if(localStorage.getItem("ae-lang")==="en")lang="en"}catch(e){}
+const t=k=>(T[lang][k]??k);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>Math.round(n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g," ");
+const nm=o=>lang==="en"?(o.name_en||o.name_hy):(o.name_hy||o.name_en);
+const pill=s=>`<span class="pill st-${esc(s)}">${esc(t("s_"+s))}</span>`;
+const dt=d=>d?new Date(d+(d.length===10?"T12:00":"")).toLocaleDateString(lang==="en"?"en-GB":"hy-AM",{day:"numeric",month:"short",year:"numeric"}):"";
+function toast(m){const e=$("#toast");e.textContent=m;e.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>e.hidden=true,2800)}
+function applyStatic(){document.documentElement.lang=lang;document.querySelectorAll("[data-i]").forEach(e=>e.textContent=t(e.dataset.i));$("#lhy").setAttribute("aria-pressed",lang==="hy");$("#len").setAttribute("aria-pressed",lang==="en")}
+function setLang(l){lang=l;try{localStorage.setItem("ae-lang",l)}catch(e){}applyStatic();render()}
+$("#lhy").onclick=()=>setLang("hy");$("#len").onclick=()=>setLang("en");
+
+/* ---------- state ---------- */
+const S={user:null,profile:null,tab:null,authMode:"in",recovery:false,equipment:[],orders:[],items:{},clients:[],cart:{},filter:"new",msg:null};
+const cfg=window.AE_CONFIG||{};
+let sb=null;
+if(cfg.supabaseUrl&&cfg.supabaseAnonKey&&window.supabase){sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey)}
+
+async function loadProfile(){
+  if(!S.user){S.profile=null;return}
+  const {data}=await sb.from("profiles").select("*").eq("id",S.user.id).maybeSingle();
+  S.profile=data||null;
+}
+async function loadData(){
+  const p=S.profile;if(!p)return;
+  const ok=p.is_admin||p.status==="approved";
+  if(ok){const {data}=await sb.from("equipment").select("*").order("sort").order("id");S.equipment=data||[]}
+  const q=sb.from("orders").select("*").order("created_at",{ascending:false});
+  const {data:orders}=await q;S.orders=orders||[];
+  if(S.orders.length){const {data:its}=await sb.from("order_items").select("*").in("order_id",S.orders.map(o=>o.id));S.items={};(its||[]).forEach(i=>(S.items[i.order_id]=S.items[i.order_id]||[]).push(i))}
+  if(p.is_admin){const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false});S.clients=(data||[]).filter(c=>!c.is_admin);await loadInvoiceData()}
+}
+async function refresh(){await loadProfile();await loadData();render()}
+
+/* ---------- views ---------- */
+function vAuth(){
+  if(S.recovery)return `<div class="card narrow"><h1>${t("newPw")}</h1><form id="fPw"><label>${t("pw8")}<input id="pw1" type="password" minlength="8" autocomplete="new-password" required></label>${msgHtml()}<button class="btn pri">${t("savePw")}</button></form></div>`;
+  const m=S.authMode;
+  let h=`<div class="card narrow"><h1>${t("welcomeTitle")}</h1><p class="muted" style="margin-top:0">${t("welcomeSub")}</p>`;
+  if(m!=="reset")h+=`<div class="seg"><button data-mode="in" aria-pressed="${m==="in"}">${t("signIn")}</button><button data-mode="up" aria-pressed="${m==="up"}">${t("register")}</button></div>`;
+  if(m==="in")h+=`<form id="fIn"><label>${t("email")}<input id="em" type="email" autocomplete="email" required></label><label>${t("password")}<input id="pw" type="password" autocomplete="current-password" required></label>${msgHtml()}<button class="btn pri">${t("signIn")}</button><button type="button" class="link" data-mode="reset">${t("forgot")}</button></form>`;
+  if(m==="up")h+=`<form id="fUp"><label>${t("fullName")}<input id="rn" autocomplete="name" required></label><label>${t("org")}<input id="ro" autocomplete="organization"></label><label>${t("phone")}<input id="rp" type="tel" autocomplete="tel" placeholder="+374 __ ___ ___" required></label><label>${t("email")}<input id="re" type="email" autocomplete="email" required></label><label>${t("pw8")}<input id="rw" type="password" minlength="8" autocomplete="new-password" required></label>${msgHtml()}<button class="btn pri">${t("register")}</button></form>`;
+  if(m==="reset")h+=`<form id="fReset"><label>${t("email")}<input id="xe" type="email" autocomplete="email" required></label>${msgHtml()}<button class="btn pri">${t("sendReset")}</button><button type="button" class="link" data-mode="in">${t("back")}</button></form>`;
+  return h+`</div>`;
+}
+function msgHtml(){return S.msg?`<div class="msg ${S.msg.k}">${esc(S.msg.m)}</div>`:""}
+
+function vPending(){const r=S.profile.status==="rejected";return `<div class="card narrow"><h1>${t(r?"rejectedTitle":"pendingTitle")}</h1><p class="muted">${t(r?"rejectedSub":"pendingSub")}</p></div>`}
+
+function cartTotal(){let sum=0,unp=false;for(const e of S.equipment){const q=S.cart[e.id]||0;if(!q)continue;if(e.price==null)unp=true;else sum+=e.price*q}return{sum,unp}}
+function vNew(){
+  const eq=S.equipment.filter(e=>e.active);
+  let h=`<form id="fOrder"><h2 style="margin-top:0">${t("event")}</h2><div class="fg">
+   <label>${t("start")}<input id="oS" type="date" required></label><label>${t("end")}<input id="oE" type="date"></label>
+   <label>${t("city")}<select id="oC">${CITIES.map(c=>`<option>${esc(c)}</option>`).join("")}</select></label><label>${t("venue")}<input id="oV"></label>
+   <label>${t("type")}<select id="oT">${TYPES.map(c=>`<option>${esc(c)}</option>`).join("")}</select></label><label>${t("layout")}<select id="oL">${LAYS.map(l=>`<option value="${l}">${esc(t("lay_"+l))}</option>`).join("")}</select></label>
+   <label>${t("guests")}<input id="oG" type="number" min="0" inputmode="numeric"></label><label>${t("speakers")}<input id="oP" type="number" min="0" inputmode="numeric"></label>
+   <label class="full">${t("langs")}<input id="oLg" placeholder="Հայերեն ↔ English, Русский"></label>
+   <label class="full">${t("notes")}<textarea id="oN" rows="3"></textarea></label></div>
+   <div class="eqsec"><h2>${t("equipment")}</h2><div class="eq">`;
+  h+=eq.map(e=>{const q=S.cart[e.id]||0;return `<div class="eqr"><div><div class="nm">${esc(nm(e))}</div><div class="pr">${e.price==null?t("onRequest"):`<span class="num">${fmt(e.price)}</span> ${t("amd")} · ${t("perUnit")}`}</div></div>
+    <div class="step"><button type="button" data-dec="${e.id}" aria-label="−">−</button><input type="number" min="0" step="1" inputmode="numeric" data-q="${e.id}" value="${q}" aria-label="${esc(nm(e))}"><button type="button" data-inc="${e.id}" aria-label="+">+</button></div>
+    <div class="lt num" id="lt${e.id}">${q&&e.price!=null?fmt(e.price*q)+" "+t("amd"):q?"—":""}</div></div>`}).join("");
+  const {sum,unp}=cartTotal();
+  h+=`</div>${msgHtml()}<div class="totalbar"><div><div class="s">${t("estTotal")}</div><div class="t num" id="tot">${fmt(sum)} ${t("amd")}</div><div class="s" id="unp" ${unp?"":"hidden"}>${t("unpricedNote")}</div></div><span class="sp" style="flex:1"></span><button class="btn pri">${t("submit")}</button></div></div></form>`;
+  return h;
+}
+function updTotals(){for(const e of S.equipment){const el=$("#lt"+e.id);if(!el)continue;const q=S.cart[e.id]||0;el.textContent=q&&e.price!=null?fmt(e.price*q)+" "+t("amd"):q?"—":""}const {sum,unp}=cartTotal();$("#tot").textContent=fmt(sum)+" "+t("amd");$("#unp").hidden=!unp}
+
+function orderCard(o,admin){
+  const its=S.items[o.id]||[];const c=admin?S.clients.find(x=>x.id===o.client_id):null;
+  const price=o.final_total!=null?`<b class="num">${fmt(o.final_total)} ${t("amd")}</b>`:`<span class="num">${fmt(o.total)} ${t("amd")}</span>${o.has_unpriced?" +":""}`;
+  let h=`<details class="ord"><summary><span class="ttl">${t("order")} #${o.id} · ${esc(dt(o.start_date))}${o.end_date&&o.end_date!==o.start_date?" – "+esc(dt(o.end_date)):""}</span><span>${pill(o.status)}</span>
+   <span class="sub">${admin&&c?esc(c.full_name)+(c.org?" · "+esc(c.org):"")+" · ":""}${esc(o.city)}${o.venue?" · "+esc(o.venue):""}${o.guests?" · "+o.guests+" "+(lang==="en"?"guests":"մասնակից"):""}</span><span>${price}</span></summary><div class="body">`;
+  h+=`<div class="kv">${[["type",o.event_type],["layout",o.layout?t("lay_"+o.layout):""],["guests",o.guests],["speakers",o.speakers],["langs",o.languages]].filter(x=>x[1]!=null&&x[1]!=="").map(([k,v])=>`<div><span>${t(k)}</span>${esc(v)}</div>`).join("")}
+   ${admin&&c?`<div><span>${t("client")}</span>${esc(c.full_name)}<br>${esc(c.email||"")}<br>${esc(c.phone||"")}</div>`:""}</div>`;
+  if(o.notes)h+=`<div style="white-space:pre-wrap;font-size:.9rem">${esc(o.notes)}</div>`;
+  h+=`<div class="tw"><table><thead><tr><th>${t("items")}</th><th class="r">${t("qty")}</th><th class="r">${t("price")}</th><th class="r">${t("sum")}</th></tr></thead><tbody>${its.map(i=>`<tr><td>${esc(nm(i))}</td><td class="r num">${i.qty}</td><td class="r num">${i.price==null?"—":fmt(i.price)}</td><td class="r num">${i.price==null?t("onRequest"):fmt(i.price*i.qty)}</td></tr>`).join("")}
+   <tr><td colspan="3"><b>${t("total")}</b></td><td class="r num"><b>${fmt(o.total)}</b>${o.has_unpriced?" +":""}</td></tr>${o.final_total!=null?`<tr><td colspan="3"><b>${t("finalTotal")}</b></td><td class="r num"><b>${fmt(o.final_total)}</b></td></tr>`:""}</tbody></table></div>`;
+  if(!admin&&o.admin_note)h+=`<div class="msg info">${esc(o.admin_note)}</div>`;
+  if(!admin&&o.status==="new")h+=`<div><button class="btn sm danger" data-cancel="${o.id}">${t("cancelOrder")}</button></div>`;
+  if(admin)h+=`<div class="fg"><label>${t("finalTotal")} (${t("amd")})<input id="ft${o.id}" type="number" min="0" inputmode="numeric" value="${o.final_total??""}" placeholder="${o.total}"></label><label>${t("adminNote")}<input id="an${o.id}" value="${esc(o.admin_note)}"></label></div>
+   <div class="row">${["new","confirmed","done","cancelled"].map(s=>`<button class="btn sm ${s===o.status?"pri":""}" data-ost="${o.id}:${s}">${t("s_"+s)}</button>`).join("")}<span class="sp" style="flex:1"></span>${o.status==="confirmed"||o.status==="done"?`<button class="btn sm" data-mkinv="${o.id}">${it("fromOrder")}</button>`:""}<button class="btn sm pri" data-osave="${o.id}">${t("save")}</button></div>`;
+  return h+`</div></details>`;
+}
+function vMine(){return S.orders.length?`<div class="list">${S.orders.map(o=>orderCard(o,false)).join("")}</div>`:`<div class="empty">${t("noOrders")}</div>`}
+function vProfile(){const p=S.profile;return `<div class="card" style="max-width:520px"><form id="fProf"><label>${t("fullName")}<input id="pn" value="${esc(p.full_name)}" required></label><label>${t("org")}<input id="po" value="${esc(p.org)}"></label><label>${t("phone")}<input id="pp" type="tel" value="${esc(p.phone)}"></label><label>${t("email")}<input value="${esc(p.email||"")}" disabled></label><button class="btn pri">${t("save")}</button></form></div>`}
+
+function vOrdersAdmin(){
+  const f=S.filter;const list=S.orders.filter(o=>f==="all"||o.status===f);
+  return `<div class="filters">${["new","confirmed","done","cancelled","all"].map(s=>`<button data-filter="${s}" aria-pressed="${f===s}">${s==="all"?t("all"):t("s_"+s)} (${s==="all"?S.orders.length:S.orders.filter(o=>o.status===s).length})</button>`).join("")}</div>`+
+   (list.length?`<div class="list">${list.map(o=>orderCard(o,true)).join("")}</div>`:`<div class="empty">${t("noOrders")}</div>`);
+}
+function vClients(){
+  if(!S.clients.length)return `<div class="empty">${t("noClients")}</div>`;
+  const rank={pending:0,approved:1,rejected:2};const cs=[...S.clients].sort((a,b)=>rank[a.status]-rank[b.status]);
+  return `<div class="tw"><table><thead><tr><th>${t("client")}</th><th>${t("phone")}</th><th>${t("registered")}</th><th></th><th></th></tr></thead><tbody>${cs.map(c=>`<tr><td><b>${esc(c.full_name)}</b>${c.org?"<br>"+esc(c.org):""}<br><span class="muted">${esc(c.email||"")}</span></td><td class="num">${esc(c.phone)}</td><td class="num">${esc(dt(c.created_at.slice(0,10)))}</td><td>${pill(c.status)}</td><td class="r" style="white-space:nowrap">${c.status!=="approved"?`<button class="btn sm ok" data-cst="${c.id}:approved">${t("approve")}</button> `:""}${c.status!=="rejected"?`<button class="btn sm danger" data-cst="${c.id}:rejected">${t("reject")}</button>`:""}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function vPrices(){
+  return `<p class="muted">${t("priceHint")}</p><div class="tw"><table><thead><tr><th>${t("name_hy")}</th><th>${t("name_en")}</th><th class="r">${t("price")}</th><th>${t("active")}</th><th></th></tr></thead><tbody>${S.equipment.map(e=>`<tr><td><input id="nh${e.id}" value="${esc(e.name_hy)}"></td><td><input id="ne${e.id}" value="${esc(e.name_en)}"></td><td class="r"><input class="pricein" id="pr${e.id}" type="number" min="0" inputmode="numeric" value="${e.price??""}"></td><td><input id="ac${e.id}" type="checkbox" style="width:auto" ${e.active?"checked":""}></td><td><button class="btn sm pri" data-esave="${e.id}">${t("save")}</button></td></tr>`).join("")}
+   <tr><td><input id="nhN" placeholder="${t("name_hy")}"></td><td><input id="neN" placeholder="${t("name_en")}"></td><td class="r"><input class="pricein" id="prN" type="number" min="0" inputmode="numeric"></td><td></td><td><button class="btn sm" id="eAdd">${t("addItem")}</button></td></tr></tbody></table></div>`;
+}
+
+function tabsFor(){const p=S.profile;if(!p)return[];if(p.is_admin)return[["orders","tOrders",S.orders.filter(o=>o.status==="new").length],["clients","tClients",S.clients.filter(c=>c.status==="pending").length],["invoices","tInv"],["calendar","tCal"],["income","tInc"],["prices","tPrices"]];if(p.status==="approved")return[["new","tNew"],["mine","tMine",0],["profile","tProfile"]];return[]}
+function render(){
+  applyStatic();
+  const main=$("#main");
+  if(!sb){main.innerHTML=`<div class="card narrow msg err">${t("notConfigured")}</div>`;return}
+  $("#out").hidden=!S.user;$("#who").textContent=S.profile?(S.profile.full_name||S.profile.email||""):"";
+  const tabs=tabsFor();const nav=$("#tabs");nav.hidden=!tabs.length;
+  if(tabs.length&&!tabs.some(x=>x[0]===S.tab))S.tab=tabs[0][0];
+  nav.innerHTML=tabs.map(([k,l,c])=>`<button data-tab="${k}" ${S.tab===k?'aria-current="page"':""}>${t(l)}${c?`<span class="cnt">${c}</span>`:""}</button>`).join("");
+  if(!S.user||S.recovery){main.innerHTML=vAuth();return}
+  if(!S.profile){main.innerHTML=`<p class="muted">${t("loading")}</p>`;return}
+  if(!S.profile.is_admin&&S.profile.status!=="approved"){main.innerHTML=vPending();return}
+  const V={new:vNew,mine:vMine,profile:vProfile,orders:vOrdersAdmin,clients:vClients,prices:vPrices,invoices:vInvoices,calendar:vCalendar,income:vIncome}[S.tab];
+  main.innerHTML=V?V():"";
+  if(S.tab==="invoices")invTotals();
+  if(S.tab==="income")updSum();
+}
+
+/* ---------- events ---------- */
+async function busy(btn,fn){if(btn)btn.disabled=true;try{await fn()}finally{if(btn)btn.disabled=false}}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("button,[data-mode]");if(!b)return;
+  if(b.dataset.mode){S.authMode=b.dataset.mode;S.msg=null;render();return}
+  if(b.dataset.tab){S.tab=b.dataset.tab;S.msg=null;render();scrollTo(0,0);return}
+  if(b.id==="out"){await sb.auth.signOut();return}
+  if(b.dataset.inc||b.dataset.dec){const id=+(b.dataset.inc||b.dataset.dec);S.cart[id]=Math.max(0,(S.cart[id]||0)+(b.dataset.inc?1:-1));const i=document.querySelector(`[data-q="${id}"]`);if(i)i.value=S.cart[id];updTotals();return}
+  if(b.dataset.filter){S.filter=b.dataset.filter;render();return}
+  if(b.dataset.cancel){await busy(b,async()=>{const {error}=await sb.rpc("cancel_my_order",{order_id:+b.dataset.cancel});if(error)return toast(t("errGeneric"));toast(t("cancelled"));await refresh()});return}
+  if(b.dataset.cst){const [id,st]=b.dataset.cst.split(":");await busy(b,async()=>{const {error}=await sb.rpc("set_client_status",{client:id,new_status:st});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh()});return}
+  if(b.dataset.ost){const [id,st]=b.dataset.ost.split(":");await busy(b,async()=>{const {error}=await sb.from("orders").update({status:st}).eq("id",+id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh()});return}
+  if(b.dataset.osave){const id=+b.dataset.osave;const ft=$("#ft"+id).value;await busy(b,async()=>{const {error}=await sb.from("orders").update({final_total:ft===""?null:Math.max(0,Math.round(+ft)),admin_note:$("#an"+id).value.trim()}).eq("id",id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh()});return}
+  if(b.dataset.esave){const id=+b.dataset.esave;const pr=$("#pr"+id).value;await busy(b,async()=>{const {error}=await sb.from("equipment").update({name_hy:$("#nh"+id).value.trim(),name_en:$("#ne"+id).value.trim(),price:pr===""?null:Math.max(0,Math.round(+pr)),active:$("#ac"+id).checked}).eq("id",id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh()});return}
+  if(b.id==="eAdd"){const h=$("#nhN").value.trim(),en=$("#neN").value.trim(),pr=$("#prN").value;if(!h||!en)return toast(t("fillAll"));await busy(b,async()=>{const max=Math.max(0,...S.equipment.map(x=>x.sort||0));const {error}=await sb.from("equipment").insert({name_hy:h,name_en:en,price:pr===""?null:Math.max(0,Math.round(+pr)),sort:max+10});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh()});return}
+});
+document.addEventListener("input",e=>{const q=e.target.dataset&&e.target.dataset.q;if(q){S.cart[+q]=Math.max(0,parseInt(e.target.value)||0);updTotals()}});
+document.addEventListener("submit",async e=>{
+  e.preventDefault();const f=e.target;const btn=f.querySelector("button:not([type=button])");S.msg=null;
+  const v=id=>($("#"+id)?.value||"").trim();
+  await busy(btn,async()=>{
+  if(f.id==="fIn"){const {error}=await sb.auth.signInWithPassword({email:v("em"),password:$("#pw").value});if(error){S.msg={k:"err",m:t("errLogin")};render()}return}
+  if(f.id==="fUp"){if(!v("rn")||!v("rp")||!v("re")||$("#rw").value.length<8){S.msg={k:"err",m:t("fillAll")};return render()}
+    const {data,error}=await sb.auth.signUp({email:v("re"),password:$("#rw").value,options:{data:{full_name:v("rn"),org:v("ro"),phone:v("rp")},emailRedirectTo:location.origin+location.pathname}});
+    if(error){S.msg={k:"err",m:error.message};return render()}
+    if(!data.session){S.authMode="in";S.msg={k:"ok",m:t("checkEmail")};render()}return}
+  if(f.id==="fReset"){const {error}=await sb.auth.resetPasswordForEmail(v("xe"),{redirectTo:location.origin+location.pathname});S.msg=error?{k:"err",m:t("errGeneric")}:{k:"ok",m:t("resetSent")};render();return}
+  if(f.id==="fPw"){const {error}=await sb.auth.updateUser({password:$("#pw1").value});if(error){S.msg={k:"err",m:error.message};return render()}S.recovery=false;toast(t("pwSaved"));await refresh();return}
+  if(f.id==="fProf"){const {error}=await sb.from("profiles").update({full_name:v("pn"),org:v("po"),phone:v("pp")}).eq("id",S.user.id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(f.id==="fOrder"){
+    const items=Object.entries(S.cart).filter(([,q])=>q>0).map(([id,q])=>({equipment_id:+id,qty:q}));
+    const err=m=>{S.msg={k:"err",m};const box=f.querySelector(".msg");if(box)box.outerHTML=msgHtml();else f.querySelector(".totalbar").insertAdjacentHTML("beforebegin",msgHtml())};
+    if(!v("oS"))return err(t("needStart"));if(v("oE")&&v("oE")<v("oS"))return err(t("endBefore"));if(!items.length)return err(t("needItems"));
+    const details={start_date:v("oS"),end_date:v("oE"),city:v("oC"),venue:v("oV"),event_type:v("oT"),layout:v("oL"),guests:v("oG"),speakers:v("oP"),languages:v("oLg"),notes:v("oN")};
+    const {error}=await sb.rpc("place_order",{details,items});
+    if(error)return err(t("errGeneric"));
+    S.cart={};S.tab="mine";toast(t("placed"));await refresh();scrollTo(0,0);return}
+  });
+});
+
+/* ---------- boot ---------- */
+applyStatic();render();
+if(sb){
+  sb.auth.onAuthStateChange((ev,session)=>{
+    if(ev==="PASSWORD_RECOVERY")S.recovery=true;
+    const changed=(session?.user?.id||null)!==(S.user?.id||null);
+    S.user=session?.user||null;
+    if(changed||ev==="PASSWORD_RECOVERY"){S.msg=null;setTimeout(refresh,0)}
+  });
+}
+</script>
+<script src="invoices.js"></script>
+</body>
+</html>

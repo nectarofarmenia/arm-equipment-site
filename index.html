@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ArmEquipment — Berry Line ՍՊԸ · Սինխրոն թարգմանության և համերգային տեխնիկա Հայաստանում</title>
+<meta name="description" content="ArmEquipment (Berry Line ՍՊԸ) — 2013 թվականից։ Սինխրոն թարգմանություն, ձայնային և համերգային տեխնիկա, սուֆլոր, ձայնագրություն և Zoom կոնֆերանսներ մինչև 1000 մասնակցով միջոցառումների համար Հայաստանում։">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20140%20120%22%3E%3Cpath%20d%3D%22M20%2060%20L70%2026%20L120%2060%20Z%22%20fill%3D%22%23c9a24a%22/%3E%3Crect%20x%3D%2232%22%20y%3D%2212%22%20width%3D%2276%22%20height%3D%2280%22%20rx%3D%225%22%20fill%3D%22%23fdfaf1%22/%3E%3Crect%20x%3D%2262%22%20y%3D%2218%22%20width%3D%2216%22%20height%3D%2226%22%20rx%3D%228%22%20fill%3D%22%2314284b%22/%3E%3Cpath%20d%3D%22M18%2060%20L70%2094%20L122%2060%20L122%20102%20Q122%20110%20114%20110%20L26%20110%20Q18%20110%2018%20102%20Z%22%20fill%3D%22%2314284b%22/%3E%3C/svg%3E">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Noto+Sans+Armenian:wght@400;500;700&display=swap">
+<style>
+/* Layout: navy band header + hero, then one column of sections; inquiry opens as a dialog sheet. */
+:root{
+  --navy:#14284b; --navy-2:#1d3863; --gold:#c9a24a; --gold-deep:#a8832c; --cream:#fdfaf1;
+  --bg:#f3f5f9; --surface:#ffffff; --line:#dbe1ea; --ink:#14284b; --muted:#566381; --tile:#e9eef6; --field:#f6f8fb;
+  --am-red:#d90012; --am-blue:#0033a0; --am-orange:#f2a800;
+  --f-latin:"Plus Jakarta Sans","Noto Sans Armenian",system-ui,sans-serif;
+  --f-body:"Noto Sans Armenian","Plus Jakarta Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1424; --surface:#131e33; --line:#24324c; --ink:#e9edf4; --muted:#9aa7bf; --tile:#1a2843; --field:#0f182b; --gold-deep:#d8b45e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1424; --surface:#131e33; --line:#24324c; --ink:#e9edf4; --muted:#9aa7bf; --tile:#1a2843; --field:#0f182b; --gold-deep:#d8b45e; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
+html[lang="hy"] .en, html[lang="en"] .hy{display:none!important}
+.in{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.flag{display:inline-block;width:24px;height:16px;border-radius:2px;background:linear-gradient(var(--am-red) 0 33.4%,var(--am-blue) 33.4% 66.7%,var(--am-orange) 66.7%);box-shadow:0 0 0 1px rgba(0,0,0,.15);flex:0 0 auto;vertical-align:-2px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--navy);color:#f3efe3}
+.top .in{display:flex;align-items:center;gap:12px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.word{font-family:var(--f-latin);font-size:1.05rem;letter-spacing:.06em;white-space:nowrap}
+.word b{color:var(--gold);font-weight:800}
+.sp{flex:1}
+.lang{display:flex;border:1px solid rgba(243,239,227,.35);border-radius:999px;overflow:hidden}
+.lang button{font:600 .8rem var(--f-latin);background:transparent;color:#cfd6e4;border:0;padding:6px 12px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+.cta{font:600 .92rem var(--f-body);background:var(--gold);color:var(--navy);border:0;border-radius:10px;padding:10px 16px;text-decoration:none;white-space:nowrap;cursor:pointer}
+@media (max-width:560px){.top .cta{display:none}}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.brand{cursor:pointer;border-radius:8px;transition:opacity .15s}
+.brand:hover{opacity:.85}
+.navbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid rgba(243,239,227,.35);background:transparent;color:#f3efe3;cursor:pointer;flex:0 0 auto}
+.navbtn:hover{background:rgba(243,239,227,.1)}
+.totop{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;width:48px;height:48px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(8,16,32,.28);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s}
+.totop.off{opacity:0;transform:translateY(12px);pointer-events:none}
+
+/* hero */
+.hero{background:var(--navy);color:#f3efe3;position:relative}
+.hero{overflow:hidden}
+.hero>.in,.contact>*{position:relative;z-index:1}
+.map{position:absolute;pointer-events:none;z-index:0}
+.map path{fill:none;stroke:var(--gold);stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.hero .map{right:-4%;top:50%;transform:translateY(-50%);height:118%;width:auto;max-width:none;opacity:.22}
+.contact{position:relative;overflow:hidden}
+.contact .map{right:-30px;bottom:-40px;height:150%;width:auto;max-width:none;opacity:.16}
+@media (max-width:760px){.hero .map{right:-30%;height:90%;top:8%;transform:none;opacity:.16}}
+.hero .in{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:32px;align-items:center;padding-block:40px 56px}
+@media (max-width:760px){.hero .in{grid-template-columns:1fr;padding-block:24px 44px}}
+.eyebrow{display:flex;align-items:center;gap:10px;font:600 .78rem var(--f-latin);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+h1{font-size:clamp(1.8rem,4.6vw,2.9rem);line-height:1.15;margin:.4em 0 .5em;text-wrap:balance;font-weight:700}
+.hero p{color:#c7cfdf;max-width:34em;margin:0 0 1.4em}
+.hero .actions{display:flex;gap:12px;flex-wrap:wrap}
+.ghost{font:600 .9rem var(--f-body);color:#f3efe3;background:transparent;border:1px solid rgba(243,239,227,.4);border-radius:10px;padding:10px 16px;text-decoration:none;cursor:pointer}
+.hero-art{background:var(--navy-2);border-radius:20px;padding:20px;max-width:100%}
+.hero-art svg{width:100%;height:auto;display:block}
+
+/* sections */
+section{padding-block:56px 8px}
+h2{font-size:clamp(1.4rem,3vw,1.9rem);margin:0 0 .3em;line-height:1.25;text-wrap:balance}
+.lead{color:var(--muted);max-width:40em;margin:0 0 28px}
+.uses{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.use{border-top:3px solid var(--gold);background:var(--surface);padding:18px 18px 20px}
+.use h3{margin:0 0 6px;font-size:1.05rem}
+.use p{margin:0;color:var(--muted);font-size:.95rem}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.pic{background:var(--tile);aspect-ratio:4/3;max-width:100%;display:flex;align-items:center;justify-content:center;padding:14px}
+.pic svg{width:100%;height:100%}
+.body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:2px;flex:1}
+.body h3{margin:0;font-size:1rem;line-height:1.35}
+.body .sub{font:400 .82rem var(--f-latin);color:var(--muted)}
+.ask{margin-top:auto;align-self:flex-start;font:600 .88rem var(--f-body);color:var(--gold-deep);background:transparent;border:1px solid var(--gold);border-radius:8px;padding:7px 12px;cursor:pointer;margin-top:14px}
+.ask:hover{background:var(--gold);color:var(--navy)}
+
+.partners{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.ptile{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-weight:600;line-height:1.35;min-width:0}
+.pico{flex:0 0 auto;width:42px;height:42px;border-radius:50%;background:var(--tile);color:var(--gold-deep);display:flex;align-items:center;justify-content:center}
+.about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:760px){.about{grid-template-columns:1fr}}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px}
+.stat{display:flex;flex-direction:column;border-left:3px solid var(--gold);padding-left:12px;border-radius:0}
+.stat b{font:800 2rem/1.1 var(--f-latin);color:var(--ink);font-variant-numeric:tabular-nums}
+.stat span{font-size:.85rem;color:var(--muted)}
+.facts{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.facts li{display:flex;gap:10px;align-items:flex-start}
+.facts svg,.facts .flag{margin-top:5px}
+
+.contact{background:var(--navy);color:#f3efe3;border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:14px;margin-bottom:48px}
+.contact p{margin:0;color:#c7cfdf}
+.mail{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.mail code{font:600 1.05rem var(--f-latin);background:rgba(255,255,255,.08);padding:10px 14px;border-radius:10px;user-select:all;word-break:break-all}
+footer{border-top:1px solid var(--line);padding-block:20px 28px;color:var(--muted);font-size:.85rem}
+footer .in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* inquiry dialog */
+dialog{border:0;padding:0;border-radius:18px;background:var(--surface);color:var(--ink);width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 24px)}
+dialog::backdrop{background:rgba(8,16,32,.6)}
+@media (max-width:560px){dialog{width:100vw;max-width:100vw;max-height:100dvh;height:100dvh;border-radius:0;margin:0}}
+.dlg{display:flex;flex-direction:column;max-height:inherit;height:100%}
+.dlg-head{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line);padding-top:max(16px,env(safe-area-inset-top,0px))}
+.dlg-head h2{font-size:1.2rem;margin:0}
+.x{margin-left:auto;background:transparent;border:0;color:var(--muted);font-size:1.6rem;line-height:1;cursor:pointer;padding:4px 8px}
+.dlg-body{overflow-y:auto;padding:4px 20px 20px;flex:1}
+.dlg-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+fieldset{border:0;padding:0;margin:18px 0 0}
+legend{font-weight:700;font-size:.98rem;margin-bottom:10px;padding:0}
+.fg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:560px){.fg{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:.85rem;color:var(--muted);min-width:0}
+label.f .req{color:var(--am-red)}
+input,select,textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea{resize:vertical}
+.err{color:#c0392b;font-size:.82rem;min-height:1em}
+.layouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.layouts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.lay{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1.5px solid var(--line);border-radius:12px;background:var(--field);cursor:pointer;font-size:.82rem;text-align:center;color:var(--ink)}
+.lay svg{width:64px;height:44px}
+.lay[aria-pressed="true"]{border-color:var(--gold);background:var(--tile);box-shadow:inset 0 0 0 1px var(--gold)}
+.eq{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.eqrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.eqrow:last-child{border-bottom:0}
+.eqrow .n{flex:1;min-width:0;font-size:.92rem}
+.step{display:flex;align-items:center;gap:2px}
+.step button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);font-size:1.1rem;cursor:pointer}
+.step input{width:56px;text-align:center;padding:6px;font-family:var(--f-latin)}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem;margin-top:10px}
+.check input{width:auto}
+.done{display:flex;flex-direction:column;gap:12px}
+.done pre{white-space:pre-wrap;word-break:break-word;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 .88rem/1.5 var(--f-body);margin:0;max-height:40vh;overflow:auto}
+.btn2{font:600 .92rem var(--f-body);background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;text-decoration:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="top"><div class="in">
+  <button class="navbtn" id="backBtn" hidden aria-label="Հետ / Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 L8 12 L15 19"/></svg></button>
+  <a class="brand" href="#top" id="homeLink" aria-label="ArmEquipment — Գլխավոր էջ / Home">
+    <svg width="44" height="38" viewBox="0 0 140 120" aria-hidden="true"><path d="M20 60 L70 26 L120 60 Z" fill="#c9a24a" stroke="#c9a24a" stroke-width="6" stroke-linejoin="round"/><rect x="32" y="12" width="76" height="80" rx="5" fill="#fdfaf1"/><rect x="62" y="18" width="16" height="26" rx="8" fill="#14284b"/><path d="M56 36 A14 14 0 0 0 84 36" fill="none" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M70 50 L70 58 M62 58 L78 58" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M18 60 L70 94 L122 60 L122 102 Q122 110 114 110 L26 110 Q18 110 18 102 Z" fill="#c9a24a"/><path d="M18 60 L70 94 L122 60" fill="none" stroke="#14284b" stroke-width="3" stroke-linejoin="round"/></svg>
+    <span class="word"><b>ARM</b>EQUIPMENT</span>
+  </a>
+  <span class="sp"></span>
+  <a class="ghost" href="/portal.html" style="padding:7px 12px;font-size:.85rem;white-space:nowrap"><span class="hy">Մուտք</span><span class="en">Sign in</span></a>
+  <div class="lang" role="group" aria-label="Language"><button id="lhy" aria-pressed="true">ՀԱՅ</button><button id="len" aria-pressed="false">ENG</button></div>
+  <button class="cta" data-open><span class="hy">Հարցում</span><span class="en">Request a quote</span></button>
+</div></header>
+
+<div class="hero" id="top"><svg class="map" viewBox="20 0 1240 1260" aria-hidden="true"><path id="amPath" stroke-width="2" d="M40 95 L130 70 L235 70 L305 35 L380 45 L440 40 L545 35 L560 22 L620 15 L660 50 L700 95 L760 105 L800 150 L830 215 L850 245 L800 300 L770 330 L800 340 L850 380 L900 420 L950 480 L990 530 L1000 580 L960 640 L930 660 L870 660 L910 720 L950 790 L1000 840 L1060 860 L1130 880 L1220 900 L1190 960 L1220 1000 L1240 1060 L1205 1110 L1220 1200 L1212 1238 L1100 1180 L1060 1120 L1000 1050 L990 1000 L940 950 L900 890 L860 880 L800 915 L760 890 L700 860 L660 800 L640 760 L600 800 L530 800 L470 770 L420 730 L390 680 L360 650 L300 640 L230 630 L140 620 L100 600 L95 560 L85 520 L85 480 L60 430 L55 400 L80 370 L65 300 L55 250 L50 200 L35 150 Z"/><use href="#amPath" transform="translate(640 630) scale(.86) translate(-640 -630)" stroke-width="1.2" opacity=".7"/><use href="#amPath" transform="translate(640 630) scale(.72) translate(-640 -630)" stroke-width="1" opacity=".45"/><use href="#amPath" transform="translate(640 630) scale(.58) translate(-640 -630)" stroke-width="1" opacity=".3"/></svg><div class="in">
+  <div>
+    <div class="eyebrow"><span class="flag" role="img" aria-label="Հայաստանի դրոշ"></span><span class="hy">Միայն Հայաստանում · 2013 թվականից</span><span class="en">Armenia only · Since 2013</span></div>
+    <h1><span class="hy">Սինխրոն թարգմանության և ձայնային տեխնիկայի վարձույթ Հայաստանում</span><span class="en">Simultaneous interpretation and sound equipment hire in Armenia</span></h1>
+    <p><span class="hy">2013 թվականից կազմակերպում ենք մինչև 1000 մասնակցով կոնֆերանսներ, մեծ համերգային ծրագրեր, հյուրանոցային միջոցառումներ և Zoom կոնֆերանսներ։ Պատմեք ձեր միջոցառման մասին, և մենք կառաջարկենք համապատասխան տեխնիկան ու գինը։</span><span class="en">Since 2013 we have run conferences of up to 1,000 guests, large concert programmes, hotel events and Zoom conferences. Tell us about your event and we will propose the right equipment and price.</span></p>
+    <div class="actions"><button class="cta" data-open><span class="hy">Ուղարկել հարցում</span><span class="en">Send a request</span></button><a class="ghost" href="#equipment"><span class="hy">Տեսնել տեխնիկան</span><span class="en">See the equipment</span></a></div>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 400 280">
+      <rect x="40" y="40" width="320" height="170" rx="10" fill="#0f1f3d"/>
+      <rect x="56" y="56" width="288" height="96" rx="6" fill="#26457a"/>
+      <rect x="56" y="56" width="288" height="96" rx="6" fill="none" stroke="#c9a24a" stroke-width="2" opacity=".6"/>
+      <circle cx="140" cy="108" r="16" fill="#f3efe3"/><path d="M118 152 Q140 120 162 152 Z" fill="#f3efe3"/>
+      <path d="M122 104 A18 18 0 0 1 158 104" fill="none" stroke="#c9a24a" stroke-width="5" stroke-linecap="round"/><rect x="117" y="102" width="8" height="12" rx="3" fill="#c9a24a"/><rect x="155" y="102" width="8" height="12" rx="3" fill="#c9a24a"/>
+      <circle cx="260" cy="108" r="16" fill="#f3efe3"/><path d="M238 152 Q260 120 282 152 Z" fill="#f3efe3"/>
+      <path d="M242 104 A18 18 0 0 1 278 104" fill="none" stroke="#c9a24a" stroke-width="5" stroke-linecap="round"/><rect x="237" y="102" width="8" height="12" rx="3" fill="#c9a24a"/><rect x="275" y="102" width="8" height="12" rx="3" fill="#c9a24a"/>
+      <rect x="40" y="152" width="320" height="16" fill="#c9a24a"/>
+      <rect x="70" y="168" width="10" height="72" fill="#0f1f3d"/><rect x="320" y="168" width="10" height="72" fill="#0f1f3d"/>
+      <path d="M188 150 Q200 128 212 128" fill="none" stroke="#f3efe3" stroke-width="3"/><rect x="208" y="122" width="12" height="9" rx="4" fill="#f3efe3"/><rect x="176" y="146" width="24" height="6" rx="3" fill="#f3efe3"/>
+      <g fill="none" stroke="#c9a24a" stroke-width="3" stroke-linecap="round" opacity=".9"><path d="M300 28 A16 16 0 0 1 300 52"/><path d="M310 20 A28 28 0 0 1 310 60"/></g>
+      <rect x="20" y="240" width="360" height="6" rx="3" fill="#0f1f3d"/>
+    </svg>
+  </div>
+</div></div>
+
+<main class="in">
+  <section id="services">
+    <h2><span class="hy">Որտեղ ենք աշխատում</span><span class="en">Where we work</span></h2>
+    <p class="lead"><span class="hy">Աշխատում ենք Հայաստանի ողջ տարածքում։ Տրամադրում ենք այն տեխնիկան, որ մասնակիցները լսեն խոսողին իրենց լեզվով, իսկ դահլիճում ամեն ինչ լավ լսելի և տեսանելի լինի։</span><span class="en">We work across Armenia, providing the equipment that lets every guest hear the speaker in their own language, and keeps the room clearly heard and seen.</span></p>
+    <div class="uses">
+      <div class="use"><h3><span class="hy">Կոնֆերանսներ և համաժողովներ</span><span class="en">Conferences and summits</span></h3><p><span class="hy">Սինխրոն թարգմանություն մի քանի լեզվով, ընդունիչներ յուրաքանչյուր մասնակցի համար։</span><span class="en">Simultaneous interpretation in several languages, a receiver for every guest.</span></p></div>
+      <div class="use"><h3><span class="hy">Հյուրանոցային միջոցառումներ</span><span class="en">Hotel events</span></h3><p><span class="hy">Ձայնային համակարգ, միկրոֆոններ, պրոյեկտոր, էկրան, հեռուստացույց և համակարգիչ դահլիճների համար։</span><span class="en">Sound system, microphones, projector, screen, TV and laptop for function rooms.</span></p></div>
+      <div class="use"><h3><span class="hy">Համերգներ և ձայնագրություն</span><span class="en">Concerts and recording</span></h3><p><span class="hy">Մեծ համերգային ծրագրերի տեխնիկա, սուֆլոր և միջոցառման ձայնագրություն։</span><span class="en">Equipment for large concert programmes, teleprompter and event audio recording.</span></p></div>
+      <div class="use"><h3><span class="hy">Zoom կոնֆերանսներ</span><span class="en">Zoom conferences</span></h3><p><span class="hy">Հիբրիդ և առցանց միջոցառումների անցկացում՝ դահլիճը միացնելով Zoom-ին։</span><span class="en">Hybrid and online events, with the hall connected to Zoom.</span></p></div>
+      <div class="use"><h3><span class="hy">Բանակցություններ և սեմինարներ</span><span class="en">Negotiations and seminars</span></h3><p><span class="hy">Սեղանի միկրոֆոններ, անլար և գլխի միկրոֆոններ ելույթների համար։</span><span class="en">Table, wireless and head microphones for speakers.</span></p></div>
+    </div>
+  </section>
+
+  <section id="equipment">
+    <h2><span class="hy">Մեր տեխնիկան</span><span class="en">Our equipment</span></h2>
+    <p class="lead"><span class="hy">Գինը կախված է միջոցառման ծավալից և տևողությունից։ Ընտրեք անհրաժեշտ տեխնիկան, և կուղարկենք առաջարկ։</span><span class="en">The price depends on the size and length of your event. Choose what you need and we will send you a quote.</span></p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="partners">
+    <h2><span class="hy">Մեր գործընկերներն ու պատվիրատուները</span><span class="en">Our partners and clients</span></h2>
+    <p class="lead"><span class="hy">2013 թվականից աշխատել ենք հյուրանոցների, պետական կառույցների, դիվանագիտական առաքելությունների և միջազգային կազմակերպությունների հետ։</span><span class="en">Since 2013 we have worked with hotels, state bodies, diplomatic missions and international organisations.</span></p>
+    <ul class="partners">
+      <li class="ptile"><span class="pico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20 V6 L12 3 L19 6 V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 20 H21 M9 9 h2 M13 9 h2 M9 13 h2 M13 13 h2 M10.5 20 v-3 h3 v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></span><span><span class="hy">Hilton հյուրանոց</span><span class="en">Hilton hotel</span></span></li>
+      <li class="ptile"><span class="pico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20 V6 L12 3 L19 6 V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 20 H21 M9 9 h2 M13 9 h2 M9 13 h2 M13 13 h2 M10.5 20 v-3 h3 v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></span><span><span class="hy">Կոնգրես հյուրանոց</span><span class="en">Congress Hotel</span></span></li>
+      <li class="ptile"><span class="pico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 12 H20.5 M12 3.5 C9 7 9 17 12 20.5 C15 17 15 7 12 3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><span><span class="hy">Բաց հասարակության հիմնադրամներ</span><span class="en">Open Society Foundations</span></span></li>
+      <li class="ptile"><span class="pico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9 L12 4 L21 9 Z M4 20 H20 M6 10 V18 M10 10 V18 M14 10 V18 M18 10 V18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg></span><span><span class="hy">ՀՀ կառավարություն</span><span class="en">Government of Armenia</span></span></li>
+      <li class="ptile"><span class="pico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 12 H20.5 M12 3.5 C9 7 9 17 12 20.5 C15 17 15 7 12 3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><span><span class="hy">ՀՀ դեսպանատներ</span><span class="en">Embassies in Armenia</span></span></li>
+      <li class="ptile"><span class="pico"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20 C7 16 4 13 4 9.5 A4 4 0 0 1 12 8 A4 4 0 0 1 20 9.5 C20 13 17 16 12 20 Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span><span class="hy">Հիմնադրամներ և ՀԿ-ներ</span><span class="en">Foundations and NGOs</span></span></li>
+    </ul>
+  </section>
+
+  <section id="about">
+    <div class="about">
+      <div>
+        <h2><span class="hy">Մեր մասին</span><span class="en">About us</span></h2>
+        <p class="lead" style="margin-bottom:0"><span class="hy">ArmEquipment-ը Berry Line ՍՊԸ-ի ծառայությունն է։ Գործում ենք 2013 թվականից և ոլորտում ունենք երկար տարիների փորձ։ Կազմակերպում ենք մինչև 1000 մասնակցով կոնֆերանսներ և մեծ համերգային ծրագրեր՝ սինխրոն թարգմանությամբ, ձայնային, պատկերային և համերգային տեխնիկայով, սուֆլորով, ձայնագրությամբ և Zoom կոնֆերանսներով։</span><span class="en">ArmEquipment is a service of Berry Line LLC. We have been working since 2013 and have long experience in the field. We run conferences of up to 1,000 participants and large concert programmes, with simultaneous interpretation, sound, projection and concert equipment, teleprompters, audio recording and Zoom conferences.</span></p>
+        <div class="stats"><div class="stat"><b>2013</b><span><span class="hy">թվականից</span><span class="en">since</span></span></div><div class="stat"><b>1000</b><span><span class="hy">մասնակից մեկ միջոցառման</span><span class="en">guests per event</span></span></div></div>
+      </div>
+      <ul class="facts">
+        <li><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="#c9a24a"/><path d="M5 9.5 L8 12 L13 6" fill="none" stroke="#14284b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="hy">Աշխատում ենք միայն Հայաստանում</span><span class="en">We work in Armenia only</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="#c9a24a"/><path d="M5 9.5 L8 12 L13 6" fill="none" stroke="#14284b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="hy">Մինչև 1000 հոգանոց կոնֆերանսներ և մեծ համերգներ</span><span class="en">Conferences of up to 1,000 guests and large concerts</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="#c9a24a"/><path d="M5 9.5 L8 12 L13 6" fill="none" stroke="#14284b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="hy">Ամբողջ տեխնիկան մեկ մատակարարից</span><span class="en">All equipment from one supplier</span></span></li>
+        <li><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8" fill="#c9a24a"/><path d="M5 9.5 L8 12 L13 6" fill="none" stroke="#14284b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><span class="hy">Հաշիվ-ապրանքագիր՝ կազմակերպությունների համար</span><span class="en">Invoices for organisations</span></span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="contact">
+      <svg class="map" viewBox="20 0 1240 1260" aria-hidden="true"><path stroke-width="2" d="M40 95 L130 70 L235 70 L305 35 L380 45 L440 40 L545 35 L560 22 L620 15 L660 50 L700 95 L760 105 L800 150 L830 215 L850 245 L800 300 L770 330 L800 340 L850 380 L900 420 L950 480 L990 530 L1000 580 L960 640 L930 660 L870 660 L910 720 L950 790 L1000 840 L1060 860 L1130 880 L1220 900 L1190 960 L1220 1000 L1240 1060 L1205 1110 L1220 1200 L1212 1238 L1100 1180 L1060 1120 L1000 1050 L990 1000 L940 950 L900 890 L860 880 L800 915 L760 890 L700 860 L660 800 L640 760 L600 800 L530 800 L470 770 L420 730 L390 680 L360 650 L300 640 L230 630 L140 620 L100 600 L95 560 L85 520 L85 480 L60 430 L55 400 L80 370 L65 300 L55 250 L50 200 L35 150 Z"/></svg>
+      <h2 style="color:#f3efe3"><span class="hy">Կապ մեզ հետ</span><span class="en">Contact us</span></h2>
+      <p><span class="hy">Լրացրեք հարցումը կամ գրեք մեզ էլ. փոստով։</span><span class="en">Fill in the request form or email us.</span></p>
+      <div class="mail"><code id="mail">armequipment@gmail.com</code><button class="cta" data-open><span class="hy">Լրացնել հարցումը</span><span class="en">Fill in the request</span></button></div>
+    </div>
+  </section>
+</main>
+<footer><div class="in"><span>© 2026 ArmEquipment · <span class="hy">Berry Line ՍՊԸ · Հայաստան · 2013 թվականից</span><span class="en">Berry Line LLC · Armenia · since 2013</span></span></div></footer>
+
+<button class="totop off" id="toTop" aria-label="Վերև / Back to top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19 V5 M5 12 L12 5 L19 12"/></svg></button>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="dlg">
+    <div class="dlg-head"><h2 id="dlgTitle"><span class="hy">Հարցում միջոցառման համար</span><span class="en">Event request</span></h2><button class="x" id="close" aria-label="Փակել">×</button></div>
+    <form id="form" class="dlg-body" novalidate>
+      <fieldset><legend><span class="hy">Ձեր տվյալները</span><span class="en">Your details</span></legend>
+        <div class="fg">
+          <label class="f">
+            <span><span class="hy">Անուն, ազգանուն</span><span class="en">Full name</span> <span class="req">*</span></span>
+            <input id="fName" autocomplete="name" required>
+          </label>
+          <label class="f"><span><span class="hy">Կազմակերպություն</span><span class="en">Organisation</span></span><input id="fOrg" autocomplete="organization"></label>
+          <label class="f"><span><span class="hy">Հեռախոս</span><span class="en">Phone</span> <span class="req">*</span></span><input id="fPhone" type="tel" autocomplete="tel" placeholder="+374 __ ___ ___" required></label>
+          <label class="f"><span><span class="hy">Էլ. փոստ</span><span class="en">Email</span></span><input id="fEmail" type="email" autocomplete="email"></label>
+        </div>
+      </fieldset>
+
+      <fieldset><legend><span class="hy">Միջոցառումը</span><span class="en">The event</span></legend>
+        <div class="fg">
+          <label class="f"><span><span class="hy">Սկիզբ</span><span class="en">Start date</span> <span class="req">*</span></span><input id="fStart" type="date" required></label>
+          <label class="f"><span><span class="hy">Ավարտ</span><span class="en">End date</span></span><input id="fEnd" type="date"></label>
+          <label class="f"><span><span class="hy">Քաղաք</span><span class="en">City</span></span>
+            <select id="fCity"><option>Երևան / Yerevan</option><option>Գյումրի / Gyumri</option><option>Վանաձոր / Vanadzor</option><option>Դիլիջան / Dilijan</option><option>Ծաղկաձոր / Tsaghkadzor</option><option>Ջերմուկ / Jermuk</option><option>Սևան / Sevan</option><option>Այլ քաղաք Հայաստանում / Other town in Armenia</option></select>
+          </label>
+          <label class="f"><span><span class="hy">Վայրը (հյուրանոց, դահլիճ)</span><span class="en">Venue (hotel, hall)</span></span><input id="fVenue"></label>
+          <label class="f"><span><span class="hy">Մասնակիցների թիվը</span><span class="en">Number of guests</span> <span class="req">*</span></span><input id="fGuests" type="number" min="1" inputmode="numeric" required></label>
+          <label class="f"><span><span class="hy">Խոսնակների / ելույթ ունեցողների թիվը</span><span class="en">Number of speakers</span></span><input id="fSpeakers" type="number" min="0" inputmode="numeric"></label>
+          <label class="f full"><span><span class="hy">Թարգմանության լեզուներ</span><span class="en">Interpretation languages</span></span><input id="fLangs" placeholder="Հայերեն ↔ Անգլերեն, Ռուսերեն"></label>
+          <label class="f full"><span><span class="hy">Միջոցառման տեսակը</span><span class="en">Type of event</span></span>
+            <select id="fType"><option>Կոնֆերանս / Conference</option><option>Սեմինար / Seminar</option><option>Բանակցություններ / Negotiations</option><option>Համաժողով / Summit</option><option>Շնորհանդես / Presentation</option><option>Բանկետ / Banquet</option><option>Համերգ / Concert</option><option>Zoom / հիբրիդ կոնֆերանս / Zoom or hybrid conference</option><option>Այլ / Other</option></select>
+          </label>
+        </div>
+        <div class="err" id="errEvent"></div>
+      </fieldset>
+
+      <fieldset><legend><span class="hy">Սեղանների և նստատեղերի դասավորությունը</span><span class="en">Seating and table layout</span></legend>
+        <div class="layouts" id="layouts"></div>
+      </fieldset>
+
+      <fieldset><legend><span class="hy">Անհրաժեշտ տեխնիկան և քանակը</span><span class="en">Equipment and quantity</span></legend>
+        <div class="eq" id="eq"></div>
+        <label class="check"><input type="checkbox" id="fAdvise"><span><span class="hy">Չգիտեմ ճշգրիտ քանակը, խորհուրդ տվեք</span><span class="en">Not sure of the quantities, please advise</span></span></label>
+      </fieldset>
+
+      <fieldset><legend><span class="hy">Այլ մանրամասներ</span><span class="en">Other details</span></legend>
+        <label class="f"><span><span class="hy">Տևողությունը, ժամերը, տեղադրման ժամը, հատուկ պահանջներ</span><span class="en">Hours, set-up time, special requirements</span></span><textarea id="fNotes" rows="4"></textarea></label>
+      </fieldset>
+      <div class="err" id="errMain" style="margin-top:12px"></div>
+    </form>
+    <div class="dlg-body done" id="done" hidden>
+      <p style="margin:16px 0 0"><b><span class="hy">Հարցումը պատրաստ է։</span><span class="en">Your request is ready.</span></b> <span class="hy">Ուղարկեք այս տեքստը մեզ <b>armequipment@gmail.com</b> հասցեով։ Պատճենեք այն կամ բացեք ձեր փոստը։</span><span class="en">Send this text to <b>armequipment@gmail.com</b>. Copy it or open your mail app.</span></p>
+      <pre id="out"></pre>
+    </div>
+    <div class="dlg-foot" id="footForm"><button class="btn2" type="button" id="cancel"><span class="hy">Չեղարկել</span><span class="en">Cancel</span></button><button class="cta" type="submit" form="form"><span class="hy">Պատրաստել հարցումը</span><span class="en">Prepare request</span></button></div>
+    <div class="dlg-foot" id="footDone" hidden><button class="btn2" type="button" id="back"><span class="hy">Խմբագրել</span><span class="en">Edit</span></button><a class="btn2" id="mailto" href="#"><span class="hy">Բացել փոստում</span><span class="en">Open in mail</span></a><button class="cta" type="button" id="copyOut"><span class="hy">Պատճենել տեքստը</span><span class="en">Copy text</span></button></div>
+  </div>
+</dialog>
+
+<script>
+const EQ=[
+ {id:"rx",hy:"Անլար ընդունիչ ականջակալով",en:"Wireless interpretation receiver",sub:"Wireless receivers for simultaneous interpretation",svg:'<path d="M58 40 A26 26 0 0 1 110 40" fill="none" stroke="#14284b" stroke-width="5" stroke-linecap="round"/><rect x="50" y="36" width="12" height="20" rx="5" fill="#c9a24a"/><rect x="106" y="36" width="12" height="20" rx="5" fill="#c9a24a"/><path d="M56 56 Q56 78 70 80" fill="none" stroke="#14284b" stroke-width="2.5"/><rect x="66" y="62" width="34" height="50" rx="7" fill="#14284b"/><rect x="72" y="70" width="22" height="10" rx="2" fill="#c9a24a"/><circle cx="83" cy="96" r="6" fill="none" stroke="#f3efe3" stroke-width="2.5"/><path d="M94 62 L94 50" stroke="#14284b" stroke-width="3" stroke-linecap="round"/>'},
+ {id:"tmic",hy:"Սեղանի միկրոֆոն",en:"Table microphone",sub:"Microphones",svg:'<rect x="40" y="88" width="80" height="16" rx="6" fill="#14284b"/><rect x="52" y="92" width="18" height="6" rx="3" fill="#c9a24a"/><circle cx="104" cy="96" r="4" fill="#e4664a"/><path d="M80 88 C80 60 92 44 104 30" fill="none" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><rect x="98" y="16" width="14" height="22" rx="7" transform="rotate(35 105 27)" fill="#14284b"/><circle cx="111" cy="18" r="3" fill="#c9a24a"/>'},
+ {id:"wmic",hy:"Անլար միկրոֆոն",en:"Wireless microphone",sub:"Wireless microphones",svg:'<g transform="rotate(-30 80 60)"><rect x="72" y="46" width="16" height="58" rx="6" fill="#14284b"/><rect x="74" y="78" width="12" height="4" rx="2" fill="#c9a24a"/><circle cx="80" cy="36" r="15" fill="#2c4a7d"/><circle cx="80" cy="36" r="15" fill="none" stroke="#14284b" stroke-width="3"/><path d="M68 32 H92 M67 38 H93 M72 26 H88 M72 45 H88" stroke="#9fb0cc" stroke-width="1.5"/><rect x="74" y="46" width="12" height="6" fill="#c9a24a"/></g><g fill="none" stroke="#c9a24a" stroke-width="3" stroke-linecap="round"><path d="M112 22 A10 10 0 0 1 116 36"/><path d="M120 14 A20 20 0 0 1 126 40"/></g>'},
+ {id:"hmic",hy:"Գլխի միկրոֆոն",en:"Head microphone",sub:"Head microphone",svg:'<circle cx="80" cy="60" r="34" fill="#d9dfea"/><path d="M48 54 A32 32 0 0 1 112 54" fill="none" stroke="#14284b" stroke-width="5" stroke-linecap="round"/><rect x="104" y="50" width="12" height="20" rx="5" fill="#14284b"/><path d="M108 70 Q100 92 74 92" fill="none" stroke="#14284b" stroke-width="3.5" stroke-linecap="round"/><rect x="62" y="87" width="14" height="10" rx="5" fill="#c9a24a"/><rect x="44" y="50" width="8" height="14" rx="4" fill="#14284b"/>'},
+ {id:"sound",hy:"Ձայնային համակարգ",en:"Sound system",sub:"Sound system",svg:'<rect x="22" y="14" width="44" height="66" rx="6" fill="#14284b"/><circle cx="44" cy="58" r="14" fill="#2c4a7d" stroke="#c9a24a" stroke-width="3"/><circle cx="44" cy="58" r="5" fill="#0f1f3d"/><circle cx="44" cy="28" r="6" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2"/><path d="M44 80 L44 100 M30 110 L44 100 L58 110" stroke="#14284b" stroke-width="4" stroke-linecap="round" fill="none"/><rect x="94" y="14" width="44" height="66" rx="6" fill="#14284b"/><circle cx="116" cy="58" r="14" fill="#2c4a7d" stroke="#c9a24a" stroke-width="3"/><circle cx="116" cy="58" r="5" fill="#0f1f3d"/><circle cx="116" cy="28" r="6" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2"/><path d="M116 80 L116 100 M102 110 L116 100 L130 110" stroke="#14284b" stroke-width="4" stroke-linecap="round" fill="none"/><rect x="68" y="88" width="24" height="14" rx="3" fill="#c9a24a"/><path d="M73 92 V98 M78 92 V98 M83 92 V98 M88 92 V98" stroke="#14284b" stroke-width="2"/>'},
+ {id:"booth",hy:"Թարգմանչական խցիկ",en:"Interpreter booth",sub:"Booth",svg:'<rect x="26" y="16" width="108" height="88" rx="6" fill="#14284b"/><rect x="36" y="26" width="88" height="40" rx="4" fill="#2c4a7d"/><rect x="26" y="66" width="108" height="8" fill="#c9a24a"/><circle cx="62" cy="48" r="7" fill="#f3efe3"/><path d="M52 66 Q62 52 72 66 Z" fill="#f3efe3"/><circle cx="98" cy="48" r="7" fill="#f3efe3"/><path d="M88 66 Q98 52 108 66 Z" fill="#f3efe3"/><path d="M54 46 A8 8 0 0 1 70 46 M90 46 A8 8 0 0 1 106 46" fill="none" stroke="#c9a24a" stroke-width="3" stroke-linecap="round"/><rect x="40" y="82" width="22" height="14" rx="2" fill="#2c4a7d" stroke="#c9a24a" stroke-width="1.5"/>'},
+ {id:"proj",hy:"Պրոյեկտոր",en:"Projector",sub:"Overhead projector",svg:'<path d="M70 66 L150 22 L150 104 Z" fill="#c9a24a" opacity=".35"/><rect x="16" y="56" width="62" height="32" rx="7" fill="#14284b"/><circle cx="66" cy="72" r="11" fill="#2c4a7d" stroke="#c9a24a" stroke-width="3"/><circle cx="66" cy="72" r="4" fill="#f3efe3"/><rect x="24" y="64" width="22" height="4" rx="2" fill="#9fb0cc"/><rect x="24" y="72" width="16" height="4" rx="2" fill="#9fb0cc"/><rect x="22" y="88" width="8" height="6" rx="2" fill="#14284b"/><rect x="64" y="88" width="8" height="6" rx="2" fill="#14284b"/>'},
+ {id:"screen",hy:"Էկրան (2 մ)",en:"Screen (2 m)",sub:"Screen (2 m)",svg:'<rect x="28" y="12" width="104" height="8" rx="4" fill="#14284b"/><rect x="34" y="20" width="92" height="62" fill="#f3efe3" stroke="#14284b" stroke-width="3"/><rect x="34" y="20" width="92" height="6" fill="#d9dfea"/><path d="M80 82 L80 100 M80 100 L60 114 M80 100 L100 114 M80 100 L80 114" stroke="#14284b" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M34 90 H126" stroke="#c9a24a" stroke-width="2" stroke-dasharray="4 4"/><text x="80" y="58" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="16" fill="#c9a24a">2 m</text>'},
+ {id:"tv",hy:"Հեռուստացույց (TV)",en:"TV screen",sub:"TV / display",svg:'<rect x="22" y="14" width="116" height="72" rx="6" fill="#14284b"/><rect x="30" y="22" width="100" height="56" rx="3" fill="#2c4a7d"/><path d="M30 64 L58 44 L78 58 L98 40 L130 64 V78 H30 Z" fill="#3e5f96"/><circle cx="108" cy="34" r="6" fill="#c9a24a"/><rect x="74" y="86" width="12" height="14" fill="#14284b"/><rect x="52" y="100" width="56" height="7" rx="3.5" fill="#c9a24a"/>'},
+ {id:"pc",hy:"Համակարգիչ (նոութբուք)",en:"Computer (laptop)",sub:"Laptop for presentations",svg:'<rect x="34" y="20" width="92" height="60" rx="5" fill="#14284b"/><rect x="41" y="27" width="78" height="46" rx="2" fill="#2c4a7d"/><rect x="48" y="35" width="34" height="5" rx="2.5" fill="#c9a24a"/><rect x="48" y="45" width="56" height="4" rx="2" fill="#9fb0cc"/><rect x="48" y="53" width="44" height="4" rx="2" fill="#9fb0cc"/><rect x="48" y="61" width="50" height="4" rx="2" fill="#9fb0cc"/><path d="M22 84 H138 L130 96 H30 Z" fill="#14284b"/><rect x="68" y="86" width="24" height="4" rx="2" fill="#c9a24a"/>'},
+ {id:"rec",hy:"Ձայնագրություն",en:"Audio recording",sub:"Event audio recording",svg:'<rect x="24" y="30" width="112" height="62" rx="8" fill="#14284b"/><circle cx="54" cy="61" r="17" fill="#2c4a7d" stroke="#c9a24a" stroke-width="3"/><circle cx="106" cy="61" r="17" fill="#2c4a7d" stroke="#c9a24a" stroke-width="3"/><circle cx="54" cy="61" r="5" fill="#f3efe3"/><circle cx="106" cy="61" r="5" fill="#f3efe3"/><path d="M54 78 H106" stroke="#9fb0cc" stroke-width="2"/><circle cx="80" cy="20" r="7" fill="#e4664a"/><text x="80" y="24" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="8" fill="#f3efe3">REC</text>'},
+ {id:"concert",hy:"Համերգային տեխնիկա",en:"Concert equipment",sub:"Stage sound and lighting",svg:'<path d="M14 106 H146" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><rect x="20" y="40" width="34" height="62" rx="4" fill="#14284b"/><circle cx="37" cy="82" r="11" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2.5"/><circle cx="37" cy="54" r="6" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2"/><rect x="106" y="40" width="34" height="62" rx="4" fill="#14284b"/><circle cx="123" cy="82" r="11" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2.5"/><circle cx="123" cy="54" r="6" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2"/><path d="M30 10 H130" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M52 14 L64 30 L80 14 M96 14 L108 30" stroke="#14284b" stroke-width="3" fill="none"/><path d="M60 30 L50 70 L78 70 Z M104 30 L94 70 L122 70 Z" fill="#c9a24a" opacity=".35"/><rect x="74" y="56" width="6" height="40" fill="#14284b"/><rect x="71" y="44" width="12" height="16" rx="6" fill="#c9a24a"/>'},
+ {id:"prompter",hy:"Սուֆլոր (տելեպրոմպտեր)",en:"Teleprompter",sub:"Prompter for speakers and hosts",svg:'<path d="M80 98 V112 M64 114 H96" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><rect x="62" y="74" width="36" height="24" rx="3" fill="#14284b"/><path d="M34 70 L80 20 L126 70 Z" fill="#9fb0cc" opacity=".45" stroke="#14284b" stroke-width="3" stroke-linejoin="round"/><rect x="58" y="34" width="44" height="4" rx="2" fill="#14284b"/><rect x="52" y="44" width="56" height="4" rx="2" fill="#14284b"/><rect x="46" y="54" width="68" height="4" rx="2" fill="#c9a24a"/><rect x="40" y="70" width="80" height="6" rx="3" fill="#14284b"/>'},
+ {id:"zoom",hy:"Zoom կոնֆերանսի անցկացում",en:"Zoom conference hosting",sub:"Hybrid and online events",svg:'<rect x="18" y="16" width="124" height="78" rx="6" fill="#14284b"/><rect x="26" y="24" width="52" height="30" rx="3" fill="#2c4a7d"/><rect x="82" y="24" width="52" height="30" rx="3" fill="#2c4a7d"/><rect x="26" y="58" width="52" height="28" rx="3" fill="#2c4a7d"/><rect x="82" y="58" width="52" height="28" rx="3" fill="#2c4a7d" stroke="#c9a24a" stroke-width="2"/><g fill="#f3efe3"><circle cx="52" cy="35" r="5"/><circle cx="108" cy="35" r="5"/><circle cx="52" cy="68" r="5"/><circle cx="108" cy="68" r="5"/></g><g fill="#9fb0cc"><path d="M42 54 Q52 42 62 54Z"/><path d="M98 54 Q108 42 118 54Z"/><path d="M42 86 Q52 74 62 86Z"/><path d="M98 86 Q108 74 118 86Z"/></g><rect x="56" y="100" width="48" height="12" rx="6" fill="#c9a24a"/><path d="M68 106 h8 l6 -3 v6 l-6 -3" fill="#14284b"/>'}
+];
+const LAYOUTS=[
+ {id:"theatre",hy:"Թատերական",en:"Theatre",svg:'<rect x="8" y="4" width="48" height="5" rx="2" fill="#c9a24a"/><g fill="#14284b"><circle cx="14" cy="18" r="3"/><circle cx="25" cy="18" r="3"/><circle cx="36" cy="18" r="3"/><circle cx="47" cy="18" r="3"/><circle cx="14" cy="28" r="3"/><circle cx="25" cy="28" r="3"/><circle cx="36" cy="28" r="3"/><circle cx="47" cy="28" r="3"/><circle cx="14" cy="38" r="3"/><circle cx="25" cy="38" r="3"/><circle cx="36" cy="38" r="3"/><circle cx="47" cy="38" r="3"/></g>'},
+ {id:"classroom",hy:"Դասարանային",en:"Classroom",svg:'<rect x="8" y="4" width="48" height="5" rx="2" fill="#c9a24a"/><g fill="#14284b"><rect x="8" y="14" width="20" height="5" rx="1.5"/><rect x="36" y="14" width="20" height="5" rx="1.5"/><rect x="8" y="27" width="20" height="5" rx="1.5"/><rect x="36" y="27" width="20" height="5" rx="1.5"/></g><g fill="#5a6f94"><circle cx="13" cy="23" r="2.2"/><circle cx="23" cy="23" r="2.2"/><circle cx="41" cy="23" r="2.2"/><circle cx="51" cy="23" r="2.2"/><circle cx="13" cy="36" r="2.2"/><circle cx="23" cy="36" r="2.2"/><circle cx="41" cy="36" r="2.2"/><circle cx="51" cy="36" r="2.2"/></g>'},
+ {id:"ushape",hy:"U-ձև",en:"U-shape",svg:'<rect x="8" y="4" width="48" height="5" rx="2" fill="#c9a24a"/><path d="M12 14 V38 H52 V14" fill="none" stroke="#14284b" stroke-width="5" stroke-linejoin="round"/><g fill="#5a6f94"><circle cx="20" cy="18" r="2.2"/><circle cx="20" cy="26" r="2.2"/><circle cx="44" cy="18" r="2.2"/><circle cx="44" cy="26" r="2.2"/><circle cx="26" cy="31" r="2.2"/><circle cx="38" cy="31" r="2.2"/></g>'},
+ {id:"boardroom",hy:"Բանակցային սեղան",en:"Boardroom",svg:'<rect x="14" y="14" width="36" height="18" rx="4" fill="#14284b"/><g fill="#5a6f94"><circle cx="20" cy="9" r="2.4"/><circle cx="32" cy="9" r="2.4"/><circle cx="44" cy="9" r="2.4"/><circle cx="20" cy="37" r="2.4"/><circle cx="32" cy="37" r="2.4"/><circle cx="44" cy="37" r="2.4"/><circle cx="8" cy="23" r="2.4"/><circle cx="56" cy="23" r="2.4"/></g><circle cx="32" cy="23" r="3" fill="#c9a24a"/>'},
+ {id:"banquet",hy:"Կլոր սեղաններ",en:"Round tables",svg:'<g fill="#14284b"><circle cx="18" cy="14" r="7"/><circle cx="46" cy="14" r="7"/><circle cx="32" cy="32" r="7"/></g><g fill="#5a6f94"><circle cx="9" cy="14" r="1.8"/><circle cx="27" cy="14" r="1.8"/><circle cx="18" cy="5" r="1.8"/><circle cx="37" cy="14" r="1.8"/><circle cx="55" cy="14" r="1.8"/><circle cx="46" cy="5" r="1.8"/><circle cx="23" cy="32" r="1.8"/><circle cx="41" cy="32" r="1.8"/><circle cx="32" cy="41" r="1.8"/></g>'},
+ {id:"other",hy:"Այլ / չգիտեմ",en:"Other / not sure",svg:'<rect x="10" y="6" width="44" height="34" rx="6" fill="none" stroke="#14284b" stroke-width="3" stroke-dasharray="5 4"/><text x="32" y="30" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="16" fill="#c9a24a">?</text>'}
+];
+const root=document.documentElement;const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const t=(hy,en)=>`<span class="hy">${hy}</span><span class="en">${en}</span>`;
+
+$("#grid").innerHTML=EQ.map(e=>`<article class="item"><div class="pic"><svg viewBox="0 0 160 120" aria-hidden="true">${e.svg}</svg></div><div class="body"><h3>${t(e.hy,e.en)}</h3><span class="sub">${e.sub}</span><button class="ask" data-open="${e.id}">${t("Ներառել հարցման մեջ","Add to request")}</button></div></article>`).join("");
+$("#layouts").innerHTML=LAYOUTS.map(l=>`<button type="button" class="lay" data-lay="${l.id}" aria-pressed="false"><svg viewBox="0 0 64 44" aria-hidden="true">${l.svg}</svg>${t(l.hy,l.en)}</button>`).join("");
+$("#eq").innerHTML=EQ.map(e=>`<div class="eqrow"><span class="n">${t(e.hy,e.en)}</span><div class="step"><button type="button" data-dec="${e.id}" aria-label="−">−</button><input id="q_${e.id}" type="number" min="0" step="1" inputmode="numeric" value="0" aria-label="${esc(e.hy)}"><button type="button" data-inc="${e.id}" aria-label="+">+</button></div></div>`).join("");
+
+function setLang(l){root.lang=l;$("#lhy").setAttribute("aria-pressed",l==="hy");$("#len").setAttribute("aria-pressed",l==="en");try{localStorage.setItem("ae-lang",l)}catch(e){}}
+let saved=null;try{saved=localStorage.getItem("ae-lang")}catch(e){}
+setLang(saved==="en"?"en":"hy");
+$("#lhy").onclick=()=>setLang("hy");$("#len").onclick=()=>setLang("en");
+
+const dlg=$("#dlg");let layout=null;
+function showForm(){$("#form").hidden=false;$("#footForm").hidden=false;$("#done").hidden=true;$("#footDone").hidden=true}
+function openDlg(pre){showForm();if(pre){const q=$("#q_"+pre);if(q&&+q.value<1)q.value=1}
+  try{dlg.showModal()}catch(e){dlg.setAttribute("open","")} }
+function closeDlg(){try{dlg.close()}catch(e){dlg.removeAttribute("open")}}
+document.addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]");if(o){e.preventDefault();openDlg(o.dataset.open);return}
+  const l=e.target.closest("[data-lay]");if(l){layout=l.dataset.lay;document.querySelectorAll(".lay").forEach(b=>b.setAttribute("aria-pressed",b===l));return}
+  const inc=e.target.closest("[data-inc]");if(inc){const q=$("#q_"+inc.dataset.inc);q.value=Math.max(0,(parseInt(q.value)||0)+1);return}
+  const dec=e.target.closest("[data-dec]");if(dec){const q=$("#q_"+dec.dataset.dec);q.value=Math.max(0,(parseInt(q.value)||0)-1);return}
+});
+/* navigation: home logo, back arrow, back-to-top */
+const navStack=[];
+function goY(y){window.scrollTo({top:y,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+function syncBack(){$("#backBtn").hidden=navStack.length===0}
+document.addEventListener("click",e=>{
+  const a=e.target.closest('a[href^="#"]');if(!a)return;
+  const id=a.getAttribute("href").slice(1);const el=id&&document.getElementById(id);if(!el)return;
+  e.preventDefault();
+  if(a.id==="homeLink"){navStack.length=0;try{dlg.open&&closeDlg()}catch(_){}goY(0);syncBack();return}
+  navStack.push(window.scrollY);syncBack();
+  goY(el.getBoundingClientRect().top+window.scrollY-68);
+});
+$("#backBtn").onclick=()=>{if(navStack.length){goY(navStack.pop())}syncBack()};
+$("#toTop").onclick=()=>{navStack.length=0;syncBack();goY(0)};
+let tick=false;window.addEventListener("scroll",()=>{if(tick)return;tick=true;requestAnimationFrame(()=>{$("#toTop").classList.toggle("off",window.scrollY<400);tick=false})},{passive:true});
+$("#close").onclick=closeDlg;$("#cancel").onclick=closeDlg;$("#back").onclick=showForm;
+dlg.addEventListener("click",e=>{if(e.target===dlg)closeDlg()});
+document.querySelectorAll("#form input").forEach(i=>i.addEventListener("input",()=>{$("#errMain").textContent="";$("#errEvent").textContent=""}));
+
+let lastText="";
+$("#form").addEventListener("submit",e=>{e.preventDefault();
+  const en=root.lang==="en";const v=id=>$("#"+id).value.trim();
+  const miss=[];if(!v("fName"))miss.push(en?"name":"անուն");if(!v("fPhone"))miss.push(en?"phone":"հեռախոս");if(!v("fStart"))miss.push(en?"start date":"սկզբի ամսաթիվ");if(!(parseInt(v("fGuests"))>0))miss.push(en?"number of guests":"մասնակիցների թիվ");
+  if(v("fEnd")&&v("fStart")&&v("fEnd")<v("fStart")){$("#errEvent").textContent=en?"The end date is before the start date.":"Ավարտի ամսաթիվը սկզբից շուտ է։";return}
+  if(miss.length){$("#errMain").textContent=(en?"Please fill in: ":"Լրացրեք՝ ")+miss.join(", ");return}
+  const items=EQ.map(x=>({x,q:parseInt($("#q_"+x.id).value)||0})).filter(r=>r.q>0);
+  const L=LAYOUTS.find(x=>x.id===layout);
+  const lines=[
+   "ՀԱՐՑՈՒՄ / REQUEST — ArmEquipment","",
+   "Անուն / Name: "+v("fName"),
+   v("fOrg")?"Կազմակերպություն / Organisation: "+v("fOrg"):null,
+   "Հեռախոս / Phone: "+v("fPhone"),
+   v("fEmail")?"Էլ. փոստ / Email: "+v("fEmail"):null,"",
+   "Ամսաթիվ / Dates: "+v("fStart")+(v("fEnd")&&v("fEnd")!==v("fStart")?" – "+v("fEnd"):""),
+   "Քաղաք / City: "+v("fCity"),
+   v("fVenue")?"Վայր / Venue: "+v("fVenue"):null,
+   "Միջոցառում / Event: "+v("fType"),
+   "Մասնակիցներ / Guests: "+v("fGuests"),
+   v("fSpeakers")?"Խոսնակներ / Speakers: "+v("fSpeakers"):null,
+   v("fLangs")?"Լեզուներ / Languages: "+v("fLangs"):null,
+   "Դասավորություն / Layout: "+(L?L.hy+" / "+L.en:"—"),"",
+   "Տեխնիկա / Equipment:",
+   ...(items.length?items.map(r=>"  • "+r.x.hy+" / "+r.x.en+" — "+r.q):["  —"]),
+   $("#fAdvise").checked?"  (Խնդրում եմ խորհուրդ տալ քանակների հարցում / Please advise on quantities)":null,
+   v("fNotes")?"\nՄանրամասներ / Details:\n"+v("fNotes"):null
+  ].filter(x=>x!==null);
+  lastText=lines.join("\n");
+  $("#out").textContent=lastText;
+  $("#mailto").href="mailto:armequipment@gmail.com?subject="+encodeURIComponent("Հարցում / Request — "+v("fName")+" — "+v("fStart"))+"&body="+encodeURIComponent(lastText);
+  $("#form").hidden=true;$("#footForm").hidden=true;$("#done").hidden=false;$("#footDone").hidden=false;$("#done").scrollTop=0;
+});
+$("#copyOut").onclick=async e=>{const b=e.currentTarget;
+  try{await navigator.clipboard.writeText(lastText)}catch(_){const r=document.createRange();r.selectNodeContents($("#out"));const s=getSelection();s.removeAllRanges();s.addRange(r)}
+  const old=b.innerHTML;b.innerHTML=t("Պատճենված է","Copied");setTimeout(()=>b.innerHTML=old,1800)};
+</script>
+
+</body>
+</html>

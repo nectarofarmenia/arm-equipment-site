@@ -1,0 +1,3 @@
+supabase/import_invoices.sql
+*.zip
+.DS_Store
