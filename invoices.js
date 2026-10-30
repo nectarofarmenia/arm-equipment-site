@@ -494,3 +494,11 @@ window.addEventListener("popstate",e=>{
   S.tab=o.tab;IS.client=o.client;IS.iyear=o.iyear;IS.imonths=o.imonths?String(o.imonths).split(",").map(Number):[];IS.mailYm=o.ym;
   if(o.edit&&o.edit!=="new"){const v=IS.inv.find(x=>String(x.id)===String(o.edit));IS.edit=v?JSON.parse(JSON.stringify(v)):null}else IS.edit=null;
   NAV_LAST=navKey();render();if(IS.edit)invTotals();scrollTo(0,0)});
+
+/* keep admin data fresh: reload every 5 minutes and when the tab comes back into view (not while editing) */
+let LAST_LOAD=Date.now();
+const _loadInv=loadInvoiceData;
+loadInvoiceData=async function(){LAST_LOAD=Date.now();return _loadInv()};
+function autoRefresh(){if(S.profile&&S.profile.is_admin&&!IS.edit&&document.visibilityState==="visible"&&Date.now()-LAST_LOAD>4.5*60000&&!document.querySelector("input:focus,textarea:focus,select:focus"))refresh()}
+setInterval(autoRefresh,60000);
+document.addEventListener("visibilitychange",autoRefresh);
