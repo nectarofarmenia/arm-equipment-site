@@ -255,9 +255,20 @@ function checkReplies(cfg) {
   (cfg.runs || []).forEach(function (run) {
     if (run.status !== 'sent_to_manager' || !run.thread_id) return;
     var th = GmailApp.getThreadById(run.thread_id);
-    if (!th) return;
-    var seenKey = 'SEEN_' + run.thread_id, seen = +(P.getProperty(seenKey) || P.getProperty('RUN_' + run.thread_id) || new Date(run.sent_at).getTime());
-    var news = th.getMessages().filter(function (m) { return m.getDate().getTime() > seen && String(m.getFrom()).toLowerCase().indexOf(me) < 0; });
+    var seenKey = 'SEEN_' + run.thread_id, seen = +(P.getProperty(seenKey) || P.getProperty('RUN_' + run.thread_id) || new Date(run.manager_sent_at || run.sent_at).getTime());
+    var news = th ? th.getMessages().filter(function (m) { return m.getDate().getTime() > seen && String(m.getFrom()).toLowerCase().indexOf(me) < 0; }) : [];
+    // the manager may also answer with a NEW email (not a reply) — e.g. corrected invoices attached
+    var mgr = String((cfg.tpl || {}).managerEmail || '').toLowerCase().trim();
+    if (mgr) {
+      var since = Utilities.formatDate(new Date(seen - 24 * 3600 * 1000), TZ, 'yyyy/MM/dd');
+      GmailApp.search('from:' + mgr + ' after:' + since, 0, 20).forEach(function (t2) {
+        if (t2.getId() === run.thread_id) return;
+        t2.getMessages().forEach(function (m) {
+          if (m.getDate().getTime() > seen && String(m.getFrom()).toLowerCase().indexOf(mgr) >= 0) news.push(m);
+        });
+      });
+      news.sort(function (x, y) { return x.getDate() - y.getDate(); });
+    }
     if (!news.length) return;
     P.setProperty(seenKey, String(news[news.length - 1].getDate().getTime()));
     var texts = [], updated = [], unchanged = 0;
