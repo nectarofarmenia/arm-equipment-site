@@ -6,7 +6,9 @@
  *                new/changed invoices (.xlsx / .docx) → website, with a notification
  *                checks the manager's reply to the month-end email:
  *                  approval and/or corrected invoices → invoices updated → sent to the accountant
- *                  anything unclear → you get an email and decide on the website
+ *                  corrections in the text are applied too (quantities, removed/added items, prices);
+ *                  anything unclear → you get an email and decide on the website;
+ *                  corrections after the accountant got the invoices → corrected invoices re-sent to her
  *                the accountant's reply → marked done; no reply after N days → polite reminder (follow-up)
  *  last day of the month, 18:00 Yerevan   all invoices of the month → manager, for approval (English)
  *  1st of the month, 9:00 Yerevan         last month's summary → you
@@ -253,7 +255,8 @@ function replyText(msg) {
 function checkReplies(cfg) {
   var me = myEmail();
   (cfg.runs || []).forEach(function (run) {
-    if (run.status !== 'sent_to_manager' || !run.thread_id) return;
+    if (!run.thread_id) return;
+    var stage = run.status;                       // sent_to_manager | needs_review | sent_to_accountant
     var th = GmailApp.getThreadById(run.thread_id);
     var seenKey = 'SEEN_' + run.thread_id, seen = +(P.getProperty(seenKey) || P.getProperty('RUN_' + run.thread_id) || new Date(run.manager_sent_at || run.sent_at).getTime());
     var news = th ? th.getMessages().filter(function (m) { return m.getDate().getTime() > seen && String(m.getFrom()).toLowerCase().indexOf(me) < 0; }) : [];
@@ -262,7 +265,7 @@ function checkReplies(cfg) {
     if (mgr) {
       var since = Utilities.formatDate(new Date(seen - 24 * 3600 * 1000), TZ, 'yyyy/MM/dd');
       GmailApp.search('from:' + mgr + ' after:' + since, 0, 20).forEach(function (t2) {
-        if (t2.getId() === run.thread_id) return;
+        if (t2.getId() === run.thread_id || t2.getId() === run.accountant_thread_id) return;
         t2.getMessages().forEach(function (m) {
           if (m.getDate().getTime() > seen && String(m.getFrom()).toLowerCase().indexOf(mgr) >= 0) news.push(m);
         });
@@ -271,36 +274,152 @@ function checkReplies(cfg) {
     }
     if (!news.length) return;
     P.setProperty(seenKey, String(news[news.length - 1].getDate().getTime()));
-    var texts = [], updated = [], unchanged = 0;
+
+    var after = stage === 'sent_to_accountant';      // already with the accountant → corrections still applied
+    var invs = rpc('bot_invoices', { p: { client: run.client, month: run.month } }) || [];
+    var texts = [], updated = [], changedNums = {}, unclear = [];
     news.forEach(function (msg) {
-      texts.push(replyText(msg));
+      var body = replyText(msg);
+      texts.push(body);
+      var hadFile = false;
+      // 1) corrected Excel / Word files
       msg.getAttachments().forEach(function (a) {
         if (!/\.(docx|xlsx)$/i.test(a.getName())) return;
         try {
           var p = readAttachment(a, msg.getDate(), run.client, cfg.clients || []);
           if (!p) return;
+          hadFile = true;
           p.client = run.client;
           p.gmail_id = msg.getId() + '/' + a.getName();
-          p.note = 'ղեկավարի ուղղում, ' + Utilities.formatDate(msg.getDate(), TZ, 'dd.MM.yyyy');
-          p.quiet = 'yes';
+          p.note = 'ղեկավարի ուղղում (ֆայլ), ' + Utilities.formatDate(msg.getDate(), TZ, 'dd.MM.yyyy');
+          p.quiet = 'yes'; p.force = 'yes';
           var r = rpc('bot_add_invoice', { p: p });
-          if (r === 'updated' || r === 'added') updated.push('#' + p.num + ' → ' + fmt(invTotal(p)) + ' դր.');
-          else unchanged++;
+          if (r === 'updated' || r === 'added') { updated.push('#' + p.num + ' → ' + fmt(invTotal(p)) + ' դր.'); changedNums[p.num] = 1; }
         } catch (e) { Logger.log(a.getName() + ': ' + e); }
       });
+      // 2) corrections written in the text ("Invoice 003: 20 headphones instead of 30", "remove the clip microphone"…)
+      if (!hadFile) {
+        invs = rpc('bot_invoices', { p: { client: run.client, month: run.month } }) || invs;
+        var tc = parseCorrections(body, invs, cfg.equipment || []);
+        tc.changed.forEach(function (c) {
+          var v = c.inv;
+          var p = { num: v.num, client: run.client, month: run.month, start_date: v.start_date, end_date: v.end_date, lines: c.lines,
+                    gmail_id: msg.getId() + '/text/' + v.num, quiet: 'yes', force: 'yes',
+                    note: 'ղեկավարի ուղղում (նամակ), ' + Utilities.formatDate(msg.getDate(), TZ, 'dd.MM.yyyy') + ': ' + c.what.join('; ') };
+          var r = rpc('bot_add_invoice', { p: p });
+          if (r === 'updated') { updated.push('#' + v.num + ' (' + c.what.join(', ') + ') → ' + fmt(invTotal(p)) + ' դր.'); changedNums[v.num] = 1; }
+        });
+        unclear = unclear.concat(tc.unclear);
+      }
     });
     var text = texts.join('\n---\n'), tp = cfg.tpl || {}, replyAt = news[news.length - 1].getDate().toISOString();
-    var approved = APPROVE_RE.test(text), changes = CHANGE_RE.test(text);
-    var summary = (updated.length ? 'Ուղղված հաշիվներ՝ ' + updated.join(', ') + '\n' : '') + 'Պատասխան՝\n' + (text || '(առանց տեքստի)');
-    if ((approved || updated.length) && !(changes && !updated.length) && tp.accountantAuto !== false) {
-      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'sent_to_manager', reply_text: text, manager_reply_at: replyAt, log: 'Ղեկավարը հաստատեց' + (updated.length ? ', ուղղումներ՝ ' + updated.join(', ') : '') } });
+    var approved = APPROVE_RE.test(text), asksChange = CHANGE_RE.test(text);
+    var summary = (updated.length ? 'Ուղղված հաշիվներ՝\n• ' + updated.join('\n• ') + '\n\n' : '') +
+                  (unclear.length ? 'Չհասկացա՝\n• ' + unclear.join('\n• ') + '\n\n' : '') + 'Պատասխան՝\n' + (text || '(առանց տեքստի)');
+
+    if (after) {          // corrections after the accountant already got the invoices → send her the corrected ones
+      var nums = Object.keys(changedNums);
+      rpc('bot_run', { p: { client: run.client, month: run.month, reply_text: text, log: 'Ղեկավարի ուշ ուղղում' + (nums.length ? ' (' + nums.map(function (n) { return '#' + n; }).join(', ') + ')' : '') } });
+      if (nums.length) sendCorrectionToAccountant(run, nums, cfg);
+      notifyMe((nums.length ? 'Ուղղված հաշիվները կրկին ուղարկվեցին հաշվապահին' : 'Ղեկավարը նորից գրել է') + ' — ' + run.client + ' ' + monthHy(run.month),
+        summary + (unclear.length ? '\n\nՉհասկացված մասը ուղղեք կայքում և սեղմեք «Միայն այս հաշիվը՝ հաշվապահին»։' : ''));
+      return;
+    }
+    var ok = (approved || updated.length) && !unclear.length && !(asksChange && !updated.length);
+    if (ok && tp.accountantAuto !== false) {
+      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'sent_to_manager', reply_text: text, manager_reply_at: replyAt, log: 'Ղեկավարը հաստատեց' + (updated.length ? ', ուղղումներ՝ ' + updated.join('; ') : '') } });
       sendToAccountant(run.client, run.month, cfg, 'Ղեկավարը հաստատեց։ ' + summary);
     } else {
-      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'needs_review', reply_text: text, manager_reply_at: replyAt, log: 'Ղեկավարի պատասխանը պետք է դիտել' } });
+      rpc('bot_run', { p: { client: run.client, month: run.month, status: 'needs_review', reply_text: text, manager_reply_at: replyAt, log: 'Ղեկավարի պատասխանը պետք է դիտել' + (updated.length ? ' (մասամբ ուղղված՝ ' + updated.join('; ') + ')' : '') } });
       notifyMe('Պետք է նայել՝ ' + (tp.managerName || 'ղեկավարը') + '-ը պատասխանել է — ' + run.client + ' ' + monthHy(run.month),
-        summary + '\n\nՀաշիվները դեռ չեմ ուղարկել հաշվապահին։ Ուղղեք կայքում (Հաշիվներ → ' + run.client + ' → ' + run.month.slice(0, 4) + ') և սեղմեք «Ուղարկել հաշվապահին»։\nhttps://www.arm-equipment.com/portal');
+        summary + '\n\nՀաշիվները դեռ չեմ ուղարկել հաշվապահին։ Ստուգեք կայքում (Նամակագրություն), ուղղեք մնացածը և սեղմեք «Ամսվա բոլոր հաշիվները՝ հաշվապահին»։\nhttps://www.arm-equipment.com/portal');
     }
   });
+}
+
+/* corrected invoices after the accountant already got the month — reply in her thread */
+function sendCorrectionToAccountant(run, nums, cfg) {
+  var tp = cfg.tpl || {};
+  if (!tp.accountantEmail) return;
+  var invs = (rpc('bot_invoices', { p: { client: run.client, month: run.month } }) || []).filter(function (v) { return nums.indexOf(String(v.num)) >= 0; });
+  if (!invs.length) return;
+  var tb = invoiceTable(invs, 'hy'), first = String(tp.accountantName || '').trim().split(/\s+/)[0];
+  var text = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\nՀյուրանոցը ուղղումներ է արել ' + monthHy(run.month) + ' ամսվա հետևյալ հաշիվներում։ Կից ուղարկում եմ ուղղված տարբերակը. խնդրում եմ դուրս գրել սրանցով (նախորդ տարբերակների փոխարեն)։\n\n' +
+             tb.text + '\nՇնորհակալություն,\n' + (tp.signer || 'Արմեն Սարգսյան') + '\nArmEquipment · Berry Line ՍՊԸ';
+  var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b">' + esc(text.split('\n\n' + tb.text)[0]).replace(/\n/g, '<br>') + tb.html +
+             '<p>Շնորհակալություն,<br>' + esc(tp.signer || 'Արմեն Սարգսյան') + '<br>ArmEquipment · Berry Line ՍՊԸ</p></div>';
+  var opts = { htmlBody: brandWrap(html), name: SENDER_NAME, attachments: invs.map(function (v) { return invoiceBlob(v, tp, cfg.equipment); }) };
+  var th = run.accountant_thread_id && GmailApp.getThreadById(run.accountant_thread_id);
+  if (th) th.reply(text, opts);
+  else GmailApp.sendEmail(tp.accountantEmail, 'Ուղղված հաշիվներ — ' + run.client + ' — ' + monthHy(run.month), text, opts);
+  rpc('bot_run', { p: { client: run.client, month: run.month, log: 'Ուղղված հաշիվներ (' + nums.map(function (n) { return '#' + n; }).join(', ') + ') ուղարկվեցին հաշվապահին' } });
+}
+
+/* ---------- corrections written as text by the manager ---------- */
+var REMOVE_RE = /\b(remove|take out|take off|delete|exclude|cancel|drop|not needed|no need|wasn'?t used|were not used|was not used|didn'?t use|did not use)\b|without|հան|հեռացն|ջնջ|պետք չէ|չի օգտագործվել|убрать|удалить|не нужн|не использ/i;
+var ADD_RE = /\b(add|plus|extra|additional|also include|include)\b|ավելացն|добав/i;
+function lineItem(name) { for (var i = 0; i < REQ_ITEMS.length; i++) if (REQ_ITEMS[i].re.test(name)) return REQ_ITEMS[i]; return null; }
+function dayMult(name) { var m = String(name).match(/\(×\s*(\d+)\s*օր\)/); return m ? +m[1] : 1; }
+function parseCorrections(text, invs, equipment) {
+  var out = { changed: [], unclear: [] };
+  if (!text || !invs.length) return out;
+  var refRe = /(?:invoice|inv\.?|bill|հաշիվ|счет|счёт)\s*(?:no\.?|number|#|№|n)?\s*#?\s*0*(\d{1,3})\b|#\s*0*(\d{1,3})\b/gi;
+  var parts = [], m, last = null, lastIdx = 0;
+  while ((m = refRe.exec(text))) {
+    if (last !== null) parts.push({ num: last, txt: text.slice(lastIdx, m.index) });
+    last = m[1] || m[2]; lastIdx = refRe.lastIndex;
+  }
+  if (last !== null) parts.push({ num: last, txt: text.slice(lastIdx) });
+  if (!parts.length && invs.length === 1) parts.push({ num: String(invs[0].num), txt: text });
+  var priceOf = {}; equipment.forEach(function (e) { if (e.code && e.price != null) priceOf[e.code] = e.price; });
+  var byNum = {};
+  parts.forEach(function (pt) {
+    var v = invs.filter(function (x) { return +x.num === +pt.num; })[0];
+    if (!v) { if (CHANGE_RE.test(pt.txt) || REMOVE_RE.test(pt.txt) || ADD_RE.test(pt.txt)) out.unclear.push('#' + pt.num + ' — այդ համարով հաշիվ չգտա'); return; }
+    var rec = byNum[v.num] || (byNum[v.num] = { inv: v, lines: JSON.parse(JSON.stringify(v.lines || [])), what: [] });
+    String(pt.txt).split(/\r?\n|;|\.\s+|,\s+(?=[^\d])/).forEach(function (cl) {
+      var c = cl.replace(/^[\s:\-–—)]+/, '').trim();
+      if (!c || c.length > 240) return;
+      var it = lineItem(c);
+      var isRemove = REMOVE_RE.test(c), isAdd = ADD_RE.test(c);
+      var looksLikeChange = it && (isRemove || isAdd || CHANGE_RE.test(c) || /\d/.test(c));
+      if (!it) { if (isRemove || isAdd || CHANGE_RE.test(c) || /\binstead\b|փոխարեն|вместо/i.test(c)) out.unclear.push('#' + v.num + ': «' + c + '»'); return; }
+      if (!looksLikeChange) return;
+      // find the line of that item
+      var idx = -1;
+      rec.lines.forEach(function (l, k) { var li = lineItem(l.name || ''); if (idx < 0 && li && li.code === it.code) idx = k; });
+      if (idx < 0 && it.code === 'tmic' && !/table|սեղան/i.test(c)) rec.lines.forEach(function (l, k) { var li = lineItem(l.name || ''); if (idx < 0 && li && /mic/.test(li.code)) idx = k; });
+      var money = c.match(/(?:amd|դր\.?|dram|драм)\s*([\d][\d\s.,]*\d|\d)|([\d][\d\s.,]*\d|\d)\s*(?:amd|դր|dram|драм)/i);
+      var clean = c.replace(/(?:amd|դր\.?|dram|драм)\s*[\d][\d\s.,]*/ig, ' ').replace(/[\d][\d\s.,]*\s*(?:amd|դր|dram|драм)/ig, ' ').replace(/\d{1,2}[.\/]\d{1,2}([.\/]\d{2,4})?/g, ' ');
+      var nums = (clean.match(/\d+/g) || []).map(Number).filter(function (n) { return n > 0 && n <= 2000; });
+      var newQty = null, inst = clean.match(/(\d+)\s*[^\d]{0,40}?(?:instead of|rather than|not|փոխարեն|вместо)\s*(\d+)/i) || clean.match(/(?:instead of|not|вместо)\s*(\d+)[^\d]{0,40}?(\d+)/i);
+      if (inst) newQty = /^(\d+)\s*[^\d]{0,40}?(?:instead|rather|not|փոխարեն|вместо)/i.test(inst[0]) ? +inst[1] : +inst[2];
+      else { var sb = clean.match(/(?:should be|must be|to|only|=|change(?:d)? to|correct(?:ed)? to|make it|պետք է լինի|դարձնել|должно быть)\s*(\d+)/i); if (sb) newQty = +sb[1]; else if (nums.length === 1) newQty = nums[0]; }
+      if (isRemove && idx >= 0) {
+        var gone = rec.lines.splice(idx, 1)[0]; rec.what.push('հանվեց ' + String(gone.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0]); return;
+      }
+      if (idx < 0) {
+        if (isAdd || newQty) {
+          var q = newQty || 1, k = dayMult((rec.lines[0] || {}).name || '');
+          var price = money ? toInt(money[1] || money[2]) : (priceOf[it.code] != null ? priceOf[it.code] : null);
+          if (price == null) { out.unclear.push('#' + v.num + ': «' + c + '» — գինը հայտնի չէ'); return; }
+          rec.lines.push({ name: it.name + (k > 1 ? ' (×' + k + ' օր)' : ''), price: price, qty: q * k });
+          rec.what.push('ավելացավ ' + it.name.split(/ (?=[Ա-Ֆա-ֆ])/)[0] + ' × ' + q); return;
+        }
+        out.unclear.push('#' + v.num + ': «' + c + '» — այդ տողը հաշվում չկա'); return;
+      }
+      var L = rec.lines[idx], k2 = dayMult(L.name), did = false;
+      if (money && /price|cost|rate|գին|цена/i.test(c)) { var np = toInt(money[1] || money[2]); if (np && np !== L.price) { rec.what.push(String(L.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0] + ' գինը ' + fmt(L.price) + '→' + fmt(np)); L.price = np; did = true; } }
+      if (newQty && !(money && /price|cost|rate|գին|цена/i.test(c) && nums.length === 0)) {
+        var nq = newQty * k2;
+        if (nq !== L.qty) { rec.what.push(String(L.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0] + ' ' + (L.qty / k2) + '→' + newQty); L.qty = nq; did = true; }
+        else did = true;
+      }
+      if (!did && (CHANGE_RE.test(c) || isAdd)) out.unclear.push('#' + v.num + ': «' + c + '»');
+    });
+  });
+  Object.keys(byNum).forEach(function (n) { var r = byNum[n]; if (r.what.length) out.changed.push(r); });
+  return out;
 }
 
 /* the accountant's reply → the month is done */
