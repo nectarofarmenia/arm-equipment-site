@@ -139,6 +139,13 @@ th{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;
 .crumbs button[aria-current="page"]{text-decoration:none;color:var(--ink);cursor:default}
 .steps{list-style:none;margin:14px 0;padding:0;display:flex;flex-direction:column;gap:10px}
 .pwwrap{position:relative;display:block}.pwwrap input{padding-right:46px;width:100%}.pwt{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:8px}.pwt:hover{color:var(--ink);background:var(--field)}
+.chkv{padding:10px 12px;border-radius:10px;margin:4px 0 10px;font-weight:600}.chkv.ok{background:var(--ok-soft);color:var(--ok)}.chkv.warn{background:var(--warn-soft);color:var(--warn)}
+.chkt td{vertical-align:top}.chkd td{padding-top:0;font-size:.88rem;white-space:normal;max-width:0;overflow-wrap:anywhere}.chkd .bad{color:var(--bad)}.chkd div{margin:2px 0}
+.lnk{background:none;border:0;padding:0;color:var(--gold);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
+details.xw{position:relative}details.xw[open]{padding-right:40px}
+.xclose{position:absolute;top:2px;right:2px;width:30px;height:30px;border-radius:50%;border:1px solid var(--gold);background:var(--surface);color:var(--gold);font-size:1rem;line-height:1;cursor:pointer;z-index:2}
+.xclose:hover{background:var(--gold);color:var(--bg,#0f1a2e)}
+.xbottom{display:block;margin:8px 0 2px auto;border:1px solid var(--gold);background:none;color:var(--gold);border-radius:999px;padding:4px 14px;cursor:pointer;font:inherit;font-size:.85rem}
 .wstep{display:flex;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .wstep .dot{flex:0 0 30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--field);color:var(--muted);border:1px solid var(--line)}
 .wstep.ok .dot{background:var(--ok-soft);color:var(--ok);border-color:transparent}.wstep.wait .dot{background:var(--info-soft);color:var(--info);border-color:transparent}.wstep.warn .dot{background:var(--warn-soft);color:var(--warn);border-color:transparent}
@@ -375,6 +382,13 @@ function render(){
 }
 
 /* back-to-top button */
+/* every opened panel (details) gets a ✕ close button, long ones also a "▲ close" at the bottom */
+document.addEventListener("toggle",e=>{const d=e.target;if(!(d instanceof HTMLDetailsElement))return;
+  if(!d.open){if(d.dataset.xs){const y=d.getBoundingClientRect().top;if(y<0)scrollBy({top:y-90})}return}
+  d.classList.add("xw");const L=typeof lang!=="undefined"&&lang==="en";
+  if(!d.querySelector(":scope>.xclose")){const x=document.createElement("button");x.type="button";x.className="xclose";x.textContent="✕";x.setAttribute("aria-label",L?"Close":"Փակել");x.title=L?"Close":"Փակել";d.querySelector("summary").after(x)}
+  requestAnimationFrame(()=>{if(d.scrollHeight>420&&!d.querySelector(":scope>.xbottom")){const y=document.createElement("button");y.type="button";y.className="xbottom";y.textContent="▲ "+(L?"Close":"Փակել");d.appendChild(y)}})},true);
+document.addEventListener("click",e=>{const b=e.target.closest(".xclose,.xbottom");if(!b)return;e.preventDefault();e.stopImmediatePropagation();const d=b.closest("details");if(d){d.dataset.xs=b.classList.contains("xbottom")?"1":"";d.open=false}},true);
 addEventListener("scroll",()=>{const b=document.getElementById("toTop");if(b)b.classList.toggle("off",scrollY<400)},{passive:true});
 document.addEventListener("click",e=>{if(e.target.closest("#toTop"))scrollTo({top:0,behavior:"smooth"})});
 

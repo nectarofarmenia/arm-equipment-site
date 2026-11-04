@@ -260,6 +260,7 @@ function vMail(){
     s3?`${esc(dshort(r.manager_reply_at))}${r.reply_text?`<details><summary class="muted" style="cursor:pointer">${esc(r.reply_text.slice(0,90))}</summary><pre class="pre">${esc(r.reply_text)}</pre></details>`:""}${r.status==="needs_review"?`<div class="muted">${esc(it("r_needs_review"))}</div>`:""}`
       :(s2?`${it("waitDays")}: <b>${daysSince(r.manager_last_at||r.manager_sent_at)}</b> · ${it("fups")}: ${mFup}/${fm}${mFup<fm?" · "+nextF(r.manager_last_at||r.manager_sent_at,mFup):""}`:"—"),
     s2&&!s3?wf("followup_manager","↻ "+it("remind"))+`<button class="btn sm" data-mrep="manager">${it("markReplied")}</button>`:"");
+  if(s3&&r.reply_text){const mc=vMgrCheck(list,r);h+=stepRow("🔍",lang==="en"?"Check against the manager’s reply":"Ստուգում ըստ Էմմայի պատասխանի",mc.state,mc.body,mc.acts)}
   h+=stepRow(4,it("st4"),s4?"ok":(q("accountant")?"wait":""),s4?`${esc(dshort(r.accountant_sent_at))} → ${esc(tp.accountantEmail||"")}`:(q("accountant")?it("wfQ"):it("notYet")),
     s4?"":(s2?wf("accountant","✉ "+it("sendNow"),s3?"pri":""):""));
   h+=stepRow(5,it("st5"),s5?"ok":(s4?"wait":""),
@@ -274,6 +275,84 @@ function vMail(){
   const prev=IS.runs.filter(x=>x.client===c&&x.month!==ym).sort((a,b)=>b.month.localeCompare(a.month)).slice(0,8);
   if(prev.length)h+=`<h2>${it("prevMonths")}</h2><div class="list">${prev.map(x=>`<button class="inv" data-mym="${x.month}"><span class="ttl">${esc(monthLabel(x.month))}</span><span class="num ttl">${fmt(x.total)} ${t("amd")}</span><span class="sub">${x.invoice_count} ${it("nInv")}</span><span><span class="pill ist-${x.status==="done"?"accountant":x.status==="needs_review"?"manager":"approved"}">${esc(it("r_"+x.status))}</span></span></button>`).join("")}</div>`;
   return h}
+
+/* ----- check the month's invoices against the manager's reply ("Invoice 005: Camera 35 000 x 2 = AMD 70 000 … TOTAL") ----- */
+const EQ_RE=[["tv",/\btv\b|television|հեռուստացույց|телевизор/i],["tmic",/table\s*mic|desk\s*mic|conference\s*mic|gooseneck|սեղանի\s*միկր|wired\s*mic|настольн/i],
+  ["hmic",/clip|lapel|lavalier|head\s*(set\s*)?mic|կլիպ|петличк/i],["wmic",/wireless|hand\s*held|radio\s*mic|անլար|беспроводн/i],
+  ["rx",/head\s*phone|receiver|ear\s*phone|ականջակալ|ընդունիչ|наушник/i],["booth",/booth|խցիկ|кабин/i],
+  ["sound",/sound|speaker|pa\s*system|ձայնային|բարձրախոս|звук|колонк/i],["zoom",/zoom|online|hybrid/i],["cam",/camera|տեսախցիկ|камер/i],
+  ["proj",/projector|պրոյեկտոր|проектор/i],["screen",/screen|էկրան|экран/i],["pc",/laptop|notebook|computer|նոութբուք|ноутбук/i],
+  ["rec",/record|ձայնագր|запис/i],["prompter",/prompter|սուֆլոր|суфлер/i],["tmic",/\bmic(rophone)?s?\b|միկրոֆոն|микрофон/i]];
+const eqCode=s=>{for(const [c,re] of EQ_RE)if(re.test(s))return c;return null};
+const numsIn=s=>(String(s).match(/\d{1,3}(?:[  ,]\d{3})+(?!\d)|\d+(?:\.\d+)?/g)||[]).map(x=>+x.replace(/[  ,]/g,""));
+function parseMgrReply(text){
+  text=String(text||"").split(/\n\s*(?:_{5,}|-{5,}|On .{3,200}wrote:|From:\s|>)/)[0];
+  const re=/(?:invoice|inv\.?|bill|հաշիվ|сч[её]т)\s*(?:no\.?|number|#|№)?\s*#?\s*0*(\d{1,3})\b/gi,parts=[];let m,last=null,at=0;
+  while((m=re.exec(text))){if(last!==null)parts.push({num:last,txt:text.slice(at,m.index)});last=m[1];at=re.lastIndex}
+  if(last!==null)parts.push({num:last,txt:text.slice(at)});
+  return parts.map(p=>{const o={num:p.num,lines:[],total:null,confirmed:false};
+    p.txt.split(/\r?\n/).forEach(raw=>{const s=raw.trim();if(!s)return;
+      if(/confirm|approv|\bok\b|correct|հաստատ|верно|подтвер/i.test(s)&&!numsIn(s).length){o.confirmed=true;return}
+      const eq=s.indexOf("="),bef=eq>=0?s.slice(0,eq):s,aft=eq>=0?s.slice(eq+1):"",bn=numsIn(bef),an=numsIn(aft);
+      if(!bn.length&&!an.length)return;
+      if(!/amd|դր|֏|=|[x×*]\s*\d|\d\s*[x×*]/i.test(s)&&Math.max(...bn)<100)return;
+      if(/^(total|ընդամենը|ընդ\.|итого|всего)/i.test(s)){o.total=(an.length?an:bn).at(-1);return}
+      const name=bef.replace(/\d{1,3}(?:[  ,]\d{3})+(?!\d)|\d+(?:\.\d+)?/g," ").replace(/amd|դր\.?|֏|[x×*:\-–—]/gi," ").replace(/\s+/g," ").trim();
+      const multi=/[x×*]/i.test(bef.replace(/[a-z]{2,}/gi,""))&&bn.length>=2;
+      const price=multi?bn[0]:null,mults=multi?bn.slice(1):[],calc=multi?mults.reduce((a,b)=>a*b,price):bn.at(-1);
+      const amount=an.length?an.at(-1):calc;
+      o.lines.push({src:s,name,code:eqCode(name),price,mults,amount,mathOk:!multi||!an.length||calc===amount})});
+    return o})}
+function checkVsMgr(list,reply){
+  const parsed=parseMgrReply(reply),res=[];
+  list.forEach(v=>{const p=parsed.filter(x=>+x.num===+v.num);const ours=(v.lines||[]).map((l,i)=>({i,l,code:eqCode(l.name),total:(+l.price||0)*(+l.qty||0)}));
+    const our=invTotal(v);
+    if(!p.length){res.push({v,state:"none",our});return}
+    const e={lines:p.flatMap(x=>x.lines),total:p.map(x=>x.total).filter(x=>x!=null).at(-1)??null,confirmed:p.some(x=>x.confirmed)};
+    if(!e.lines.length&&e.total==null){res.push({v,state:e.confirmed?"ok":"none",our,conf:e.confirmed});return}
+    const used=new Set(),rows=e.lines.map(x=>{
+      let c=ours.filter(o=>!used.has(o.i)&&(x.code?o.code===x.code:(o.total===x.amount||(x.price!=null&&+o.l.price===x.price))));
+      const o=c.find(o=>o.total===x.amount)||c[0]||null;if(o)used.add(o.i);return {x,o,ok:!!o&&o.total===x.amount}});
+    const extra=ours.filter(o=>!used.has(o.i));
+    const sum=e.lines.reduce((a,x)=>a+x.amount,0),mgr=e.total!=null?e.total:sum;
+    const full=e.total!=null;                                  // a TOTAL line = she listed the whole invoice
+    const sane=e.lines.every(x=>x.mathOk)&&(!full||!e.lines.length||sum===e.total);
+    res.push({v,state:mgr===our?"ok":"diff",our,mgr,rows,extra,full,sane})});
+  const unknown=parsed.filter(p=>!list.some(v=>+v.num===+p.num)).map(p=>p.num);
+  return {res,unknown}}
+function mgrLines(r){                                          // the invoice lines as the manager wrote them
+  const out=r.rows.map(({x,o})=>{const q0=x.code&&S.equipment.find(q=>q.code===x.code||eqCode(q.name_en||"")===x.code);
+    const nm=o?o.l.name:q0?(q0.name_en+" "+q0.name_hy).trim():(x.name||"—");
+    if(x.price!=null&&x.mults.length)return {name:nm,price:x.price,qty:x.mults.reduce((a,b)=>a*b,1)};
+    const q=o&&+o.l.qty>0&&x.amount%(+o.l.qty)===0?+o.l.qty:1;return {name:nm,price:x.amount/q,qty:q}});
+  if(!r.full)r.extra.forEach(o=>out.push(o.l));return out}
+function vMgrCheck(list,r){
+  const en=lang==="en",L=(hy,e2)=>en?e2:hy,{res,unknown}=checkVsMgr(list,r.reply_text||"");
+  const diff=res.filter(x=>x.state==="diff"),okN=res.filter(x=>x.state==="ok").length,none=res.filter(x=>x.state==="none");
+  const unc=list.filter(v=>v.checked===false),fixable=diff.filter(x=>x.sane);
+  const ready=!diff.length&&!unknown.length&&!unc.length;
+  let b=`<div class="chkv ${ready?"ok":"warn"}">${ready?"✓ "+L("Բոլոր հաշիվները համընկնում են Էմմայի պատասխանի հետ։ Պատրաստ է Հասմիկին ուղարկելու։","All invoices match the manager’s reply. Ready to send to the accountant.")
+    :"⚠ "+[diff.length?diff.length+" "+L("հաշիվ չի համընկնում Էմմայի հետ","invoice(s) differ from the manager’s reply"):"",unc.length?unc.length+" "+L("հաշիվ դեռ չստուգված է","invoice(s) still unchecked"):"",unknown.length?L("Էմման նշել է հաշիվ, որը չունենք՝ ","Manager mentions invoice(s) we don’t have: ")+unknown.map(n=>"#"+n).join(", "):""].filter(Boolean).join(" · ")}</div>`;
+  b+=`<div class="tw"><table class="chkt"><thead><tr><th>#</th><th class="r">${L("Մեր գումարը","Ours")}</th><th class="r">${L("Էմմայի գումարը","Manager’s")}</th><th>${L("Արդյունք","Result")}</th></tr></thead><tbody>`;
+  res.forEach(x=>{const v=x.v;
+    const st=x.state==="ok"?`<span class="pill ist-accountant">✓ ${x.conf&&x.mgr==null?L("հաստատված","confirmed"):L("համընկնում է","matches")}</span>`
+      :x.state==="diff"?`<span class="pill ist-manager">✗ ${L("տարբեր է","differs")} (${x.mgr>x.our?"+":""}${fmt(x.mgr-x.our)})</span>`
+      :`<span class="muted">${L("Էմման չի նշել","not mentioned")}</span>`;
+    b+=`<tr><td><button class="lnk" data-inv="${v.id}">${esc(v.num)}</button>${v.checked===false?` <span title="${esc(it("unchecked"))}">⚠</span>`:""}</td><td class="r num">${fmt(x.our)}</td><td class="r num">${x.mgr!=null?fmt(x.mgr):"—"}</td><td>${st}</td></td></tr>`;
+    if(x.state==="diff")b+=`<tr class="chkd"><td></td><td colspan="3">${x.rows.map(({x:e,o,ok})=>`<div class="${ok?"":"bad"}">${ok?"✓":"✗"} ${esc(e.src)}${o?` <span class="muted">— ${L("մերը","ours")}: ${esc(String(o.l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0])} ${fmt(o.l.price)} × ${o.l.qty} = ${fmt(o.total)}</span>`:` <span class="muted">— ${L("մեր հաշվում չկա","not in our invoice")}</span>`}</div>`).join("")}${x.full?x.extra.map(o=>`<div class="bad">✗ ${esc(String(o.l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0])} ${fmt(o.l.price)} × ${o.l.qty} = ${fmt(o.total)} <span class="muted">— ${L("Էմմայի ցուցակում չկա, կհանվի","not in the manager’s list, will be removed")}</span></div>`).join(""):""}<div style="margin-top:6px">${x.state==="diff"&&x.sane?`<button class="btn sm pri" data-mfix="${v.id}">${L("Ուղղել ըստ Էմմայի","Apply manager’s version")}</button>`:x.state==="diff"?`<span class="muted" style="font-size:.85rem">${L("Էմմայի թվերը իրար չեն գումարվում, ուղղեք ձեռքով","Manager’s numbers don’t add up — fix by hand")}</span>`:""}</div></td></tr>`});
+  b+=`</tbody></table></div>`;
+  const acts=[fixable.length>1?`<button class="btn sm pri" data-mfix="all">${L("Ուղղել բոլորը ըստ Էմմայի","Apply all manager’s versions")} (${fixable.length})</button>`:"",
+    unc.length&&!diff.length?`<button class="btn sm" data-mchk="1">✓ ${L("Նշել բոլորը ստուգված","Mark all as checked")} (${unc.length})</button>`:""].filter(Boolean).join("");
+  return {body:b,acts,ready,state:ready?"ok":"warn"}}
+async function applyMgr(ids){
+  const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,r=IS.runs.find(x=>x.client===c&&x.month===ym);if(!r)return;
+  const list=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym),{res}=checkVsMgr(list,r.reply_text||"");
+  const todo=res.filter(x=>x.state==="diff"&&x.sane&&(ids==="all"||+ids===x.v.id));let n=0;
+  for(const x of todo){const lines=mgrLines(x),nt=lines.reduce((a,l)=>a+l.price*l.qty,0);
+    const row={lines,note:((x.v.note||"")+"\nՈւղղված ըստ Էմմայի պատասխանի "+dd2(new Date())+" ("+fmt(x.our)+" → "+fmt(nt)+" դր.)").trim().slice(0,2000),updated_at:new Date().toISOString()};
+    if(IS.hasChecked)row.checked=true;
+    const {error}=await sb.from("invoices").update(row).eq("id",x.v.id);if(!error)n++}
+  toast(n?t("saved")+" · "+n:t("errGeneric"));await refresh()}
 
 /* ----- admin home: welcome, urgent notices, key figures ----- */
 function vHome(){
@@ -429,6 +508,9 @@ document.addEventListener("click",async e=>{
     const ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym&&["manager","accountant","approved"].includes(v.status)).map(v=>v.id);
     if(ids.length){const {error:e1}=await sb.from("invoices").update({status:"draft",updated_at:new Date().toISOString()}).in("id",ids);if(e1)return toast(t("errGeneric"))}
     const {error}=await sb.from("approval_runs").delete().eq("id",r.id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(b.dataset.mfix){b.disabled=true;await applyMgr(b.dataset.mfix);return}
+  if(b.dataset.mchk){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===IS.mailYm&&v.checked===false).map(v=>v.id);
+    if(ids.length){const {error}=await sb.from("invoices").update({checked:true,updated_at:new Date().toISOString()}).in("id",ids);if(error)return toast(t("errGeneric"))}toast(t("saved"));await refresh();return}
   if(b.dataset.mrep){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,who=b.dataset.mrep,now=new Date().toISOString();
     const r=IS.runs.find(x=>x.client===c&&x.month===ym);if(!r)return;
     const upd=who==="manager"?{manager_reply_at:now}:{accountant_reply_at:now,status:"done"};
