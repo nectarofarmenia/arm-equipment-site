@@ -303,7 +303,8 @@ function parseMgrReply(text){
       const amount=an.length?an.at(-1):calc;
       o.lines.push({src:s,name,code:eqCode(name),price,mults,amount,mathOk:!multi||!an.length||calc===amount})});
     return o})}
-function checkVsMgr(list,reply){
+const MGR_FIX="Ուղղված ըստ Էմմայի պատասխանի",MGR_KEEP="Հաստատված առանց փոփոխության (Էմմայի պատասխանից հետո)";
+function checkVsMgr(list,reply,replyAt){
   const parsed=parseMgrReply(reply),res=[];
   list.forEach(v=>{const p=parsed.filter(x=>+x.num===+v.num);const ours=(v.lines||[]).map((l,i)=>({i,l,code:eqCode(l.name),total:(+l.price||0)*(+l.qty||0)}));
     const our=invTotal(v);
@@ -317,39 +318,52 @@ function checkVsMgr(list,reply){
     const sum=e.lines.reduce((a,x)=>a+x.amount,0),mgr=e.total!=null?e.total:sum;
     const full=e.total!=null;                                  // a TOTAL line = she listed the whole invoice
     const sane=e.lines.every(x=>x.mathOk)&&(!full||!e.lines.length||sum===e.total);
-    res.push({v,state:mgr===our?"ok":"diff",our,mgr,rows,extra,full,sane})});
+    let state=mgr===our?"ok":"diff",how="";
+    // already handled on the site after her reply: changed to her version, or our version confirmed
+    const after=replyAt&&v.updated_at&&new Date(v.updated_at)>=new Date(replyAt),note=String(v.note||"");
+    if(state==="diff"&&after&&note.includes(MGR_KEEP)&&note.lastIndexOf(MGR_KEEP)>note.lastIndexOf(MGR_FIX)){state="ok";how="keep"}
+    else if(state==="diff"&&after&&note.includes(MGR_FIX)&&!sane){state="ok";how="fix"}
+    res.push({v,state,how,our,mgr,rows,extra,full,sane,sum})});
   const unknown=parsed.filter(p=>!list.some(v=>+v.num===+p.num)).map(p=>p.num);
   return {res,unknown}}
 function mgrLines(r){                                          // the invoice lines as the manager wrote them
   const out=r.rows.map(({x,o})=>{const q0=x.code&&S.equipment.find(q=>q.code===x.code||eqCode(q.name_en||"")===x.code);
     const nm=o?o.l.name:q0?(q0.name_en+" "+q0.name_hy).trim():(x.name||"—");
-    if(x.price!=null&&x.mults.length)return {name:nm,price:x.price,qty:x.mults.reduce((a,b)=>a*b,1)};
+    if(x.price!=null&&x.mults.length){const q=x.mults.reduce((a,b)=>a*b,1);
+      if(x.mathOk)return {name:nm,price:x.price,qty:q};
+      return x.amount%q===0?{name:nm,price:x.amount/q,qty:q}:{name:nm,price:x.amount,qty:1}}   // her "= AMD …" wins
     const q=o&&+o.l.qty>0&&x.amount%(+o.l.qty)===0?+o.l.qty:1;return {name:nm,price:x.amount/q,qty:q}});
   if(!r.full)r.extra.forEach(o=>out.push(o.l));return out}
 function vMgrCheck(list,r){
-  const en=lang==="en",L=(hy,e2)=>en?e2:hy,{res,unknown}=checkVsMgr(list,r.reply_text||"");
-  const diff=res.filter(x=>x.state==="diff"),okN=res.filter(x=>x.state==="ok").length,none=res.filter(x=>x.state==="none");
-  const unc=list.filter(v=>v.checked===false),fixable=diff.filter(x=>x.sane);
+  const en=lang==="en",L=(hy,e2)=>en?e2:hy,{res,unknown}=checkVsMgr(list,r.reply_text||"",r.manager_reply_at);
+  const diff=res.filter(x=>x.state==="diff"),unc=list.filter(v=>v.checked===false);
   const ready=!diff.length&&!unknown.length&&!unc.length;
-  let b=`<div class="chkv ${ready?"ok":"warn"}">${ready?"✓ "+L("Բոլոր հաշիվները համընկնում են Էմմայի պատասխանի հետ։ Պատրաստ է Հասմիկին ուղարկելու։","All invoices match the manager’s reply. Ready to send to the accountant.")
+  const nm=l=>esc(String(l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0]);
+  let b=`<div class="chkv ${ready?"ok":"warn"}">${ready?"✓ "+L("Բոլոր հաշիվները համաձայնեցված են Էմմայի պատասխանի հետ։ Պատրաստ է Հասմիկին ուղարկելու։","All invoices are agreed with the manager’s reply. Ready to send to the accountant.")
     :"⚠ "+[diff.length?diff.length+" "+L("հաշիվ չի համընկնում Էմմայի հետ","invoice(s) differ from the manager’s reply"):"",unc.length?unc.length+" "+L("հաշիվ դեռ չստուգված է","invoice(s) still unchecked"):"",unknown.length?L("Էմման նշել է հաշիվ, որը չունենք՝ ","Manager mentions invoice(s) we don’t have: ")+unknown.map(n=>"#"+n).join(", "):""].filter(Boolean).join(" · ")}</div>`;
-  b+=`<div class="tw"><table class="chkt"><thead><tr><th>#</th><th class="r">${L("Մեր գումարը","Ours")}</th><th class="r">${L("Էմմայի գումարը","Manager’s")}</th><th>${L("Արդյունք","Result")}</th></tr></thead><tbody>`;
+  b+=`<div class="chkl">`;
   res.forEach(x=>{const v=x.v;
-    const st=x.state==="ok"?`<span class="pill ist-accountant">✓ ${x.conf&&x.mgr==null?L("հաստատված","confirmed"):L("համընկնում է","matches")}</span>`
+    const st=x.state==="ok"?`<span class="pill ist-accountant">✓ ${x.how==="keep"?L("հաստատված մերը","ours confirmed"):x.how==="fix"?L("փոխված ըստ Էմմայի","changed to manager’s"):x.conf&&x.mgr==null?L("հաստատված","confirmed"):L("համընկնում է","matches")}</span>`
       :x.state==="diff"?`<span class="pill ist-manager">✗ ${L("տարբեր է","differs")} (${x.mgr>x.our?"+":""}${fmt(x.mgr-x.our)})</span>`
       :`<span class="muted">${L("Էմման չի նշել","not mentioned")}</span>`;
-    b+=`<tr><td><button class="lnk" data-inv="${v.id}">${esc(v.num)}</button>${v.checked===false?` <span title="${esc(it("unchecked"))}">⚠</span>`:""}</td><td class="r num">${fmt(x.our)}</td><td class="r num">${x.mgr!=null?fmt(x.mgr):"—"}</td><td>${st}</td></td></tr>`;
-    if(x.state==="diff")b+=`<tr class="chkd"><td></td><td colspan="3">${x.rows.map(({x:e,o,ok})=>`<div class="${ok?"":"bad"}">${ok?"✓":"✗"} ${esc(e.src)}${o?` <span class="muted">— ${L("մերը","ours")}: ${esc(String(o.l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0])} ${fmt(o.l.price)} × ${o.l.qty} = ${fmt(o.total)}</span>`:` <span class="muted">— ${L("մեր հաշվում չկա","not in our invoice")}</span>`}</div>`).join("")}${x.full?x.extra.map(o=>`<div class="bad">✗ ${esc(String(o.l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0])} ${fmt(o.l.price)} × ${o.l.qty} = ${fmt(o.total)} <span class="muted">— ${L("Էմմայի ցուցակում չկա, կհանվի","not in the manager’s list, will be removed")}</span></div>`).join(""):""}<div style="margin-top:6px">${x.state==="diff"&&x.sane?`<button class="btn sm pri" data-mfix="${v.id}">${L("Ուղղել ըստ Էմմայի","Apply manager’s version")}</button>`:x.state==="diff"?`<span class="muted" style="font-size:.85rem">${L("Էմմայի թվերը իրար չեն գումարվում, ուղղեք ձեռքով","Manager’s numbers don’t add up — fix by hand")}</span>`:""}</div></td></tr>`});
-  b+=`</tbody></table></div>`;
-  const acts=[fixable.length>1?`<button class="btn sm pri" data-mfix="all">${L("Ուղղել բոլորը ըստ Էմմայի","Apply all manager’s versions")} (${fixable.length})</button>`:"",
+    b+=`<div class="chki ${x.state}"><div class="chkh"><button class="lnk" data-inv="${v.id}">#${esc(v.num)}</button>${v.checked===false?`<span title="${esc(it("unchecked"))}">⚠</span>`:""}<span class="muted">${L("մերը","ours")} <b class="num">${fmt(x.our)}</b></span><span class="muted">${L("Էմմա","manager")} <b class="num">${x.mgr!=null?fmt(x.mgr):"—"}</b></span>${st}</div>`;
+    if(x.state!=="diff"){b+=`</div>`;return}
+    const nl=mgrLines(x),nt=nl.reduce((a,l)=>a+l.price*l.qty,0);
+    b+=`<div class="chkd">${x.rows.map(({x:e,o,ok})=>`<div class="${ok?"":"bad"}">${ok?"✓":"✗"} ${esc(e.src)}${o?` <span class="muted">— ${L("մերը","ours")}: ${nm(o.l)} ${fmt(o.l.price)} × ${o.l.qty} = ${fmt(o.total)}</span>`:` <span class="muted">— ${L("մեր հաշվում չկա, կավելացվի","not in our invoice, will be added")}</span>`}</div>`).join("")}${x.full?x.extra.map(o=>`<div class="bad">✗ ${nm(o.l)} ${fmt(o.l.price)} × ${o.l.qty} = ${fmt(o.total)} <span class="muted">— ${L("Էմմայի ցուցակում չկա, կհանվի","not in the manager’s list, will be removed")}</span></div>`).join(""):""}
+      ${!x.sane?`<div class="muted" style="margin-top:4px">⚠ ${L(`Էմմայի TOTAL-ը (${fmt(x.mgr)}) չի համընկնում իր տողերի գումարին (${fmt(x.sum)})։ «Փոխել»-ից հետո հաշիվը կլինի ${fmt(nt)} դր.։`,`Manager’s TOTAL (${fmt(x.mgr)}) differs from her lines (${fmt(x.sum)}). After “Change” the invoice will be ${fmt(nt)} AMD.`)}</div>`:""}
+      <div class="row" style="margin-top:8px;gap:8px"><button class="btn sm pri" data-mfix="${v.id}">✎ ${L("Փոխել ըստ Էմմայի","Change to manager’s")} → ${fmt(nt)}</button><button class="btn sm" data-mkeep="${v.id}">✓ ${L("Հաստատել մերը","Keep ours")} (${fmt(x.our)})</button></div></div></div>`});
+  b+=`</div>`;
+  const acts=[diff.length>1?`<button class="btn sm pri" data-mfix="all">✎ ${L("Փոխել բոլորը ըստ Էմմայի","Change all to manager’s")} (${diff.length})</button><button class="btn sm" data-mkeep="all">✓ ${L("Հաստատել բոլորը առանց փոփոխության","Keep all as they are")} (${diff.length})</button>`:"",
     unc.length&&!diff.length?`<button class="btn sm" data-mchk="1">✓ ${L("Նշել բոլորը ստուգված","Mark all as checked")} (${unc.length})</button>`:""].filter(Boolean).join("");
   return {body:b,acts,ready,state:ready?"ok":"warn"}}
-async function applyMgr(ids){
+async function applyMgr(ids,keep){
   const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,r=IS.runs.find(x=>x.client===c&&x.month===ym);if(!r)return;
-  const list=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym),{res}=checkVsMgr(list,r.reply_text||"");
-  const todo=res.filter(x=>x.state==="diff"&&x.sane&&(ids==="all"||+ids===x.v.id));let n=0;
-  for(const x of todo){const lines=mgrLines(x),nt=lines.reduce((a,l)=>a+l.price*l.qty,0);
-    const row={lines,note:((x.v.note||"")+"\nՈւղղված ըստ Էմմայի պատասխանի "+dd2(new Date())+" ("+fmt(x.our)+" → "+fmt(nt)+" դր.)").trim().slice(0,2000),updated_at:new Date().toISOString()};
+  const list=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym),{res}=checkVsMgr(list,r.reply_text||"",r.manager_reply_at);
+  const todo=res.filter(x=>x.state==="diff"&&(ids==="all"||+ids===x.v.id));let n=0;
+  for(const x of todo){const now=new Date().toISOString();let row;
+    if(keep)row={note:((x.v.note||"")+"\n"+MGR_KEEP+" "+dd2(new Date())+" — "+fmt(x.our)+" դր. (Էմմա՝ "+fmt(x.mgr)+")").trim().slice(-2000),updated_at:now};
+    else{const lines=mgrLines(x),nt=lines.reduce((a,l)=>a+l.price*l.qty,0);
+      row={lines,note:((x.v.note||"")+"\n"+MGR_FIX+" "+dd2(new Date())+" ("+fmt(x.our)+" → "+fmt(nt)+" դր.)").trim().slice(-2000),updated_at:now}}
     if(IS.hasChecked)row.checked=true;
     const {error}=await sb.from("invoices").update(row).eq("id",x.v.id);if(!error)n++}
   toast(n?t("saved")+" · "+n:t("errGeneric"));await refresh()}
@@ -509,6 +523,7 @@ document.addEventListener("click",async e=>{
     if(ids.length){const {error:e1}=await sb.from("invoices").update({status:"draft",updated_at:new Date().toISOString()}).in("id",ids);if(e1)return toast(t("errGeneric"))}
     const {error}=await sb.from("approval_runs").delete().eq("id",r.id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(b.dataset.mfix){b.disabled=true;await applyMgr(b.dataset.mfix);return}
+  if(b.dataset.mkeep){b.disabled=true;await applyMgr(b.dataset.mkeep,true);return}
   if(b.dataset.mchk){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===IS.mailYm&&v.checked===false).map(v=>v.id);
     if(ids.length){const {error}=await sb.from("invoices").update({checked:true,updated_at:new Date().toISOString()}).in("id",ids);if(error)return toast(t("errGeneric"))}toast(t("saved"));await refresh();return}
   if(b.dataset.mrep){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,who=b.dataset.mrep,now=new Date().toISOString();
