@@ -121,6 +121,10 @@ function brandWrap(inner) {
     '<tr><td style="background:#14284b;padding:12px 24px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#d9d2bf">Berry Line ՍՊԸ · <a href="mailto:armequipment@gmail.com" style="color:#c9a24a;text-decoration:none">armequipment@gmail.com</a> · <a href="https://www.arm-equipment.com" style="color:#c9a24a;text-decoration:none">arm-equipment.com</a></td></tr>' +
     '</table></div>';
 }
+/* accountant name(s): "Հասմիկ Ավագյան, Անահիտ Եփրիկյան" → "Հասմիկ և Անահիտ" */
+function accFirstNames(tp) {
+  return String(tp.accountantName || '').split(/[,;]/).map(function (x) { return x.trim().split(/\s+/)[0]; }).filter(String).join(' և ');
+}
 function sendWithThread(to, subject, text, html, attachments) {
   var d = GmailApp.createDraft(to, subject, text, { htmlBody: brandWrap(html), attachments: attachments, name: SENDER_NAME });
   var m = d.send();
@@ -222,7 +226,7 @@ function sendToAccountant(client, ym, cfg, why) {
   var invs = (rpc('bot_invoices', { p: { client: client, month: ym } }) || []).filter(function (v) { return v.status !== 'draft'; });
   if (!invs.length) return;
   var tb = invoiceTable(invs, 'hy');
-  var first = String(tp.accountantName || '').trim().split(/\s+/)[0];
+  var first = accFirstNames(tp);
   var greet = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',';
   var intro = 'Կից ուղարկում եմ ' + client + '-ի ' + monthHy(ym) + ' ամսվա հաշիվները՝ ' + invs.length + ' հաշիվ, ընդհանուր՝ ' + fmt(tb.total) + ' դր.։ Հաշիվները հաստատված են հյուրանոցի կողմից։';
   var ask = 'Խնդրում եմ դուրս գրել հաշիվները։';
@@ -343,7 +347,7 @@ function sendCorrectionToAccountant(run, nums, cfg) {
   if (!tp.accountantEmail) return;
   var invs = (rpc('bot_invoices', { p: { client: run.client, month: run.month } }) || []).filter(function (v) { return nums.indexOf(String(v.num)) >= 0; });
   if (!invs.length) return;
-  var tb = invoiceTable(invs, 'hy'), first = String(tp.accountantName || '').trim().split(/\s+/)[0];
+  var tb = invoiceTable(invs, 'hy'), first = accFirstNames(tp);
   var text = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\nՀյուրանոցը ուղղումներ է արել ' + monthHy(run.month) + ' ամսվա հետևյալ հաշիվներում։ Կից ուղարկում եմ ուղղված տարբերակը. խնդրում եմ դուրս գրել սրանցով (նախորդ տարբերակների փոխարեն)։\n\n' +
              tb.text + '\nՇնորհակալություն,\n' + (tp.signer || 'Արմեն Սարգսյան') + '\nArmEquipment · Berry Line ՍՊԸ';
   var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b">' + esc(text.split('\n\n' + tb.text)[0]).replace(/\n/g, '<br>') + tb.html +
@@ -477,7 +481,7 @@ function followUp(who, client, ym, cfg, force, run) {
     text = body + '\n\n' + tb.text + '\n' + sign;
     html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b"><p>' + esc(body).replace(/\n/g, '<br>') + '</p>' + tb.html + '<p>' + esc(sign).replace(/\n/g, '<br>') + '</p></div>';
   } else {
-    var first = String(tp.accountantName || '').trim().split(/\s+/)[0];
+    var first = accFirstNames(tp);
     subject = 'Re: ' + client + ' — ' + monthHy(ym) + ' — հաշիվներ դուրս գրելու համար';
     sign = 'Շնորհակալություն,\n' + (tp.signer || 'Արմեն Սարգսյան') + '\nArmEquipment · Berry Line ՍՊԸ';
     var bodyHy = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\nՀիշեցնում եմ ' + client + '-ի ' + monthHy(ym) + ' ամսվա հաշիվների մասին (' + invs.length + ' հաշիվ, ընդհանուր՝ ' + fmt(tb.total) +
