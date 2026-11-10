@@ -147,6 +147,10 @@ function sendQueue() {
         else if (p[0] === 'accountant') sendToAccountant(p[1], p[2], cfg, '');
         else if (p[0] === 'followup_manager') followUp('manager', p[1], p[2], cfg, true);
         else if (p[0] === 'followup_accountant') followUp('accountant', p[1], p[2], cfg, true);
+        else if (p[0] === 'correction') {                 // correction:Hilton:2026-10:001,002 — only these, in the accountant's thread
+          var run = (cfg.runs || []).filter(function (x) { return x.client === p[1] && x.month === p[2]; })[0] || { client: p[1], month: p[2] };
+          if (!sendCorrectionToAccountant(run, String(p[3] || '').split(','), cfg, 'self')) throw new Error('no invoices to send: ' + p[3]);
+        }
       } else {
         var o = { name: SENDER_NAME };
         if (m.html) o.htmlBody = m.html;
@@ -368,14 +372,14 @@ function checkReplies(cfg) {
 }
 
 /* corrected invoices after the accountant already got the month — reply in her thread */
-function sendCorrectionToAccountant(run, nums, cfg) {
+function sendCorrectionToAccountant(run, nums, cfg, who) {
   var tp = cfg.tpl || {};
-  if (!tp.accountantEmail) return;
+  if (!tp.accountantEmail) return false;
   var invs = (rpc('bot_invoices', { p: { client: run.client, month: run.month } }) || []).filter(function (v) { return nums.indexOf(String(v.num)) >= 0; });
-  if (!invs.length) return;
+  if (!invs.length) return false;
   guardInvs(invs, 'հաշվապահին', run.client, run.month);
   var tb = invoiceTable(invs, 'hy'), first = accFirstNames(tp);
-  var text = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\nՀյուրանոցը ուղղումներ է արել ' + monthHy(run.month) + ' ամսվա հետևյալ հաշիվներում։ Կից ուղարկում եմ ուղղված տարբերակը. խնդրում եմ դուրս գրել սրանցով (նախորդ տարբերակների փոխարեն)։\n\n' +
+  var text = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\n' + (who === 'self' ? 'Նախորդ նամակում ' + monthHy(run.month) + ' ամսվա հետևյալ հաշիվներում որոշ տողեր թերի էին (առանց անվանման)։' : 'Հյուրանոցը ուղղումներ է արել ' + monthHy(run.month) + ' ամսվա հետևյալ հաշիվներում։') + ' Կից ուղարկում եմ ուղղված տարբերակը. խնդրում եմ դուրս գրել սրանցով (նախորդ տարբերակների փոխարեն)։\n\n' +
              tb.text + '\nՇնորհակալություն,\n' + (tp.signer || 'Արմեն Սարգսյան') + '\nArmEquipment · Berry Line ՍՊԸ';
   var html = '<div style="font-family:Arial,sans-serif;font-size:14px;color:#14284b">' + esc(text.split('\n\n' + tb.text)[0]).replace(/\n/g, '<br>') + tb.html +
              '<p>Շնորհակալություն,<br>' + esc(tp.signer || 'Արմեն Սարգսյան') + '<br>ArmEquipment · Berry Line ՍՊԸ</p></div>';
@@ -384,6 +388,7 @@ function sendCorrectionToAccountant(run, nums, cfg) {
   if (th) th.reply(text, opts);
   else GmailApp.sendEmail(tp.accountantEmail, 'Ուղղված հաշիվներ — ' + run.client + ' — ' + monthHy(run.month), text, opts);
   rpc('bot_run', { p: { client: run.client, month: run.month, log: 'Ուղղված հաշիվներ (' + nums.map(function (n) { return '#' + n; }).join(', ') + ') ուղարկվեցին հաշվապահին' } });
+  return true;
 }
 
 /* ---------- corrections written as text by the manager ---------- */

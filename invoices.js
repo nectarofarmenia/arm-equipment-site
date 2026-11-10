@@ -266,7 +266,10 @@ function vMail(){
   else if(badN)h+=stepRow("🔍",lang==="en"?"Incomplete invoices":"Կիսատ հաշիվներ","warn",`⚠ ${badN} ${lang==="en"?"invoice(s) have a line without name, price or qty":"հաշիվ ունի տող առանց անվան, գնի կամ քանակի"}`,`<button class="btn sm pri" data-mrepair="1">🛠 ${lang==="en"?"Repair":"Ուղղել ինքնաշխատ"}</button>`);
   const block=badN?`<span class="muted">⛔ ${lang==="en"?"Fix the incomplete invoices first":"Նախ ուղղիր կիսատ հաշիվները"}</span>`:"";
   h+=stepRow(4,it("st4"),s4?"ok":(q("accountant")?"wait":""),s4?`${esc(dshort(r.accountant_sent_at))} → ${esc(tp.accountantEmail||"")}`:(q("accountant")?it("wfQ"):it("notYet")),
-    block||(s4?wf("accountant","↻ "+(lang==="en"?"Send again":"Կրկին ուղարկել")):(s2?wf("accountant","✉ "+it("sendNow"),s3?"pri":""):"")));
+    block||(s4?wf("accountant","↻ "+(lang==="en"?"Send all again":"Կրկին ուղարկել բոլորը")):(s2?wf("accountant","✉ "+it("sendNow"),s3?"pri":""):"")));
+  if(s4&&!badN){const ch=v=>v.updated_at&&new Date(v.updated_at)>new Date(r.accountant_sent_at);
+    h+=stepRow("↻",lang==="en"?"Only corrected invoices → accountant":"Միայն ուղղված հաշիվները՝ հաշվապահին","",`<span class="muted">${lang==="en"?"Same email thread. Ticked: changed after the last email.":"Նույն նամակաշղթայով։ Նշված են վերջին նամակից հետո փոխվածները։"}</span><div class="row" style="flex-wrap:wrap;gap:12px;margin-top:8px">${list.map(v=>`<label style="display:inline-flex;flex-direction:row;gap:6px;align-items:center;width:auto;margin:0;padding:6px 10px;border:1px solid var(--line,#d5dce7);border-radius:10px;cursor:pointer"><input type="checkbox" style="width:auto;margin:0" class="corrPick" value="${esc(v.num)}"${ch(v)?" checked":""}>#${esc(v.num)} <span class="muted num">${fmt(invTotal(v))}</span></label>`).join("")}</div>`,
+      `<button class="btn sm pri" data-wfcorr="${esc(c)}:${ym}">✉ ${lang==="en"?"Send selected":"Ուղարկել ընտրվածները"}</button>`)}
   h+=stepRow(5,it("st5"),s5?"ok":(s4?"wait":""),
     s5?`${esc(dshort(r.accountant_reply_at))}${r.accountant_reply_text?`<details><summary class="muted" style="cursor:pointer">${esc(r.accountant_reply_text.slice(0,90))}</summary><pre class="pre">${esc(r.accountant_reply_text)}</pre></details>`:""}`
       :(s4?`${it("waitDays")}: <b>${daysSince(r.accountant_last_at||r.accountant_sent_at)}</b> · ${it("fups")}: ${aFup}/${fm}${aFup<fm?" · "+nextF(r.accountant_last_at||r.accountant_sent_at,aFup):""}`:"—"),
@@ -558,6 +561,9 @@ document.addEventListener("click",async e=>{
     const ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym&&["manager","accountant","approved"].includes(v.status)).map(v=>v.id);
     if(ids.length){const {error:e1}=await sb.from("invoices").update({status:"draft",updated_at:new Date().toISOString()}).in("id",ids);if(e1)return toast(t("errGeneric"))}
     const {error}=await sb.from("approval_runs").delete().eq("id",r.id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(b.dataset.wfcorr){const nums=[...document.querySelectorAll(".corrPick:checked")].map(x=>x.value);if(!nums.length)return toast(lang==="en"?"Pick at least one invoice":"Նշիր գոնե մեկ հաշիվ");
+    b.disabled=true;const {error}=await sb.from("outbox").insert({kind:"workflow",to_addr:"-",subject:"correction:"+b.dataset.wfcorr+":"+nums.join(",")});
+    if(error){b.disabled=false;return toast(t("errGeneric"))}toast(it("queued")+" · #"+nums.join(", #"));await refresh();return}
   if(b.dataset.mrepair){b.disabled=true;await repairMonth();return}
   if(b.dataset.mfix){b.disabled=true;await applyMgr(b.dataset.mfix);return}
   if(b.dataset.mkeep){b.disabled=true;await applyMgr(b.dataset.mkeep,true);return}
