@@ -199,10 +199,34 @@ function monthEnd(cfg) {
   sendToManager(client, ym, cfg);
 }
 
+/* never send an incomplete invoice: a line without a name ("—"), price or qty stops the email */
+function badLines(invs) {
+  var out = [];
+  invs.forEach(function (v) {
+    var ls = v.lines || [];
+    if (!ls.length) out.push('#' + v.num + ' դատարկ է');
+    ls.forEach(function (l, i) {
+      if (!String(l.name || '').replace(/[\s—–\-_.]/g, '')) out.push('#' + v.num + ' տող ' + (i + 1) + '՝ անուն չկա (' + fmt(l.price) + ' × ' + l.qty + ')');
+      else if (!(+l.price > 0) || !(+l.qty > 0)) out.push('#' + v.num + ' տող ' + (i + 1) + '՝ գին կամ քանակ չկա');
+    });
+  });
+  return out;
+}
+function guardInvs(invs, who, client, ym) {
+  var bad = badLines(invs);
+  if (!bad.length) return;
+  rpc('bot_run', { p: { client: client, month: ym, status: 'needs_review', log: 'Չուղարկվեց ' + who + '՝ կիսատ հաշիվներ — ' + bad.join('; ') } });
+  notifyMe('Չուղարկեցի ' + who + '՝ կիսատ հաշիվներ — ' + client + ' ' + monthHy(ym),
+    'Հետևյալ հաշիվներում կա տող առանց անվան, գնի կամ քանակի.\n\n' + bad.join('\n') +
+    '\n\nԲացեք կայքը → Նամակագրություն և սեղմեք «Ուղղել ինքնաշխատ» (կամ ուղղեք ձեռքով), հետո նորից ուղարկեք։');
+  throw new Error('Կիսատ հաշիվներ, չուղարկվեց: ' + bad.join('; '));
+}
+
 function sendToManager(client, ym, cfg) {
   var tp = cfg.tpl || {};
   if (!tp.managerEmail) throw new Error('manager email is empty');
   var invs = (rpc('bot_invoices', { p: { client: client, month: ym } }) || []).filter(function (v) { return v.status !== 'accountant'; });
+  if (invs.length) guardInvs(invs, 'Էմմային', client, ym);
   if (!invs.length) { notifyMe('ArmEquipment — ' + monthHy(ym) + '՝ հաշիվ չկա', client + '-ի ' + monthHy(ym) + ' ամսվա համար ուղարկելու հաշիվ չգտա։'); return; }
   var tb = invoiceTable(invs, 'en');
   var last = String(tp.managerName || '').trim().split(/\s+/).pop();
@@ -226,6 +250,7 @@ function sendToAccountant(client, ym, cfg, why) {
   if (!tp.accountantEmail) throw new Error('accountant email is empty');
   var invs = (rpc('bot_invoices', { p: { client: client, month: ym } }) || []).filter(function (v) { return v.status !== 'draft'; });
   if (!invs.length) return;
+  guardInvs(invs, 'հաշվապահին', client, ym);
   var tb = invoiceTable(invs, 'hy');
   var first = accFirstNames(tp);
   var greet = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',';
@@ -348,6 +373,7 @@ function sendCorrectionToAccountant(run, nums, cfg) {
   if (!tp.accountantEmail) return;
   var invs = (rpc('bot_invoices', { p: { client: run.client, month: run.month } }) || []).filter(function (v) { return nums.indexOf(String(v.num)) >= 0; });
   if (!invs.length) return;
+  guardInvs(invs, 'հաշվապահին', run.client, run.month);
   var tb = invoiceTable(invs, 'hy'), first = accFirstNames(tp);
   var text = 'Բարև Ձեզ' + (first ? ', ' + first : '') + ',\n\nՀյուրանոցը ուղղումներ է արել ' + monthHy(run.month) + ' ամսվա հետևյալ հաշիվներում։ Կից ուղարկում եմ ուղղված տարբերակը. խնդրում եմ դուրս գրել սրանցով (նախորդ տարբերակների փոխարեն)։\n\n' +
              tb.text + '\nՇնորհակալություն,\n' + (tp.signer || 'Արմեն Սարգսյան') + '\nArmEquipment · Berry Line ՍՊԸ';

@@ -223,7 +223,8 @@ async function storeInv(v){
   if(IS.hasChecked)row.checked=true;
   const {data,error}=v.id?await sb.from("invoices").update(row).eq("id",v.id).select("id").maybeSingle():await sb.from("invoices").insert(row).select("id").maybeSingle();
   if(error||!data)return false;v.id=data.id;return true}
-async function sendInv(kind){const v=readInv();v.lines=v.lines.filter(l=>l.name);if(!v.lines.length)return toast(it("needLine"));
+async function sendInv(kind){const v=readInv();v.lines=v.lines.filter(l=>l.name||+l.price);if(!v.lines.length)return toast(it("needLine"));
+    const iss=invIssues(v).filter(i=>i.t!=="dup");if(iss.length)return toast("⚠ "+(lang==="en"?"Incomplete line: ":"Կիսատ տող՝ ")+iss[0].msg);
   const tp=IS.tpl||{},to=((kind==="manager"?tp.managerEmail:tp.accountantEmail)||"").trim();if(!to)return toast(it("noMail"));
   if(!(await storeInv(v)))return toast(t("errGeneric"));
   const dt=dateText(v),body=`Բարև Ձեզ,\n\nԿցված է հաշիվ #${v.num} (${dt})՝ ${fmt(invTotal(v))} դր.։\n\n${mailText(v)}\n\nՀարգանքով՝\n${tp.signer||""}\nArmEquipment · Berry Line ՍՊԸ`;
@@ -251,18 +252,21 @@ function vMail(){
   const s2=r&&r.manager_sent_at, s3=r&&r.manager_reply_at, s4=r&&r.accountant_sent_at, s5=r&&r.accountant_reply_at;
   const mFup=r?(r.manager_followups||0):0, aFup=r?(r.accountant_followups||0):0;
   const nextF=(last,n)=>n<fm?it("nextFup")+dd2(new Date(new Date(last).getTime()+fd*864e5)):"";
+  const badN=list.filter(v=>invIssues(v).length).length;
   h+=`<ol class="steps">`;
   h+=stepRow(1,it("st1"),list.length?(unc.length?"warn":"ok"):"wait",`${list.length} ${it("nInv")} · <span class="num">${fmt(a._total)}</span> ${t("amd")}${unc.length?` · ⚠ ${unc.length} ${esc(it("unchecked"))}`:""}`,
     `<button class="btn sm" data-mopen="1">${it("openInv")}</button>`);
   h+=stepRow(2,it("st2"),s2?"ok":(q("manager")?"wait":""),s2?`${esc(dshort(r.manager_sent_at))} → ${esc(tp.managerEmail||"")}`:(q("manager")?it("wfQ"):`${it("notYet")}${tp.monthEndAuto!==false?` · ${it("autoAt")}${dd2(lastDay)} 18:00`:""}`),
-    s2?"":wf("manager","✉ "+it("sendNow"),"pri"));
+    s2?"":(badN?`<span class="muted">⛔ ${lang==="en"?"Fix the incomplete invoices first":"Նախ ուղղիր կիսատ հաշիվները"}</span>`:wf("manager","✉ "+it("sendNow"),"pri")));
   h+=stepRow(3,it("st3"),s3?(r.status==="needs_review"?"warn":"ok"):(s2?"wait":""),
     s3?`${esc(dshort(r.manager_reply_at))}${r.reply_text?`<details><summary class="muted" style="cursor:pointer">${esc(r.reply_text.slice(0,90))}</summary><pre class="pre">${esc(r.reply_text)}</pre></details>`:""}${r.status==="needs_review"?`<div class="muted">${esc(it("r_needs_review"))}</div>`:""}`
       :(s2?`${it("waitDays")}: <b>${daysSince(r.manager_last_at||r.manager_sent_at)}</b> · ${it("fups")}: ${mFup}/${fm}${mFup<fm?" · "+nextF(r.manager_last_at||r.manager_sent_at,mFup):""}`:"—"),
     s2&&!s3?wf("followup_manager","↻ "+it("remind"))+`<button class="btn sm" data-mrep="manager">${it("markReplied")}</button>`:"");
-  if(s3&&r.reply_text){const mc=vMgrCheck(list,r);h+=stepRow("🔍",lang==="en"?"Check against the manager’s reply":"Ստուգում ըստ Էմմայի պատասխանի",mc.state,mc.body,mc.acts)}
+  let mc=null;if(s3&&r.reply_text){mc=vMgrCheck(list,r);h+=stepRow("🔍",lang==="en"?"Check against the manager’s reply":"Ստուգում ըստ Էմմայի պատասխանի",mc.state,mc.body,mc.acts)}
+  else if(badN)h+=stepRow("🔍",lang==="en"?"Incomplete invoices":"Կիսատ հաշիվներ","warn",`⚠ ${badN} ${lang==="en"?"invoice(s) have a line without name, price or qty":"հաշիվ ունի տող առանց անվան, գնի կամ քանակի"}`,`<button class="btn sm pri" data-mrepair="1">🛠 ${lang==="en"?"Repair":"Ուղղել ինքնաշխատ"}</button>`);
+  const block=badN?`<span class="muted">⛔ ${lang==="en"?"Fix the incomplete invoices first":"Նախ ուղղիր կիսատ հաշիվները"}</span>`:"";
   h+=stepRow(4,it("st4"),s4?"ok":(q("accountant")?"wait":""),s4?`${esc(dshort(r.accountant_sent_at))} → ${esc(tp.accountantEmail||"")}`:(q("accountant")?it("wfQ"):it("notYet")),
-    s4?wf("accountant","↻ "+(lang==="en"?"Send again":"Կրկին ուղարկել")):(s2?wf("accountant","✉ "+it("sendNow"),s3?"pri":""):""));
+    block||(s4?wf("accountant","↻ "+(lang==="en"?"Send again":"Կրկին ուղարկել")):(s2?wf("accountant","✉ "+it("sendNow"),s3?"pri":""):"")));
   h+=stepRow(5,it("st5"),s5?"ok":(s4?"wait":""),
     s5?`${esc(dshort(r.accountant_reply_at))}${r.accountant_reply_text?`<details><summary class="muted" style="cursor:pointer">${esc(r.accountant_reply_text.slice(0,90))}</summary><pre class="pre">${esc(r.accountant_reply_text)}</pre></details>`:""}`
       :(s4?`${it("waitDays")}: <b>${daysSince(r.accountant_last_at||r.accountant_sent_at)}</b> · ${it("fups")}: ${aFup}/${fm}${aFup<fm?" · "+nextF(r.accountant_last_at||r.accountant_sent_at,aFup):""}`:"—"),
@@ -326,21 +330,44 @@ function checkVsMgr(list,reply,replyAt){
     res.push({v,state,how,our,mgr,rows,extra,full,sane,sum})});
   const unknown=parsed.filter(p=>!list.some(v=>+v.num===+p.num)).map(p=>p.num);
   return {res,unknown}}
+/* a line without a real name ("—", "-", empty) or with a zero price/qty is a broken line */
+const badName=n=>!String(n||"").replace(/[\s—–\-_.]/g,"");
+function nameByPrice(p,pool){if(!(p>0))return null;                // our other lines first, then the price list
+  const o=(pool||[]).find(l=>!badName(l.name)&&+l.price===+p);if(o)return o.name;
+  const q=S.equipment.filter(e=>+e.price===+p);return q.length===1?((q[0].name_en||"")+" "+(q[0].name_hy||"")).trim():null}
+function mergeLines(ls){const out=[];                               // same item, same price → one line with the qty added up
+  ls.forEach(l=>{const k=out.find(o=>!badName(o.name)&&o.name===l.name&&+o.price===+l.price);if(k)k.qty=+k.qty+(+l.qty||0);else out.push({...l})});return out}
+function invIssues(v){const ls=v.lines||[],out=[];
+  ls.forEach((l,i)=>{const n="#"+(i+1);
+    if(badName(l.name))out.push({i,t:"name",msg:n+" — անուն չկա ("+fmt(l.price)+" × "+l.qty+")"});
+    if(!(+l.price>0))out.push({i,t:"price",msg:n+" — գին չկա"});
+    if(!(+l.qty>0))out.push({i,t:"qty",msg:n+" — քանակ չկա"})});
+  if(!ls.length)out.push({t:"empty",msg:"հաշիվը դատարկ է"});
+  const seen={};ls.forEach(l=>{if(badName(l.name))return;const k=l.name+"|"+l.price;if(seen[k])out.push({t:"dup",msg:"կրկնվող տող՝ "+String(l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0]+" "+fmt(l.price)});seen[k]=1});
+  return out}
+function repairLines(ls){                                          // fill missing names by price, then merge duplicates
+  const pool=ls.filter(l=>!badName(l.name));
+  return mergeLines(ls.map(l=>badName(l.name)?{...l,name:nameByPrice(l.price,pool)||l.name}:l))}
 function mgrLines(r){                                          // the invoice lines as the manager wrote them
+  const pool=[...r.rows.filter(y=>y.o).map(y=>y.o.l),...r.extra.map(o=>o.l)];
   const out=r.rows.map(({x,o})=>{const q0=x.code&&S.equipment.find(q=>q.code===x.code||eqCode(q.name_en||"")===x.code);
-    const nm=o?o.l.name:q0?(q0.name_en+" "+q0.name_hy).trim():(x.name||"—");
+    const same=x.code&&pool.find(l=>eqCode(l.name)===x.code);
+    const nm=o?o.l.name:same?same.name:q0?(q0.name_en+" "+q0.name_hy).trim():(nameByPrice(x.price!=null?x.price:x.amount,pool)||x.name||"—");
     if(x.price!=null&&x.mults.length){const q=x.mults.reduce((a,b)=>a*b,1);
       if(x.mathOk)return {name:nm,price:x.price,qty:q};
       return x.amount%q===0?{name:nm,price:x.amount/q,qty:q}:{name:nm,price:x.amount,qty:1}}   // her "= AMD …" wins
     const q=o&&+o.l.qty>0&&x.amount%(+o.l.qty)===0?+o.l.qty:1;return {name:nm,price:x.amount/q,qty:q}});
-  if(!r.full)r.extra.forEach(o=>out.push(o.l));return out}
+  if(!r.full)r.extra.forEach(o=>out.push(o.l));
+  return repairLines(out)}
 function vMgrCheck(list,r){
   const en=lang==="en",L=(hy,e2)=>en?e2:hy,{res,unknown}=checkVsMgr(list,r.reply_text||"",r.manager_reply_at);
   const diff=res.filter(x=>x.state==="diff"),unc=list.filter(v=>v.checked===false);
-  const ready=!diff.length&&!unknown.length&&!unc.length;
+  const bad=list.map(v=>({v,iss:invIssues(v)})).filter(x=>x.iss.length);
+  const ready=!diff.length&&!unknown.length&&!unc.length&&!bad.length;
   const nm=l=>esc(String(l.name).split(/ (?=[Ա-Ֆա-ֆ])/)[0]);
   let b=`<div class="chkv ${ready?"ok":"warn"}">${ready?"✓ "+L("Բոլոր հաշիվները համաձայնեցված են Էմմայի պատասխանի հետ։ Պատրաստ է Հասմիկին ուղարկելու։","All invoices are agreed with the manager’s reply. Ready to send to the accountant.")
-    :"⚠ "+[diff.length?diff.length+" "+L("հաշիվ չի համընկնում Էմմայի հետ","invoice(s) differ from the manager’s reply"):"",unc.length?unc.length+" "+L("հաշիվ դեռ չստուգված է","invoice(s) still unchecked"):"",unknown.length?L("Էմման նշել է հաշիվ, որը չունենք՝ ","Manager mentions invoice(s) we don’t have: ")+unknown.map(n=>"#"+n).join(", "):""].filter(Boolean).join(" · ")}</div>`;
+    :"⚠ "+[diff.length?diff.length+" "+L("հաշիվ չի համընկնում Էմմայի հետ","invoice(s) differ from the manager’s reply"):"",unc.length?unc.length+" "+L("հաշիվ դեռ չստուգված է","invoice(s) still unchecked"):"",bad.length?bad.length+" "+L("հաշիվ կիսատ է (տող առանց անվան, գնի կամ քանակի)","invoice(s) incomplete (a line without name, price or qty)"):"",unknown.length?L("Էմման նշել է հաշիվ, որը չունենք՝ ","Manager mentions invoice(s) we don’t have: ")+unknown.map(n=>"#"+n).join(", "):""].filter(Boolean).join(" · ")}</div>`;
+  if(bad.length)b+=`<div class="chkl">${bad.map(({v,iss})=>`<div class="chki diff"><div class="chkh"><button class="lnk" data-inv="${v.id}">#${esc(v.num)}</button><span class="pill ist-manager">✗ ${L("կիսատ","incomplete")}</span></div><div class="chkd">${iss.map(i=>`<div class="bad">✗ ${esc(i.msg)}</div>`).join("")}</div></div>`).join("")}</div>`;
   b+=`<div class="chkl">`;
   res.forEach(x=>{const v=x.v;
     const st=x.state==="ok"?`<span class="pill ist-accountant">✓ ${x.how==="keep"?L("հաստատված մերը","ours confirmed"):x.how==="fix"?L("փոխված ըստ Էմմայի","changed to manager’s"):x.conf&&x.mgr==null?L("հաստատված","confirmed"):L("համընկնում է","matches")}</span>`
@@ -353,9 +380,15 @@ function vMgrCheck(list,r){
       ${!x.sane?`<div class="muted" style="margin-top:4px">⚠ ${L(`Էմմայի TOTAL-ը (${fmt(x.mgr)}) չի համընկնում իր տողերի գումարին (${fmt(x.sum)})։ «Փոխել»-ից հետո հաշիվը կլինի ${fmt(nt)} դր.։`,`Manager’s TOTAL (${fmt(x.mgr)}) differs from her lines (${fmt(x.sum)}). After “Change” the invoice will be ${fmt(nt)} AMD.`)}</div>`:""}
       <div class="row" style="margin-top:8px;gap:8px"><button class="btn sm pri" data-mfix="${v.id}">✎ ${L("Փոխել ըստ Էմմայի","Change to manager’s")} → ${fmt(nt)}</button><button class="btn sm" data-mkeep="${v.id}">✓ ${L("Հաստատել մերը","Keep ours")} (${fmt(x.our)})</button></div></div></div>`});
   b+=`</div>`;
-  const acts=[diff.length>1?`<button class="btn sm pri" data-mfix="all">✎ ${L("Փոխել բոլորը ըստ Էմմայի","Change all to manager’s")} (${diff.length})</button><button class="btn sm" data-mkeep="all">✓ ${L("Հաստատել բոլորը առանց փոփոխության","Keep all as they are")} (${diff.length})</button>`:"",
+  const acts=[bad.length?`<button class="btn sm pri" data-mrepair="1">🛠 ${L("Ուղղել կիսատները ինքնաշխատ","Repair incomplete ones")} (${bad.length})</button>`:"",diff.length>1?`<button class="btn sm pri" data-mfix="all">✎ ${L("Փոխել բոլորը ըստ Էմմայի","Change all to manager’s")} (${diff.length})</button><button class="btn sm" data-mkeep="all">✓ ${L("Հաստատել բոլորը առանց փոփոխության","Keep all as they are")} (${diff.length})</button>`:"",
     unc.length&&!diff.length?`<button class="btn sm" data-mchk="1">✓ ${L("Նշել բոլորը ստուգված","Mark all as checked")} (${unc.length})</button>`:""].filter(Boolean).join("");
-  return {body:b,acts,ready,state:ready?"ok":"warn"}}
+  return {body:b,acts,ready,bad:bad.length,state:ready?"ok":"warn"}}
+async function repairMonth(){
+  const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,list=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym);let n=0,left=0;
+  for(const v of list){if(!invIssues(v).length)continue;const lines=repairLines(v.lines||[]);
+    if(JSON.stringify(lines)!==JSON.stringify(v.lines)){const {error}=await sb.from("invoices").update({lines,updated_at:new Date().toISOString()}).eq("id",v.id);if(!error)n++}
+    if(invIssues({...v,lines}).length)left++}
+  toast((n?t("saved")+" · "+n:"")+(left?" · ⚠ "+left+(lang==="en"?" still need a manual fix":" դեռ պետք է ձեռքով ուղղել"):""));await refresh()}
 async function applyMgr(ids,keep){
   const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ym=IS.mailYm,r=IS.runs.find(x=>x.client===c&&x.month===ym);if(!r)return;
   const list=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym),{res}=checkVsMgr(list,r.reply_text||"",r.manager_reply_at);
@@ -525,6 +558,7 @@ document.addEventListener("click",async e=>{
     const ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===ym&&["manager","accountant","approved"].includes(v.status)).map(v=>v.id);
     if(ids.length){const {error:e1}=await sb.from("invoices").update({status:"draft",updated_at:new Date().toISOString()}).in("id",ids);if(e1)return toast(t("errGeneric"))}
     const {error}=await sb.from("approval_runs").delete().eq("id",r.id);if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(b.dataset.mrepair){b.disabled=true;await repairMonth();return}
   if(b.dataset.mfix){b.disabled=true;await applyMgr(b.dataset.mfix);return}
   if(b.dataset.mkeep){b.disabled=true;await applyMgr(b.dataset.mkeep,true);return}
   if(b.dataset.mchk){const tp=IS.tpl||{},c=tp.workflowClient||"Hilton",ids=IS.inv.filter(v=>cl(v)===c&&monthOf(v)===IS.mailYm&&v.checked===false).map(v=>v.id);
@@ -565,7 +599,8 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("submit",async e=>{
   const f=e.target;if(!["fInv","fShares","fTpl","fEmail"].includes(f.id))return;e.preventDefault();
-  if(f.id==="fInv"){const v=readInv();v.lines=v.lines.filter(l=>l.name);if(!v.lines.length)return toast(it("needLine"));
+  if(f.id==="fInv"){const v=readInv();v.lines=v.lines.filter(l=>l.name||+l.price);if(!v.lines.length)return toast(it("needLine"));
+    const iss=invIssues(v).filter(i=>i.t!=="dup");if(iss.length)return toast("⚠ "+(lang==="en"?"Incomplete line: ":"Կիսատ տող՝ ")+iss[0].msg);
     const toDir=FS_OK&&IS.dir&&["approved","accountant"].includes(v.status)&&monthOf(v)&&await ensureDir();
     if(!(await storeInv(v)))return toast(t("errGeneric"));IS.edit=null;const m=monthOf(v);IS.client=v.client;IS.iyear=m?+m.slice(0,4):null;toast(t("saved"));await refresh();
     return}
