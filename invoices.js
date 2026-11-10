@@ -368,6 +368,9 @@ async function applyMgr(ids,keep){
     const {error}=await sb.from("invoices").update(row).eq("id",x.v.id);if(!error)n++}
   toast(n?t("saved")+" · "+n:t("errGeneric"));await refresh()}
 
+/* several addresses: any separator → "a@x.am,b@y.am" */
+const mails=v=>String(v||"").split(/[\s,;]+/).filter(Boolean).join(",");
+
 /* ----- admin home: welcome, urgent notices, key figures ----- */
 function vHome(){
   const en=lang==="en",L=(hy,e)=>en?e:hy,tp=IS.tpl||{},now=new Date(),ym=todayIso.slice(0,7),cy=now.getFullYear();
@@ -570,7 +573,7 @@ document.addEventListener("submit",async e=>{
     const {error}=await sb.from("settings").upsert({key:"email",value:val});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(f.id==="fShares"){const sh=readShares();if(Math.abs(sh.reduce((a,x)=>a+x.pct,0)-100)>0.001)return toast(it("sum100"));
     const {error}=await sb.from("settings").upsert({key:"shares",value:sh});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
-  if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:$("#tMgr").value.trim(),accountantEmail:$("#tAcc").value.trim(),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked,followupDays:+$("#tFd").value||5,followupMax:+$("#tFm").value,requestDomains:$("#tRd").value.trim()||"hilton.com"}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:mails($("#tMgr").value),accountantEmail:mails($("#tAcc").value),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked,followupDays:+$("#tFd").value||5,followupMax:+$("#tFm").value,requestDomains:$("#tRd").value.trim()||"hilton.com"}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
 });
 
 /* ----- browser Back stays inside the admin (and a visible ‹ Back button) ----- */

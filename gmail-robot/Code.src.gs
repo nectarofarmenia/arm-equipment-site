@@ -126,6 +126,7 @@ function accFirstNames(tp) {
   return String(tp.accountantName || '').split(/[,;]/).map(function (x) { return x.trim().split(/\s+/)[0]; }).filter(String).join(' և ');
 }
 function sendWithThread(to, subject, text, html, attachments) {
+  to = String(to || '').split(/[\s,;]+/).filter(String).join(',');   // several addresses, any separator
   var d = GmailApp.createDraft(to, subject, text, { htmlBody: brandWrap(html), attachments: attachments, name: SENDER_NAME });
   var m = d.send();
   return m.getThread().getId();
