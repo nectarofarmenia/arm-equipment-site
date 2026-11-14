@@ -9,7 +9,7 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#14284b">
+<meta name="theme-color" content="#0a1440">
 <style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
 
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -155,6 +155,52 @@ textarea{resize:vertical}
 .done pre{white-space:pre-wrap;word-break:break-word;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 .88rem/1.5 var(--f-body);margin:0;max-height:40vh;overflow:auto}
 .btn2{font:600 .92rem var(--f-body);background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 16px;cursor:pointer;text-decoration:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== Theme "Night blue" (same as the portal, Nov 2026) ===== */
+:root,:root[data-theme="light"],:root[data-theme="dark"]{
+  --navy:#0a1440; --navy-2:rgba(255,255,255,.07); --gold:#f5b93a; --gold-deep:#f5c35a;
+  --bg:#070f2e; --surface:rgba(24,40,104,.55); --line:rgba(130,160,255,.16); --ink:#eef2ff; --muted:#a3b3de; --tile:rgba(40,60,140,.4); --field:rgba(8,18,58,.65);
+  --acc:#3d7bff; --acc2:#6a5cff; color-scheme:dark}
+body{background:radial-gradient(1200px 700px at 10% -5%,#1b2f86 0%,transparent 60%),radial-gradient(900px 600px at 100% 30%,#3a1f8a 0%,transparent 55%),radial-gradient(900px 700px at 40% 100%,#0d3a7a 0%,transparent 60%),#070f2e;background-attachment:fixed}
+body::before{background:#0a1440}
+.top{background:linear-gradient(90deg,rgba(10,22,70,.96),rgba(18,30,95,.96));border-bottom:1px solid var(--line);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.cta{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 6px 18px rgba(61,123,255,.35);border-radius:12px}
+.ghost{border-color:rgba(160,185,255,.45);border-radius:12px}
+.lang button[aria-pressed="true"]{background:var(--gold);color:#0a1440}
+.totop{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
+/* hero */
+.hero{background:linear-gradient(120deg,rgba(37,72,200,.55),rgba(76,45,190,.45) 60%,rgba(10,20,64,.2))}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(60px);pointer-events:none;z-index:0}
+.hero::before{width:420px;height:420px;background:#3db4ff;opacity:.28;top:-140px;right:8%}
+.hero::after{width:360px;height:360px;background:#a855f7;opacity:.25;bottom:-160px;left:-80px}
+.hero p{color:rgba(238,242,255,.85)}
+.eyebrow{color:#ffd27a}
+.hero .map{opacity:.16}
+.hero-art{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:24px;box-shadow:0 24px 60px rgba(3,8,30,.45);backdrop-filter:blur(6px)}
+/* cards */
+.use{border-top:0;border-radius:18px;border:1px solid var(--line);position:relative;overflow:hidden;padding-top:22px;box-shadow:0 10px 30px rgba(3,8,30,.25)}
+.use::before{content:"";position:absolute;left:0;right:0;top:0;height:4px}
+.use:nth-child(5n+1)::before{background:linear-gradient(90deg,#1f4fd8,#3b82f6)}.use:nth-child(5n+2)::before{background:linear-gradient(90deg,#047857,#22c55e)}
+.use:nth-child(5n+3)::before{background:linear-gradient(90deg,#6d28d9,#a855f7)}.use:nth-child(5n+4)::before{background:linear-gradient(90deg,#d97706,#f59e0b)}.use:nth-child(5n+5)::before{background:linear-gradient(90deg,#be185d,#f472b6)}
+.item,.ptile{border-radius:18px;box-shadow:0 10px 30px rgba(3,8,30,.25)}
+.item:hover,.ptile:hover{border-color:rgba(130,160,255,.4)}
+.pic{background:linear-gradient(160deg,rgba(61,123,255,.18),rgba(106,92,255,.12))}
+.ask{color:#cfe0ff;border-color:rgba(143,182,255,.55);border-radius:10px}
+.ask:hover{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:#fff}
+.pico{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
+.partners li:nth-child(4n+2) .pico{background:linear-gradient(135deg,#047857,#22c55e)}.partners li:nth-child(4n+3) .pico{background:linear-gradient(135deg,#6d28d9,#a855f7)}.partners li:nth-child(4n+4) .pico{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.stat{border-left:0;padding:14px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.stat b{color:#fff}
+.stat:nth-child(4n+1){background:linear-gradient(135deg,#1f4fd8,#3b82f6);border:0}.stat:nth-child(4n+2){background:linear-gradient(135deg,#047857,#22c55e);border:0}
+.stat:nth-child(4n+3){background:linear-gradient(135deg,#6d28d9,#a855f7);border:0}.stat:nth-child(4n+4){background:linear-gradient(135deg,#d97706,#f59e0b);border:0}
+.stat span{color:rgba(255,255,255,.85)}
+.contact{background:linear-gradient(130deg,rgba(37,72,200,.85),rgba(76,45,190,.8) 60%,rgba(20,30,90,.9));border:1px solid var(--line);border-radius:24px;box-shadow:0 24px 60px rgba(3,8,30,.45)}
+.contact p{color:rgba(238,242,255,.85)}
+footer{border-top-color:var(--line)}
+dialog{background:#0f1c52;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.5)}
+dialog::backdrop{background:rgba(3,8,30,.7)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(61,123,255,.25)}
+.lay[aria-pressed="true"]{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
 </style>
 </head>
 <body>
