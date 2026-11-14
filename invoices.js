@@ -53,7 +53,7 @@ async function loadInvoiceData(){
   const [inv,{data:st},{data:ob},{data:bc},{data:iq},{data:ar}]=await Promise.all([fetchAllInvoices(),sb.from("settings").select("*"),
     sb.from("outbox").select("id,kind,to_addr,subject,invoice_id,new_status,status,error,created_at,sent_at").order("id",{ascending:false}).limit(300),
     sb.from("bot_config").select("secret,last_seen").maybeSingle(),sb.from("inquiries").select("*").order("id",{ascending:false}).limit(200),sb.from("approval_runs").select("*")]);
-  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};IS.pay=Array.isArray(m.payouts)?m.payouts:[];
+  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};IS.pay=Array.isArray(m.payouts)?m.payouts:[];IS.payM=m.payouts_m&&typeof m.payouts_m==='object'?m.payouts_m:{};
   if(!IS.dirInit){IS.dirInit=true;await initDir()}
   setTimeout(syncDir,0);
 }
@@ -215,16 +215,18 @@ function vPayouts(y){
   const P=pNames().filter(n=>!/չբաշխ|unalloc/i.test(n)&&(A[n]||curShares().some(s=>s.name===n)));
   const lastM=y===todayIso.slice(0,4)?+todayIso.slice(5,7):12;
   const mon=[];for(let m=1;m<=lastM;m++){const ym=y+"-"+pad(m);mon.push({m,ym,x:agg(yl.filter(v=>monthOf(v)===ym))})}
-  const pays=(IS.pay||[]).filter(x=>payYear(x)===y),paid=n=>pays.filter(x=>x.name===n).reduce((a,x)=>a+(+x.amount||0),0);
-  const cov={};P.forEach(n=>{let left=paid(n);cov[n]={};mon.forEach(o=>{const due=o.x[n]||0,c=Math.min(due,Math.max(0,left));cov[n][o.ym]=c;left-=c})});   // first month first
-  let h=`<h2>💸 ${L("Բաժիններ և վճարումներ","Shares and payments")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ Գրանցիր յուրաքանչյուր փոխանցում՝ ցանկացած գումարով։ Այն կհանվի ամիսներից՝ սկսելով առաջինից։ ✓ ամբողջությամբ վճարված ամիսն է, «մնաց»՝ մասնակի վճարվածը։","From all clients’ invoices. Record each transfer, any amount: it pays off the months starting from the first. ✓ = fully paid, “left” = partly paid.")}</p>`;
+  const M=IS.payM||{},tick=(ym,n)=>!!(M[ym]||{})[n];
+  const pays=(IS.pay||[]).filter(x=>payYear(x)===y),sent=n=>pays.filter(x=>x.name===n).reduce((a,x)=>a+(+x.amount||0),0);
+  const ticked=n=>mon.reduce((a,o)=>a+(tick(o.ym,n)?(o.x[n]||0):0),0),paid=n=>sent(n)+ticked(n);
+  const cov={};P.forEach(n=>{let left=sent(n);cov[n]={};mon.forEach(o=>{if(tick(o.ym,n)){cov[n][o.ym]=o.x[n]||0;return}const due=o.x[n]||0,c=Math.min(due,Math.max(0,left));cov[n][o.ym]=c;left-=c})});   // ticked months are paid; transfers go to the rest, first month first
+  let h=`<h2>💸 ${L("Բաժիններ և վճարումներ","Shares and payments")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ Ամբողջ ամիսը վճարելիս նշիր ☑ գումարի կողքին։ Ցանկացած այլ գումար գրանցիր ներքևում՝ այն կհանվի չնշված ամիսներից՝ սկսելով առաջինից։ ✓ վճարված է, «մնաց»՝ մասնակի։","From all clients’ invoices. Tick ☑ when a whole month is paid. Record any other amount below: it pays off the unticked months from the first. ✓ = paid, “left” = partly paid.")}</p>`;
   if(!P.length)return h;
   h+=`<div class="tw"><table class="paytb"><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${P.map(n=>`<th class="r pgrp">${esc(n)}</th>`).join("")}</tr></thead><tbody>`;
   mon.forEach(({m,ym,x})=>{h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>{const due=x[n]||0,c=cov[n][ym];
-    if(!due)return `<td class="r num pgrp muted">0</td>`;
-    if(c>=due)return `<td class="r num pgrp pdone">✓ ${fmt(due)}</td>`;
-    if(c>0)return `<td class="r num pgrp ppart">${fmt(due)}<small>${L("մնաց","left")} ${fmt(due-c)}</small></td>`;
-    return `<td class="r num pgrp">${fmt(due)}</td>`}).join("")}</tr>`});
+    if(!due)return `<td class="r num pgrp muted">0</td>`;const tk=tick(ym,n);
+    const box=`<input type="checkbox" class="pchk" data-ym="${ym}" data-n="${esc(n)}"${tk?" checked":""} aria-label="${esc(n)} ${MONTHS[lang][m-1]} ${L("վճարված","paid")}">`;
+    const cls=tk?"pdone ptick":c>=due?"pdone":c>0?"ppart":"";
+    return `<td class="r num pgrp ${cls}"><label class="pck"><span>${c>=due&&!tk?"✓ ":""}${fmt(due)}${!tk&&c>0&&c<due?`<small>${L("մնաց","left")} ${fmt(due-c)}</small>`:""}</span>${box}</label></td>`}).join("")}</tr>`});
   h+=`<tr class="psum"><td><b>${L("Ընդամենը","Total")}</b></td><td class="r num"><b>${fmt(A._total)}</b></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(A[n])}</b></td>`).join("")}</tr>`;
   h+=`<tr class="psum ppaid"><td><b>✓ ${L("Վճարված","Paid")}</b></td><td></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(paid(n))}</b></td>`).join("")}</tr>`;
   h+=`<tr class="psum punpaid"><td><b>${L("Չվճարված","Unpaid")}</b></td><td></td>${P.map(n=>{const d=(A[n]||0)-paid(n);return `<td class="r num pgrp"><b${d<0?' style="color:var(--ok)"':""}>${d<0?"+"+fmt(-d)+L(" ավել"," over"):fmt(d)}</b></td>`}).join("")}</tr></tbody></table></div>`;
@@ -233,9 +235,13 @@ function vPayouts(y){
     <label>${L("Ամսաթիվ","Date")}<input id="pyD" type="date" value="${todayIso}"></label>
     <label>${L("Գումար, դր.","Amount, AMD")}<input id="pyA" type="number" min="1" step="1" inputmode="numeric" required></label>
     <label>${L("Նշում","Note")}<input id="pyT" placeholder="${L("օր.՝ բանկային փոխանցում, կանխիկ","e.g. bank transfer, cash")}"></label></div>
-    <div class="row" style="margin-top:8px"><button class="btn pri">＋ ${L("Ավելացնել","Add")}</button><span class="muted" style="font-size:.85rem">${L(`Կհանվի ${y}-ի ամիսներից՝ Հունվարից սկսած։`,`Applied to ${y} months from January.`)}</span></div></form>`;
+    <div class="row" style="margin-top:8px"><button class="btn pri">＋ ${L("Ավելացնել","Add")}</button><span class="muted" style="font-size:.85rem">${L(`Կհանվի ${y}-ի չնշված ամիսներից՝ Հունվարից սկսած։`,`Applied to unticked ${y} months from January.`)}</span></div></form>`;
   if(pays.length)h+=`<div class="tw" style="margin-top:10px"><table><thead><tr><th>${L("Ամսաթիվ","Date")}</th><th>${L("Ում","To")}</th><th class="r">${L("Գումար","Amount")}</th><th>${L("Նշում","Note")}</th><th></th></tr></thead><tbody>${[...pays].sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>`<tr><td>${esc(dd2(new Date(x.date+"T12:00:00")))}</td><td>${esc(x.name)}</td><td class="r num">${fmt(x.amount)}</td><td class="muted">${esc(x.note||"")}</td><td class="r"><button class="btn sm danger" data-paydel="${esc(x.id)}" aria-label="${it("del")}">✕</button></td></tr>`).join("")}</tbody></table></div>`;
   return h}
+let payT=null;
+function setTick(ym,n,on){const M=IS.payM=IS.payM||{};M[ym]=M[ym]||{};if(on)M[ym][n]=true;else delete M[ym][n];if(!Object.keys(M[ym]).length)delete M[ym];
+  const y=window.scrollY;render();scrollTo(0,y);
+  clearTimeout(payT);payT=setTimeout(async()=>{const {error}=await sb.from("settings").upsert({key:"payouts_m",value:IS.payM});toast(error?t("errGeneric"):t("saved"))},500)}
 async function savePay(list){const {error}=await sb.from("settings").upsert({key:"payouts",value:list});if(error){toast(t("errGeneric"));return false}IS.pay=list;toast(t("saved"));render();return true}
 function shRow(s){return `<div class="row shr"><input class="shN" value="${esc(s.name)}" style="flex:2;min-width:120px" aria-label="${it("person")}"><input class="shP num" type="number" min="0" max="100" step="0.01" value="${s.pct}" style="flex:1;min-width:80px" aria-label="%"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" class="shT" style="width:auto" ${s.tax?"checked":""}>${it("tax")}</label><button type="button" class="btn sm danger shX" aria-label="${it("del")}">✕</button></div>`}
 function readShares(){return [...document.querySelectorAll("#shRows .shr")].map(r=>({name:r.querySelector(".shN").value.trim(),pct:+r.querySelector(".shP").value||0,tax:r.querySelector(".shT").checked})).filter(s=>s.name)}
@@ -632,7 +638,8 @@ document.addEventListener("click",async e=>{
   if(b.id==="shAdd"){$("#shRows").insertAdjacentHTML("beforeend",shRow({name:"",pct:0}));updSum();return}
   if(b.classList.contains("shX")){b.closest(".shr").remove();updSum();return}
 });
-document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}});
+document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}
+  if(e.target.classList.contains("pchk"))setTick(e.target.dataset.ym,e.target.dataset.n,e.target.checked)});
 document.addEventListener("input",e=>{
   if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
   if(e.target.closest("#shRows"))updSum();
