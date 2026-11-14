@@ -671,3 +671,9 @@ loadInvoiceData=async function(){LAST_LOAD=Date.now();return _loadInv()};
 function autoRefresh(){if(S.profile&&S.profile.is_admin&&!IS.edit&&document.visibilityState==="visible"&&Date.now()-LAST_LOAD>4.5*60000&&!document.querySelector("input:focus,textarea:focus,select:focus"))refresh()}
 setInterval(autoRefresh,60000);
 document.addEventListener("visibilitychange",autoRefresh);
+
+/* the iPad home-screen app keeps old files: when the app comes back to the screen, check for a newer version and reload */
+(function(){const cur=(document.querySelector('script[src*="invoices.js?v="]')||{}).src||"";const v=(cur.match(/v=([^&]+)/)||[])[1];if(!v)return;let busy=false;
+  async function chk(){if(busy||document.hidden)return;busy=true;try{const r=await fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"});const h=await r.text();const n=(h.match(/invoices\.js\?v=([^"&]+)/)||[])[1];
+    if(n&&n!==v&&!document.querySelector("input:focus,textarea:focus"))location.reload()}catch(e){}busy=false}
+  document.addEventListener("visibilitychange",chk);addEventListener("focus",chk);setInterval(chk,10*60*1000)})();
