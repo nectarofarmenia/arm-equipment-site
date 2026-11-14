@@ -53,7 +53,7 @@ async function loadInvoiceData(){
   const [inv,{data:st},{data:ob},{data:bc},{data:iq},{data:ar}]=await Promise.all([fetchAllInvoices(),sb.from("settings").select("*"),
     sb.from("outbox").select("id,kind,to_addr,subject,invoice_id,new_status,status,error,created_at,sent_at").order("id",{ascending:false}).limit(300),
     sb.from("bot_config").select("secret,last_seen").maybeSingle(),sb.from("inquiries").select("*").order("id",{ascending:false}).limit(200),sb.from("approval_runs").select("*")]);
-  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};IS.pay=Array.isArray(m.payouts)?m.payouts:[];IS.payM=m.payouts_m&&typeof m.payouts_m==='object'?m.payouts_m:null;
+  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};IS.pay=Array.isArray(m.payouts)?m.payouts:[];
   if(!IS.dirInit){IS.dirInit=true;await initDir()}
   setTimeout(syncDir,0);
 }
@@ -208,30 +208,35 @@ function vIncome(){
   return h;
 }
 /* ----- each share by month + what I transferred (typed in the table) + what is left ----- */
-function payMap(){if(IS.payM)return IS.payM;const m={};             // old list entries → per month
-  (IS.pay||[]).forEach(x=>{const ym=String(x.date||"").slice(0,7);if(!ym)return;(m[ym]=m[ym]||{})[x.name]=((m[ym]||{})[x.name]||0)+(+x.amount||0)});return IS.payM=m}
+/* ----- each share by month; transfers (any amount, any date) pay off the months from the first one ----- */
+const payYear=x=>String(x.year||String(x.date||"").slice(0,4));
 function vPayouts(y){
-  const en=lang==="en",L=(hy,e2)=>en?e2:hy,yl=IS.inv.filter(v=>(monthOf(v)||"").startsWith(y+"-")),A=agg(yl),M=payMap();
+  const en=lang==="en",L=(hy,e2)=>en?e2:hy,yl=IS.inv.filter(v=>(monthOf(v)||"").startsWith(y+"-")),A=agg(yl);
   const P=pNames().filter(n=>!/չբաշխ|unalloc/i.test(n)&&(A[n]||curShares().some(s=>s.name===n)));
   const lastM=y===todayIso.slice(0,4)?+todayIso.slice(5,7):12;
   const mon=[];for(let m=1;m<=lastM;m++){const ym=y+"-"+pad(m);mon.push({m,ym,x:agg(yl.filter(v=>monthOf(v)===ym))})}
-  const paid=n=>mon.reduce((a,o)=>a+((M[o.ym]||{})[n]?(o.x[n]||0):0),0);
-  let h=`<h2>💸 ${L("Բաժիններ և վճարումներ","Shares and payments")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ Վճարելուց հետո նշիր ✓ գումարի կողքին, ներքևում կհաշվվի վճարվածը և չվճարվածը։","From all clients’ invoices. Tick ✓ next to an amount once paid — paid and unpaid totals are calculated below.")}</p>`;
+  const pays=(IS.pay||[]).filter(x=>payYear(x)===y),paid=n=>pays.filter(x=>x.name===n).reduce((a,x)=>a+(+x.amount||0),0);
+  const cov={};P.forEach(n=>{let left=paid(n);cov[n]={};mon.forEach(o=>{const due=o.x[n]||0,c=Math.min(due,Math.max(0,left));cov[n][o.ym]=c;left-=c})});   // first month first
+  let h=`<h2>💸 ${L("Բաժիններ և վճարումներ","Shares and payments")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ Գրանցիր յուրաքանչյուր փոխանցում՝ ցանկացած գումարով։ Այն կհանվի ամիսներից՝ սկսելով առաջինից։ ✓ ամբողջությամբ վճարված ամիսն է, «մնաց»՝ մասնակի վճարվածը։","From all clients’ invoices. Record each transfer, any amount: it pays off the months starting from the first. ✓ = fully paid, “left” = partly paid.")}</p>`;
   if(!P.length)return h;
   h+=`<div class="tw"><table class="paytb"><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${P.map(n=>`<th class="r pgrp">${esc(n)}</th>`).join("")}</tr></thead><tbody>`;
-  mon.forEach(({m,ym,x})=>{const pm=M[ym]||{};
-    h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>`<td class="r num pgrp">${x[n]?`<label class="pck${pm[n]?" on":""}"><span>${fmt(x[n])}</span><input type="checkbox" class="pchk" data-ym="${ym}" data-n="${esc(n)}" data-v="${x[n]}"${pm[n]?" checked":""} aria-label="${esc(n)} ${MONTHS[lang][m-1]} ${L("վճարված","paid")}"></label>`:`<span class="muted">0</span>`}</td>`).join("")}</tr>`});
-  const row=(lbl,f,cls)=>`<tr class="psum ${cls}"><td><b>${lbl}</b></td><td></td>${P.map(n=>`<td class="r num pgrp"><b data-${cls}="${esc(n)}">${fmt(f(n))}</b></td>`).join("")}</tr>`;
+  mon.forEach(({m,ym,x})=>{h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>{const due=x[n]||0,c=cov[n][ym];
+    if(!due)return `<td class="r num pgrp muted">0</td>`;
+    if(c>=due)return `<td class="r num pgrp pdone">✓ ${fmt(due)}</td>`;
+    if(c>0)return `<td class="r num pgrp ppart">${fmt(due)}<small>${L("մնաց","left")} ${fmt(due-c)}</small></td>`;
+    return `<td class="r num pgrp">${fmt(due)}</td>`}).join("")}</tr>`});
   h+=`<tr class="psum"><td><b>${L("Ընդամենը","Total")}</b></td><td class="r num"><b>${fmt(A._total)}</b></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(A[n])}</b></td>`).join("")}</tr>`;
-  h+=row("✓ "+L("Վճարված","Paid"),paid,"ppaid")+row(L("Չվճարված","Unpaid"),n=>(A[n]||0)-paid(n),"punpaid");
-  return h+`</tbody></table></div>`}
-function payTotals(){const M=payMap(),sum={},tot={};
-  document.querySelectorAll(".paytb .pchk").forEach(c=>{const n=c.dataset.n,v=+c.dataset.v||0;tot[n]=(tot[n]||0)+v;if((M[c.dataset.ym]||{})[n])sum[n]=(sum[n]||0)+v;c.closest(".pck").classList.toggle("on",c.checked)});
-  document.querySelectorAll("[data-ppaid]").forEach(el=>el.textContent=fmt(sum[el.dataset.ppaid]||0));
-  document.querySelectorAll("[data-punpaid]").forEach(el=>{const n=el.dataset.punpaid;el.textContent=fmt((tot[n]||0)-(sum[n]||0))})}
-let payT=null;
-function setPay(ym,n,v){const M=payMap();M[ym]=M[ym]||{};if(v)M[ym][n]=v;else delete M[ym][n];if(!Object.keys(M[ym]).length)delete M[ym];payTotals();
-  clearTimeout(payT);payT=setTimeout(async()=>{const {error}=await sb.from("settings").upsert({key:"payouts_m",value:IS.payM});toast(error?t("errGeneric"):t("saved"))},700)}
+  h+=`<tr class="psum ppaid"><td><b>✓ ${L("Վճարված","Paid")}</b></td><td></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(paid(n))}</b></td>`).join("")}</tr>`;
+  h+=`<tr class="psum punpaid"><td><b>${L("Չվճարված","Unpaid")}</b></td><td></td>${P.map(n=>{const d=(A[n]||0)-paid(n);return `<td class="r num pgrp"><b${d<0?' style="color:var(--ok)"':""}>${d<0?"+"+fmt(-d)+L(" ավել"," over"):fmt(d)}</b></td>`}).join("")}</tr></tbody></table></div>`;
+  h+=`<form id="fPay" class="card" style="margin-top:12px"><strong>${L("Գրանցել փոխանցում","Record a transfer")} · ${y}</strong><div class="fg" style="margin-top:8px">
+    <label>${L("Ում","To")}<select id="pyN">${P.map(n=>`<option>${esc(n)}</option>`).join("")}</select></label>
+    <label>${L("Ամսաթիվ","Date")}<input id="pyD" type="date" value="${todayIso}"></label>
+    <label>${L("Գումար, դր.","Amount, AMD")}<input id="pyA" type="number" min="1" step="1" inputmode="numeric" required></label>
+    <label>${L("Նշում","Note")}<input id="pyT" placeholder="${L("օր.՝ բանկային փոխանցում, կանխիկ","e.g. bank transfer, cash")}"></label></div>
+    <div class="row" style="margin-top:8px"><button class="btn pri">＋ ${L("Ավելացնել","Add")}</button><span class="muted" style="font-size:.85rem">${L(`Կհանվի ${y}-ի ամիսներից՝ Հունվարից սկսած։`,`Applied to ${y} months from January.`)}</span></div></form>`;
+  if(pays.length)h+=`<div class="tw" style="margin-top:10px"><table><thead><tr><th>${L("Ամսաթիվ","Date")}</th><th>${L("Ում","To")}</th><th class="r">${L("Գումար","Amount")}</th><th>${L("Նշում","Note")}</th><th></th></tr></thead><tbody>${[...pays].sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(x=>`<tr><td>${esc(dd2(new Date(x.date+"T12:00:00")))}</td><td>${esc(x.name)}</td><td class="r num">${fmt(x.amount)}</td><td class="muted">${esc(x.note||"")}</td><td class="r"><button class="btn sm danger" data-paydel="${esc(x.id)}" aria-label="${it("del")}">✕</button></td></tr>`).join("")}</tbody></table></div>`;
+  return h}
+async function savePay(list){const {error}=await sb.from("settings").upsert({key:"payouts",value:list});if(error){toast(t("errGeneric"));return false}IS.pay=list;toast(t("saved"));render();return true}
 function shRow(s){return `<div class="row shr"><input class="shN" value="${esc(s.name)}" style="flex:2;min-width:120px" aria-label="${it("person")}"><input class="shP num" type="number" min="0" max="100" step="0.01" value="${s.pct}" style="flex:1;min-width:80px" aria-label="%"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" class="shT" style="width:auto" ${s.tax?"checked":""}>${it("tax")}</label><button type="button" class="btn sm danger shX" aria-label="${it("del")}">✕</button></div>`}
 function readShares(){return [...document.querySelectorAll("#shRows .shr")].map(r=>({name:r.querySelector(".shN").value.trim(),pct:+r.querySelector(".shP").value||0,tax:r.querySelector(".shT").checked})).filter(s=>s.name)}
 function updSum(){const el=$("#shSum");if(!el)return;const s=readShares().reduce((a,x)=>a+x.pct,0);el.textContent=(+s.toFixed(2))+"%";el.style.color=Math.abs(s-100)<0.001?"var(--ok)":"var(--bad)"}
@@ -620,19 +625,21 @@ document.addEventListener("click",async e=>{
   if(b.dataset.day){IS.dayPick=IS.dayPick===b.dataset.day?null:b.dataset.day;render();return}
   if(b.dataset.mo){IS.cal.m=+b.dataset.mo;IS.dayPick=null;render();return}
   if(b.id==="cPrev"||b.id==="cNext"){const d=new Date(IS.cal.y,IS.cal.m+(b.id==="cNext"?1:-1),1);IS.cal={y:d.getFullYear(),m:d.getMonth()};IS.dayPick=null;render();return}
+  if(b.dataset.paydel){const x=(IS.pay||[]).find(p=>p.id===b.dataset.paydel);if(!x)return;
+    if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent=lang==="en"?"Delete?":"Ջնջե՞լ";return}
+    b.disabled=true;await savePay(IS.pay.filter(p=>p.id!==x.id));return}
   if(b.dataset.py){IS.pyear=b.dataset.py==="all"?"all":+b.dataset.py;render();return}
   if(b.id==="shAdd"){$("#shRows").insertAdjacentHTML("beforeend",shRow({name:"",pct:0}));updSum();return}
   if(b.classList.contains("shX")){b.closest(".shr").remove();updSum();return}
 });
-document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}
-  if(e.target.classList.contains("pchk"))setPay(e.target.dataset.ym,e.target.dataset.n,e.target.checked?+e.target.dataset.v||true:0)});
+document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}});
 document.addEventListener("input",e=>{
   if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
   if(e.target.closest("#shRows"))updSum();
   if(e.target.id==="iS"&&$("#iE")&&$("#iE").value<e.target.value)$("#iE").value=e.target.value;
 });
 document.addEventListener("submit",async e=>{
-  const f=e.target;if(!["fInv","fShares","fTpl","fEmail"].includes(f.id))return;e.preventDefault();
+  const f=e.target;if(!["fInv","fShares","fTpl","fEmail","fPay"].includes(f.id))return;e.preventDefault();
   if(f.id==="fInv"){const v=readInv();v.lines=v.lines.filter(l=>l.name||+l.price);if(!v.lines.length)return toast(it("needLine"));
     const iss=invIssues(v).filter(i=>i.t!=="dup");if(iss.length)return toast("⚠ "+(lang==="en"?"Incomplete line: ":"Կիսատ տող՝ ")+iss[0].msg);
     const toDir=FS_OK&&IS.dir&&["approved","accountant"].includes(v.status)&&monthOf(v)&&await ensureDir();
@@ -642,6 +649,9 @@ document.addEventListener("submit",async e=>{
     const {error}=await sb.from("settings").upsert({key:"email",value:val});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(f.id==="fShares"){const sh=readShares();if(Math.abs(sh.reduce((a,x)=>a+x.pct,0)-100)>0.001)return toast(it("sum100"));
     const {error}=await sb.from("settings").upsert({key:"shares",value:sh});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(f.id==="fPay"){const amount=Math.round(+$("#pyA").value||0),date=$("#pyD").value;if(!(amount>0)||!date)return toast(lang==="en"?"Enter the amount and date":"Գրիր գումարը և ամսաթիվը");
+    const y=String(IS.pyear!=="all"&&IS.pyear?IS.pyear:todayIso.slice(0,4));
+    await savePay([...(IS.pay||[]),{id:Date.now().toString(36),name:$("#pyN").value,date,amount,note:$("#pyT").value.trim(),year:y}]);return}
   if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:mails($("#tMgr").value),accountantEmail:mails($("#tAcc").value),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked,followupDays:+$("#tFd").value||5,followupMax:+$("#tFm").value,requestDomains:$("#tRd").value.trim()||"hilton.com"}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
 });
 
