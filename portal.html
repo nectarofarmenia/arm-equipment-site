@@ -158,6 +158,7 @@ details.xw{position:relative}details.xw[open]{padding-right:40px}
 .navarr{display:flex;gap:6px;padding:4px 0;align-items:center;flex:0 0 auto;margin-right:6px}
 nav.tabs .navarr button{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--gold);background:transparent;color:var(--gold);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
 nav.tabs .navarr button:hover:not(:disabled){background:var(--gold);color:var(--navy)}
+nav.tabs .navarr #navReload{transition:transform .4s}
 nav.tabs .navarr button:disabled{color:rgba(201,162,74,.3);border-color:rgba(201,162,74,.25);cursor:default}
 .totop{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:15;width:42px;height:42px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);box-shadow:0 6px 18px rgba(8,16,32,.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .2s}
 .totop:hover{transform:translateY(-2px)}.totop.off{opacity:0;transform:translateY(12px);pointer-events:none}
