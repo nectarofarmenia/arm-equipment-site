@@ -213,23 +213,24 @@ function payMap(){if(IS.payM)return IS.payM;const m={};             // old list 
 function vPayouts(y){
   const en=lang==="en",L=(hy,e2)=>en?e2:hy,yl=IS.inv.filter(v=>(monthOf(v)||"").startsWith(y+"-")),A=agg(yl),M=payMap();
   const P=pNames().filter(n=>!/չբաշխ|unalloc/i.test(n)&&(A[n]||curShares().some(s=>s.name===n)));
-  const lastM=y===todayIso.slice(0,4)?+todayIso.slice(5,7):12,paid=n=>Object.keys(M).filter(k=>k.startsWith(y+"-")).reduce((a,k)=>a+(+M[k][n]||0),0);
-  let h=`<h2>💸 ${L("Բաժիններ և փոխանցումներ","Shares and transfers")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ «Փոխանցված» վանդակներում գրիր, թե ամեն ամսվա համար որքան ես փոխանցել, ներքևում կհաշվվի մնացորդը։ Բաժնի գումարի վրա սեղմելով այն կլցվի վանդակում։","From all clients’ invoices. Type what you transferred for each month — the balance is calculated below. Tap a share amount to copy it into the box.")}</p>`;
+  const lastM=y===todayIso.slice(0,4)?+todayIso.slice(5,7):12;
+  const mon=[];for(let m=1;m<=lastM;m++){const ym=y+"-"+pad(m);mon.push({m,ym,x:agg(yl.filter(v=>monthOf(v)===ym))})}
+  const paid=n=>mon.reduce((a,o)=>a+((M[o.ym]||{})[n]?(o.x[n]||0):0),0);
+  let h=`<h2>💸 ${L("Բաժիններ և վճարումներ","Shares and payments")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ Վճարելուց հետո նշիր ✓ գումարի կողքին, ներքևում կհաշվվի վճարվածը և չվճարվածը։","From all clients’ invoices. Tick ✓ next to an amount once paid — paid and unpaid totals are calculated below.")}</p>`;
   if(!P.length)return h;
-  h+=`<div class="tw"><table class="paytb"><thead><tr><th rowspan="2">${it("month")}</th><th class="r" rowspan="2">${it("total")}</th>${P.map(n=>`<th class="r pgrp" colspan="2">${esc(n)}</th>`).join("")}</tr><tr>${P.map(()=>`<th class="r pgrp">${L("Բաժին","Share")}</th><th class="r">${L("Փոխանցված","Paid")}</th>`).join("")}</tr></thead><tbody>`;
-  for(let m=1;m<=lastM;m++){const ym=y+"-"+pad(m),x=agg(yl.filter(v=>monthOf(v)===ym)),pm=M[ym]||{};
-    h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>`<td class="r num pgrp">${x[n]?`<button type="button" class="lnk pfill" data-ym="${ym}" data-n="${esc(n)}" data-v="${x[n]}" title="${L("Լցնել","Fill")}">${fmt(x[n])}</button>`:"0"}</td><td class="r"><input class="pin num" type="number" min="0" step="1" inputmode="numeric" data-ym="${ym}" data-n="${esc(n)}" value="${pm[n]?pm[n]:""}" aria-label="${esc(n)} ${MONTHS[lang][m-1]}"></td>`).join("")}</tr>`}
-  const cell=(n,v,b)=>`<td class="r num pgrp">${b?"<b>":""}${v}${b?"</b>":""}</td>`;
-  h+=`<tr class="psum"><td><b>${L("Պետք է վճարել","To pay")}</b></td><td class="r num"><b>${fmt(A._total)}</b></td>${P.map(n=>cell(n,fmt(A[n]),1)+`<td></td>`).join("")}</tr>`;
-  h+=`<tr class="psum"><td>${L("Փոխանցված","Paid")}</td><td></td>${P.map(n=>`<td class="pgrp"></td><td class="r num"><b data-ptot="${esc(n)}">${fmt(paid(n))}</b></td>`).join("")}</tr>`;
-  h+=`<tr class="psum"><td><b>${L("Մնացել է","Left")}</b></td><td></td>${P.map(n=>`<td class="pgrp"></td><td class="r num">${(d=>`<b data-pleft="${esc(n)}" data-owe="${A[n]||0}" style="color:${d>0?"var(--bad)":"var(--ok)"}">${d<0?"+"+fmt(-d)+L(" ավել"," over"):fmt(d)}</b>`)((A[n]||0)-paid(n))}</td>`).join("")}</tr></tbody></table></div>`;
-  return h}
-function payTotals(){const y=document.querySelector(".paytb .pin")?.dataset.ym.slice(0,4);if(!y)return;const M=payMap();
-  document.querySelectorAll("[data-pleft]").forEach(el=>{const n=el.dataset.pleft,p=Object.keys(M).filter(k=>k.startsWith(y+"-")).reduce((a,k)=>a+(+M[k][n]||0),0),d=(+el.dataset.owe||0)-p;
-    el.textContent=d<0?"+"+fmt(-d)+(lang==="en"?" over":" ավել"):fmt(d);el.style.color=d>0?"var(--bad)":"var(--ok)";
-    const t2=document.querySelector(`[data-ptot="${CSS.escape(n)}"]`);if(t2)t2.textContent=fmt(p)})}
+  h+=`<div class="tw"><table class="paytb"><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${P.map(n=>`<th class="r pgrp">${esc(n)}</th>`).join("")}</tr></thead><tbody>`;
+  mon.forEach(({m,ym,x})=>{const pm=M[ym]||{};
+    h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>`<td class="r num pgrp">${x[n]?`<label class="pck${pm[n]?" on":""}"><span>${fmt(x[n])}</span><input type="checkbox" class="pchk" data-ym="${ym}" data-n="${esc(n)}" data-v="${x[n]}"${pm[n]?" checked":""} aria-label="${esc(n)} ${MONTHS[lang][m-1]} ${L("վճարված","paid")}"></label>`:`<span class="muted">0</span>`}</td>`).join("")}</tr>`});
+  const row=(lbl,f,cls)=>`<tr class="psum ${cls}"><td><b>${lbl}</b></td><td></td>${P.map(n=>`<td class="r num pgrp"><b data-${cls}="${esc(n)}">${fmt(f(n))}</b></td>`).join("")}</tr>`;
+  h+=`<tr class="psum"><td><b>${L("Ընդամենը","Total")}</b></td><td class="r num"><b>${fmt(A._total)}</b></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(A[n])}</b></td>`).join("")}</tr>`;
+  h+=row("✓ "+L("Վճարված","Paid"),paid,"ppaid")+row(L("Չվճարված","Unpaid"),n=>(A[n]||0)-paid(n),"punpaid");
+  return h+`</tbody></table></div>`}
+function payTotals(){const M=payMap(),sum={},tot={};
+  document.querySelectorAll(".paytb .pchk").forEach(c=>{const n=c.dataset.n,v=+c.dataset.v||0;tot[n]=(tot[n]||0)+v;if((M[c.dataset.ym]||{})[n])sum[n]=(sum[n]||0)+v;c.closest(".pck").classList.toggle("on",c.checked)});
+  document.querySelectorAll("[data-ppaid]").forEach(el=>el.textContent=fmt(sum[el.dataset.ppaid]||0));
+  document.querySelectorAll("[data-punpaid]").forEach(el=>{const n=el.dataset.punpaid;el.textContent=fmt((tot[n]||0)-(sum[n]||0))})}
 let payT=null;
-function setPay(ym,n,v){const M=payMap();M[ym]=M[ym]||{};if(v>0)M[ym][n]=v;else delete M[ym][n];if(!Object.keys(M[ym]).length)delete M[ym];payTotals();
+function setPay(ym,n,v){const M=payMap();M[ym]=M[ym]||{};if(v)M[ym][n]=v;else delete M[ym][n];if(!Object.keys(M[ym]).length)delete M[ym];payTotals();
   clearTimeout(payT);payT=setTimeout(async()=>{const {error}=await sb.from("settings").upsert({key:"payouts_m",value:IS.payM});toast(error?t("errGeneric"):t("saved"))},700)}
 function shRow(s){return `<div class="row shr"><input class="shN" value="${esc(s.name)}" style="flex:2;min-width:120px" aria-label="${it("person")}"><input class="shP num" type="number" min="0" max="100" step="0.01" value="${s.pct}" style="flex:1;min-width:80px" aria-label="%"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" class="shT" style="width:auto" ${s.tax?"checked":""}>${it("tax")}</label><button type="button" class="btn sm danger shX" aria-label="${it("del")}">✕</button></div>`}
 function readShares(){return [...document.querySelectorAll("#shRows .shr")].map(r=>({name:r.querySelector(".shN").value.trim(),pct:+r.querySelector(".shP").value||0,tax:r.querySelector(".shT").checked})).filter(s=>s.name)}
@@ -619,13 +620,12 @@ document.addEventListener("click",async e=>{
   if(b.dataset.day){IS.dayPick=IS.dayPick===b.dataset.day?null:b.dataset.day;render();return}
   if(b.dataset.mo){IS.cal.m=+b.dataset.mo;IS.dayPick=null;render();return}
   if(b.id==="cPrev"||b.id==="cNext"){const d=new Date(IS.cal.y,IS.cal.m+(b.id==="cNext"?1:-1),1);IS.cal={y:d.getFullYear(),m:d.getMonth()};IS.dayPick=null;render();return}
-  if(b.classList.contains("pfill")){const inp=document.querySelector(`.pin[data-ym="${b.dataset.ym}"][data-n="${CSS.escape(b.dataset.n)}"]`);if(inp){inp.value=b.dataset.v;setPay(b.dataset.ym,b.dataset.n,+b.dataset.v)}return}
   if(b.dataset.py){IS.pyear=b.dataset.py==="all"?"all":+b.dataset.py;render();return}
   if(b.id==="shAdd"){$("#shRows").insertAdjacentHTML("beforeend",shRow({name:"",pct:0}));updSum();return}
   if(b.classList.contains("shX")){b.closest(".shr").remove();updSum();return}
 });
 document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}
-  if(e.target.classList.contains("pin")){const v=Math.max(0,Math.round(+e.target.value||0));e.target.value=v||"";setPay(e.target.dataset.ym,e.target.dataset.n,v)}});
+  if(e.target.classList.contains("pchk"))setPay(e.target.dataset.ym,e.target.dataset.n,e.target.checked?+e.target.dataset.v||true:0)});
 document.addEventListener("input",e=>{
   if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
   if(e.target.closest("#shRows"))updSum();
