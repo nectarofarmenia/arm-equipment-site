@@ -261,6 +261,37 @@ nav.tabs .navarr button:disabled{color:rgba(143,182,255,.3);border-color:rgba(14
   body.side header .in:first-child{min-height:60px}
 }
 @media (max-width:1099px){nav.tabs button .tl{white-space:nowrap}}
+
+/* ===== sign-in page ===== */
+.auth{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,440px);gap:28px;align-items:stretch;max-width:1100px;margin:28px auto 0}
+.ahero{position:relative;overflow:hidden;border-radius:26px;padding:40px 38px;border:1px solid var(--line);
+  background:linear-gradient(145deg,rgba(37,72,200,.85),rgba(76,45,190,.8) 55%,rgba(20,30,90,.9));box-shadow:0 30px 70px rgba(4,8,40,.45);color:#fff;min-height:520px;display:flex;flex-direction:column;justify-content:flex-end}
+.aglow{position:absolute;border-radius:50%;filter:blur(40px);opacity:.55;pointer-events:none}
+.aglow.g1{width:320px;height:320px;background:#3db4ff;top:-90px;right:-60px}.aglow.g2{width:260px;height:260px;background:#a855f7;bottom:-80px;left:-60px;opacity:.4}
+.aorb{position:relative;width:150px;height:150px;margin-bottom:auto;align-self:flex-end}
+.aorb span{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);animation:apulse 3.6s ease-out infinite}
+.aorb .r2{animation-delay:1.2s}.aorb .r3{animation-delay:2.4s}
+.aorb i{position:absolute;inset:38px;border-radius:50%;background:linear-gradient(135deg,#f5b93a,#f59e0b);display:flex;align-items:center;justify-content:center;color:#0a1440;box-shadow:0 10px 30px rgba(245,158,11,.5)}
+.aorb i svg{width:36px;height:36px}
+@keyframes apulse{0%{transform:scale(.55);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+@media (prefers-reduced-motion:reduce){.aorb span{animation:none;opacity:.3}}
+.akick{position:relative;margin:0 0 8px;font:800 .8rem var(--f-latin);letter-spacing:.22em;color:#ffd27a}
+.atitle{position:relative;margin:0 0 10px;font-size:1.9rem;line-height:1.2;max-width:520px}
+.asub{position:relative;margin:0 0 22px;color:rgba(255,255,255,.82);max-width:480px}
+.afeat{position:relative;list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.afeat li{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;font-size:.88rem;font-weight:600}
+.fi{flex:0 0 34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff}.fi svg{width:18px;height:18px}
+.fi.c1{background:linear-gradient(135deg,#1f4fd8,#3b82f6)}.fi.c2{background:linear-gradient(135deg,#047857,#22c55e)}.fi.c3{background:linear-gradient(135deg,#6d28d9,#a855f7)}.fi.c4{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.acard{align-self:center;padding:30px 28px;border-radius:24px;background:rgba(20,34,96,.7);box-shadow:0 30px 70px rgba(4,8,40,.45),inset 0 1px 0 rgba(255,255,255,.08)}
+.acard h1{font-size:1.6rem}
+.acard .seg{background:rgba(5,12,45,.6);border-radius:14px;padding:4px}
+.acard .seg button{border-radius:10px;color:#aebde6}
+.acard .seg button[aria-pressed="true"]{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 14px rgba(61,123,255,.35)}
+.acard input{padding:12px 14px}
+.acard .btn.pri{padding:13px 16px;font-size:1rem}
+.acard .link{align-self:center}
+@media (max-width:860px){.auth{grid-template-columns:1fr;margin-top:14px;gap:16px}.ahero{min-height:0;padding:26px 22px}.aorb{position:absolute;width:96px;height:96px;top:22px;right:22px;margin:0}.aorb i{inset:24px}.aorb i svg{width:24px;height:24px}
+  .atitle{font-size:1.35rem;padding-right:96px}.afeat{grid-template-columns:1fr}.acard{order:-1}}
 </style>
 </head>
 <body>
@@ -364,12 +395,24 @@ async function refresh(){await loadProfile();await loadData();render()}
 function vAuth(){
   if(S.recovery)return `<div class="card narrow"><h1>${t("newPw")}</h1><form id="fPw"><label>${t("pw8")}<input id="pw1" type="password" minlength="8" autocomplete="new-password" required></label>${msgHtml()}<button class="btn pri">${t("savePw")}</button></form></div>`;
   const m=S.authMode;
-  let h=`<div class="card narrow"><h1>${t("welcomeTitle")}</h1><p class="muted" style="margin-top:0">${t("welcomeSub")}</p>`;
+  const en=lang==="en",L=(hy,e2)=>en?e2:hy,I=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const hero=`<section class="ahero"><div class="aglow g1"></div><div class="aglow g2"></div>
+    <div class="aorb" aria-hidden="true"><span class="r1"></span><span class="r2"></span><span class="r3"></span><i>${I('<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/>')}</i></div>
+    <p class="akick">ARMEQUIPMENT</p>
+    <h2 class="atitle">${L("Թարգմանչական և ձայնային տեխնիկա՝ ձեր միջոցառման համար","Interpretation & sound equipment for your event")}</h2>
+    <p class="asub">${L("Պատվիրեք առցանց, հետևեք պատվերի ընթացքին և ստացեք հաշիվները մեկ տեղում։","Order online, follow your order and get every invoice in one place.")}</p>
+    <ul class="afeat">
+      <li><b class="fi c1">${I('<path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/>')}</b><span>${L("Սինխրոն թարգմանության համակարգեր","Simultaneous interpretation systems")}</span></li>
+      <li><b class="fi c2">${I('<rect x="6" y="2" width="12" height="20" rx="2"/><circle cx="12" cy="14" r="4"/><circle cx="12" cy="6" r="1.2"/>')}</b><span>${L("Ձայնային համակարգեր և միկրոֆոններ","Sound systems & microphones")}</span></li>
+      <li><b class="fi c3">${I('<rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/>')}</b><span>${L("Տեսախցիկներ, էկրաններ, Zoom","Cameras, screens, Zoom")}</span></li>
+      <li><b class="fi c4">${I('<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h7M9 17h5"/>')}</b><span>${L("Պատվերներ և հաշիվներ մեկ տեղում","Orders & invoices in one place")}</span></li>
+    </ul></section>`;
+  let h=`<div class="auth">${hero}<div class="card acard"><h1>${t("welcomeTitle")}</h1><p class="muted" style="margin-top:0">${t("welcomeSub")}</p>`;
   if(m!=="reset")h+=`<div class="seg"><button data-mode="in" aria-pressed="${m==="in"}">${t("signIn")}</button><button data-mode="up" aria-pressed="${m==="up"}">${t("register")}</button></div>`;
   if(m==="in")h+=`<form id="fIn"><label>${t("email")}<input id="em" type="email" autocomplete="email" required></label><label>${t("password")}<input id="pw" type="password" autocomplete="current-password" required></label>${msgHtml()}<button class="btn pri">${t("signIn")}</button><button type="button" class="link" data-mode="reset">${t("forgot")}</button></form>`;
   if(m==="up")h+=`<form id="fUp"><label>${t("fullName")}<input id="rn" autocomplete="name" required></label><label>${t("org")}<input id="ro" autocomplete="organization"></label><label>${t("phone")}<input id="rp" type="tel" autocomplete="tel" placeholder="+374 __ ___ ___" required></label><label>${t("email")}<input id="re" type="email" autocomplete="email" required></label><label>${t("pw8")}<input id="rw" type="password" minlength="8" autocomplete="new-password" required></label>${msgHtml()}<button class="btn pri">${t("register")}</button></form>`;
   if(m==="reset")h+=`<form id="fReset"><label>${t("email")}<input id="xe" type="email" autocomplete="email" required></label>${msgHtml()}<button class="btn pri">${t("sendReset")}</button><button type="button" class="link" data-mode="in">${t("back")}</button></form>`;
-  return h+`</div>`;
+  return h+`</div></div>`;
 }
 function msgHtml(){return S.msg?`<div class="msg ${S.msg.k}">${esc(S.msg.m)}${S.msg.resend?`<div style="margin-top:8px"><button type="button" class="btn sm" id="resendBtn">${t("resend")}</button></div>`:""}</div>`:""}
 
