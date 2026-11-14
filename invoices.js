@@ -53,7 +53,7 @@ async function loadInvoiceData(){
   const [inv,{data:st},{data:ob},{data:bc},{data:iq},{data:ar}]=await Promise.all([fetchAllInvoices(),sb.from("settings").select("*"),
     sb.from("outbox").select("id,kind,to_addr,subject,invoice_id,new_status,status,error,created_at,sent_at").order("id",{ascending:false}).limit(300),
     sb.from("bot_config").select("secret,last_seen").maybeSingle(),sb.from("inquiries").select("*").order("id",{ascending:false}).limit(200),sb.from("approval_runs").select("*")]);
-  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};IS.pay=Array.isArray(m.payouts)?m.payouts:[];IS.payM=m.payouts_m&&typeof m.payouts_m==='object'?m.payouts_m:{};
+  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};if(Array.isArray(m.menu_order)&&JSON.stringify(m.menu_order)!==JSON.stringify(menuOrder())){try{localStorage.setItem("ae_menu",JSON.stringify(m.menu_order))}catch(e){}}IS.pay=Array.isArray(m.payouts)?m.payouts:[];IS.payM=m.payouts_m&&typeof m.payouts_m==='object'?m.payouts_m:{};
   if(!IS.dirInit){IS.dirInit=true;await initDir()}
   setTimeout(syncDir,0);
 }

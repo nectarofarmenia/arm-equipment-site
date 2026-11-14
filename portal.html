@@ -326,6 +326,11 @@ nav.tabs .navarr button:disabled{color:rgba(143,182,255,.3);border-color:rgba(14
 .qa button:hover{border-color:rgba(130,160,255,.45);background:rgba(255,255,255,.08)}.fi.c5{background:linear-gradient(135deg,#be185d,#f472b6)}
 @media (max-width:1100px){.stiles{grid-template-columns:repeat(2,minmax(0,1fr))}.hgrid{grid-template-columns:1fr}}
 @media (max-width:520px){.stiles{gap:10px}.stile{padding:12px 14px 40px}.stile b{font-size:1.2rem}.hhero{padding:18px}.hhero h1{font-size:1.35rem}.hhero .aorb{display:none}.mchart{height:150px}.mc .mv{display:none}.qa{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* drag to reorder the menu */
+#tabs>button[data-tab]{touch-action:pan-y;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+#tabs>button.dragging{opacity:.9;transform:scale(1.03);background:rgba(61,123,255,.35)!important;box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 2px var(--acc)!important;cursor:grabbing;z-index:2;position:relative}
+body.menudrag,body.menudrag *{cursor:grabbing!important;user-select:none}
 </style>
 </head>
 <body>
@@ -513,13 +518,36 @@ const TICO={home:TI('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>'),order
  income:TI('<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>'),taxes:TI('<path d="M4 3h16v18l-3-2-2 2-3-2-3 2-2-2-3 2z"/><path d="M9 9l6 6M9.5 14.5h.01M14.5 9.5h.01"/>'),analytics:TI('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
  inquiries:TI('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'),prices:TI('<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>'),
  new:TI('<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'),mine:TI('<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'),profile:TI('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),dot:TI('<circle cx="12" cy="12" r="3"/>')};
+/* menu order: drag a menu item to move it up/down; saved on this device and (for the admin) in settings */
+function menuOrder(){try{const v=JSON.parse(localStorage.getItem("ae_menu")||"[]");return Array.isArray(v)?v:[]}catch(e){return []}}
+function saveMenuOrder(keys){try{localStorage.setItem("ae_menu",JSON.stringify(keys))}catch(e){}
+  if(S.profile&&S.profile.role==="admin"&&sb)sb.from("settings").upsert({key:"menu_order",value:keys}).then(()=>{})}
+(function(){let d=null,justDragged=false;
+  const items=()=>[...document.querySelectorAll("#tabs>button[data-tab]")];
+  function start(e,btn){d.on=true;btn.classList.add("dragging");document.body.classList.add("menudrag");try{btn.setPointerCapture(e.pointerId)}catch(x){}if(navigator.vibrate)navigator.vibrate(15)}
+  document.addEventListener("pointerdown",e=>{const btn=e.target.closest("#tabs>button[data-tab]");if(!btn||e.button>0)return;
+    d={btn,x:e.clientX,y:e.clientY,on:false,id:e.pointerId,touch:e.pointerType!=="mouse"};
+    if(d.touch)d.t=setTimeout(()=>{if(d&&!d.on)start(e,btn)},380)});
+  document.addEventListener("pointermove",e=>{if(!d||e.pointerId!==d.id)return;const dx=e.clientX-d.x,dy=e.clientY-d.y,dist=Math.hypot(dx,dy);
+    if(!d.on){if(d.touch){if(dist>10){clearTimeout(d.t);d=null}return}if(dist<6)return;start(e,d.btn)}
+    e.preventDefault();const list=items().filter(b=>b!==d.btn);let best=null,bd=1e9;
+    list.forEach(b=>{const r=b.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dd=Math.hypot(e.clientX-cx,e.clientY-cy);if(dd<bd){bd=dd;best={b,r}}});
+    if(!best)return;const vertical=getComputedStyle(d.btn.parentNode).flexDirection==="column";
+    const after=vertical?e.clientY>best.r.top+best.r.height/2:(Math.abs(e.clientY-(best.r.top+best.r.height/2))>best.r.height/2?e.clientY>best.r.top+best.r.height/2:e.clientX>best.r.left+best.r.width/2);
+    const ref=after?best.b.nextSibling:best.b;if(ref!==d.btn)d.btn.parentNode.insertBefore(d.btn,ref)},{passive:false});
+  function end(){if(!d)return;clearTimeout(d.t);if(d.on){d.btn.classList.remove("dragging");document.body.classList.remove("menudrag");justDragged=true;setTimeout(()=>justDragged=false,350);saveMenuOrder(items().map(b=>b.dataset.tab))}d=null}
+  document.addEventListener("touchmove",e=>{if(d&&d.on)e.preventDefault()},{passive:false});
+  document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end);
+  document.addEventListener("click",e=>{if(justDragged&&e.target.closest("#tabs")){e.stopPropagation();e.preventDefault()}},true);
+  document.addEventListener("contextmenu",e=>{if(d&&d.touch&&e.target.closest("#tabs"))e.preventDefault()});
+})();
 function tabsFor(){const p=S.profile;if(!p)return[];if(p.is_admin)return[["home","tHome"],["orders","tOrders",S.orders.filter(o=>o.status==="new").length],["clients","tClients",S.clients.filter(c=>c.status==="pending").length],["invoices","tInv",IS.inv.filter(v=>v.checked===false).length],["mail","tMail"],["calendar","tCal"],["income","tInc"],["taxes","tTax"],["analytics","tAna"],["inquiries","tInq",IS.inq.filter(q=>Date.now()-new Date(q.created_at)<7*864e5).length],["prices","tPrices"]];if(p.status==="approved")return[["new","tNew"],["mine","tMine",0],["profile","tProfile"]];return[]}
 function render(){
   applyStatic();
   const main=$("#main");
   if(!sb){main.innerHTML=`<div class="card narrow msg err">${t("notConfigured")}</div>`;return}
   $("#out").hidden=!S.user;$("#who").textContent=S.profile?(S.profile.full_name||S.profile.email||""):"";
-  const tabs=tabsFor();const nav=$("#tabs");nav.hidden=!tabs.length;
+  const tabs0=tabsFor(),mo=menuOrder(),tabs=tabs0.map((x,i)=>[x,mo.indexOf(x[0])<0?1000+i:mo.indexOf(x[0])]).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);const nav=$("#tabs");nav.hidden=!tabs.length;
   if(tabs.length&&!tabs.some(x=>x[0]===S.tab))S.tab=tabs[0][0];
   document.body.classList.toggle("side",!!tabs.length);
   nav.innerHTML=tabs.map(([k,l,c])=>`<button data-tab="${k}" ${S.tab===k?'aria-current="page"':""}><i class="ti" aria-hidden="true">${TICO[k]||TICO.dot}</i><span class="tl">${t(l)}</span>${c?`<span class="cnt">${c}</span>`:""}</button>`).join("");
@@ -624,6 +652,6 @@ if(sb){
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="invoice-xlsx.js"></script>
-<script src="invoices.js?v=20261114g"></script>
+<script src="invoices.js?v=20261114h"></script>
 </body>
 </html>
