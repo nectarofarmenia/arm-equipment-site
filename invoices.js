@@ -53,7 +53,7 @@ async function loadInvoiceData(){
   const [inv,{data:st},{data:ob},{data:bc},{data:iq},{data:ar}]=await Promise.all([fetchAllInvoices(),sb.from("settings").select("*"),
     sb.from("outbox").select("id,kind,to_addr,subject,invoice_id,new_status,status,error,created_at,sent_at").order("id",{ascending:false}).limit(300),
     sb.from("bot_config").select("secret,last_seen").maybeSingle(),sb.from("inquiries").select("*").order("id",{ascending:false}).limit(200),sb.from("approval_runs").select("*")]);
-  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};
+  IS.inv=inv;IS.hasChecked=inv.some(v=>"checked" in v);IS.outbox=ob||[];IS.bot=bc||null;IS.inq=iq||[];IS.runs=ar||[];const m={};(st||[]).forEach(r=>m[r.key]=r.value);IS.email=m.email||{};IS.shares=m.shares||null;IS.tpl=m.invoice_template||{};IS.folders=m.client_folders||{};IS.pay=Array.isArray(m.payouts)?m.payouts:[];
   if(!IS.dirInit){IS.dirInit=true;await initDir()}
   setTimeout(syncDir,0);
 }
@@ -185,6 +185,7 @@ function vIncome(){
   const a=agg(list),N=pNames();
   let h=`<div class="filters">${["all",...clientNames()].map(c=>`<button data-pc="${esc(c)}" aria-pressed="${pc===c}">${c==="all"?it("allOrgs"):esc(c)}</button>`).join("")}</div><div class="filters">${["all",...ys].map(y=>`<button data-py="${y}" aria-pressed="${String(sel)===String(y)}">${y==="all"?it("allYears"):y}</button>`).join("")}</div>
   <div class="row" style="margin:6px 0 14px"><b class="num" style="font-size:1.9rem">${fmt(a._total)} ${t("amd")}</b><span class="muted">${it("yearIncome")} · ${list.length}</span></div>${shareCards(a)}`;
+  h+=vPayouts(sel!=="all"?String(sel):todayIso.slice(0,4));
   if(sel!=="all"){h+=`<h2>${it("byMonth")} · ${sel}</h2><div class="tw"><table><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${N.map(n=>`<th class="r">${esc(n)}</th>`).join("")}<th class="r">${it("days")}</th></tr></thead><tbody>`;
     for(let m=1;m<=12;m++){const l=list.filter(v=>monthOf(v)===sel+"-"+pad(m)),x=agg(l),dd=new Set(l.flatMap(dayList)).size;h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${N.map(n=>`<td class="r num">${fmt(x[n])}</td>`).join("")}<td class="r num">${dd}</td></tr>`}
     h+=`<tr><td><b>${it("total")}</b></td><td class="r num"><b>${fmt(a._total)}</b></td>${N.map(n=>`<td class="r num"><b>${fmt(a[n])}</b></td>`).join("")}<td></td></tr></tbody></table></div>`}
@@ -206,6 +207,30 @@ function vIncome(){
   h+=vEmail();
   return h;
 }
+/* ----- what I owe each partner this year, what I already paid, what is left ----- */
+function payees(names){const me=String((IS.tpl||{}).signer||"Արմեն").trim().split(/\s+/)[0];return names.filter(n=>n!==me&&n!=="Արմեն"&&!/չբաշխ|unalloc/i.test(n))}
+function vPayouts(y){
+  const en=lang==="en",L=(hy,e2)=>en?e2:hy,yl=IS.inv.filter(v=>(monthOf(v)||"").startsWith(y+"-")),A=agg(yl);
+  const P=payees(pNames()).filter(n=>A[n]||(IS.pay||[]).some(x=>x.name===n&&String(x.date||"").startsWith(y)));
+  const pays=(IS.pay||[]).filter(x=>String(x.date||"").startsWith(y)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const paid=n=>pays.filter(x=>x.name===n).reduce((a,x)=>a+(+x.amount||0),0);
+  const lastM=y===todayIso.slice(0,4)?+todayIso.slice(5,7):12;
+  let h=`<h2>💸 ${L("Վճարումներ՝ հարկ և գործընկերներ","Payouts: tax and partners")} · ${y}</h2><p class="muted">${L("Բոլոր կազմակերպությունների հաշիվներից։ Ներքևում գրանցիր փոխանցածդ գումարները՝ մնացորդը կհաշվվի ինքնաշխատ։","From all clients’ invoices. Record your transfers below — the balance updates automatically.")}</p>`;
+  if(!P.length)return h+`<p class="muted">${L("Այս տարի հաշիվ չկա։","No invoices this year.")}</p>`;
+  h+=`<div class="tw"><table><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${P.map(n=>`<th class="r">${esc(n)}</th>`).join("")}</tr></thead><tbody>`;
+  for(let m=1;m<=lastM;m++){const x=agg(yl.filter(v=>monthOf(v)===y+"-"+pad(m)));h+=`<tr${x._total?"":` class="muted"`}><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>`<td class="r num">${fmt(x[n])}</td>`).join("")}</tr>`}
+  h+=`<tr class="payowe"><td><b>${L("Պետք է վճարել","To pay")}</b></td><td class="r num"><b>${fmt(A._total)}</b></td>${P.map(n=>`<td class="r num"><b>${fmt(A[n])}</b></td>`).join("")}</tr>`;
+  h+=`<tr class="paypaid"><td>${L("Վճարված","Paid")}</td><td></td>${P.map(n=>`<td class="r num">${fmt(paid(n))}</td>`).join("")}</tr>`;
+  h+=`<tr class="payleft"><td><b>${L("Մնացել է վճարելու","Left to pay")}</b></td><td></td>${P.map(n=>{const d=(A[n]||0)-paid(n);return `<td class="r num"><b style="color:${d>0?"var(--bad)":"var(--ok)"}">${d<0?"+"+fmt(-d)+" "+L("ավել","over"):fmt(d)}</b></td>`}).join("")}</tr></tbody></table></div>`;
+  h+=`<form id="fPay" class="card" style="margin-top:12px"><strong>${L("Գրանցել փոխանցում","Record a transfer")}</strong><div class="fg" style="margin-top:8px">
+    <label>${L("Ում","To")}<select id="pyN">${P.map(n=>`<option>${esc(n)}</option>`).join("")}</select></label>
+    <label>${L("Ամսաթիվ","Date")}<input id="pyD" type="date" value="${y===todayIso.slice(0,4)?todayIso:y+"-12-31"}" min="${y}-01-01" max="${y}-12-31"></label>
+    <label>${L("Գումար, դր.","Amount, AMD")}<input id="pyA" type="number" min="1" step="1" inputmode="numeric" required></label>
+    <label>${L("Նշում","Note")}<input id="pyT" placeholder="${L("օր.՝ բանկային փոխանցում, կանխիկ","e.g. bank transfer, cash")}"></label></div>
+    <div class="row" style="margin-top:8px"><button class="btn pri">＋ ${L("Ավելացնել","Add")}</button></div></form>`;
+  if(pays.length)h+=`<div class="tw" style="margin-top:10px"><table><thead><tr><th>${L("Ամսաթիվ","Date")}</th><th>${L("Ում","To")}</th><th class="r">${L("Գումար","Amount")}</th><th>${L("Նշում","Note")}</th><th></th></tr></thead><tbody>${pays.map(x=>`<tr><td>${esc(dd2(new Date(x.date+"T12:00:00")))}</td><td>${esc(x.name)}</td><td class="r num">${fmt(x.amount)}</td><td class="muted">${esc(x.note||"")}</td><td class="r"><button class="btn sm danger" data-paydel="${esc(x.id)}" aria-label="${it("del")}">✕</button></td></tr>`).join("")}</tbody></table></div>`;
+  return h}
+async function savePay(list){const {error}=await sb.from("settings").upsert({key:"payouts",value:list});if(error){toast(t("errGeneric"));return false}toast(t("saved"));await refresh();return true}
 function shRow(s){return `<div class="row shr"><input class="shN" value="${esc(s.name)}" style="flex:2;min-width:120px" aria-label="${it("person")}"><input class="shP num" type="number" min="0" max="100" step="0.01" value="${s.pct}" style="flex:1;min-width:80px" aria-label="%"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" class="shT" style="width:auto" ${s.tax?"checked":""}>${it("tax")}</label><button type="button" class="btn sm danger shX" aria-label="${it("del")}">✕</button></div>`}
 function readShares(){return [...document.querySelectorAll("#shRows .shr")].map(r=>({name:r.querySelector(".shN").value.trim(),pct:+r.querySelector(".shP").value||0,tax:r.querySelector(".shT").checked})).filter(s=>s.name)}
 function updSum(){const el=$("#shSum");if(!el)return;const s=readShares().reduce((a,x)=>a+x.pct,0);el.textContent=(+s.toFixed(2))+"%";el.style.color=Math.abs(s-100)<0.001?"var(--ok)":"var(--bad)"}
@@ -593,6 +618,9 @@ document.addEventListener("click",async e=>{
   if(b.dataset.day){IS.dayPick=IS.dayPick===b.dataset.day?null:b.dataset.day;render();return}
   if(b.dataset.mo){IS.cal.m=+b.dataset.mo;IS.dayPick=null;render();return}
   if(b.id==="cPrev"||b.id==="cNext"){const d=new Date(IS.cal.y,IS.cal.m+(b.id==="cNext"?1:-1),1);IS.cal={y:d.getFullYear(),m:d.getMonth()};IS.dayPick=null;render();return}
+  if(b.dataset.paydel){const x=(IS.pay||[]).find(p=>p.id===b.dataset.paydel);if(!x)return;
+    if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent=lang==="en"?"Delete?":"Ջնջե՞լ";return}
+    b.disabled=true;await savePay(IS.pay.filter(p=>p.id!==x.id));return}
   if(b.dataset.py){IS.pyear=b.dataset.py==="all"?"all":+b.dataset.py;render();return}
   if(b.id==="shAdd"){$("#shRows").insertAdjacentHTML("beforeend",shRow({name:"",pct:0}));updSum();return}
   if(b.classList.contains("shX")){b.closest(".shr").remove();updSum();return}
@@ -604,7 +632,7 @@ document.addEventListener("input",e=>{
   if(e.target.id==="iS"&&$("#iE")&&$("#iE").value<e.target.value)$("#iE").value=e.target.value;
 });
 document.addEventListener("submit",async e=>{
-  const f=e.target;if(!["fInv","fShares","fTpl","fEmail"].includes(f.id))return;e.preventDefault();
+  const f=e.target;if(!["fInv","fShares","fTpl","fEmail","fPay"].includes(f.id))return;e.preventDefault();
   if(f.id==="fInv"){const v=readInv();v.lines=v.lines.filter(l=>l.name||+l.price);if(!v.lines.length)return toast(it("needLine"));
     const iss=invIssues(v).filter(i=>i.t!=="dup");if(iss.length)return toast("⚠ "+(lang==="en"?"Incomplete line: ":"Կիսատ տող՝ ")+iss[0].msg);
     const toDir=FS_OK&&IS.dir&&["approved","accountant"].includes(v.status)&&monthOf(v)&&await ensureDir();
@@ -614,6 +642,8 @@ document.addEventListener("submit",async e=>{
     const {error}=await sb.from("settings").upsert({key:"email",value:val});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
   if(f.id==="fShares"){const sh=readShares();if(Math.abs(sh.reduce((a,x)=>a+x.pct,0)-100)>0.001)return toast(it("sum100"));
     const {error}=await sb.from("settings").upsert({key:"shares",value:sh});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
+  if(f.id==="fPay"){const amount=Math.round(+$("#pyA").value||0),date=$("#pyD").value;if(!(amount>0)||!date)return toast(lang==="en"?"Enter the amount and date":"Գրիր գումարը և ամսաթիվը");
+    await savePay([...(IS.pay||[]),{id:Date.now().toString(36),name:$("#pyN").value,date,amount,note:$("#pyT").value.trim()}]);return}
   if(f.id==="fTpl"){const {error}=await sb.from("settings").upsert({key:"invoice_template",value:{...IS.tpl,client:$("#tClient").value,signer:$("#tSign").value.trim(),managerEmail:mails($("#tMgr").value),accountantEmail:mails($("#tAcc").value),managerName:$("#tMgrN").value.trim(),accountantName:$("#tAccN").value.trim(),signerEn:$("#tSignEn").value.trim(),workflowClient:$("#tWf").value.trim()||"Hilton",monthEndAuto:$("#tMe").checked,accountantAuto:$("#tAccA").checked,followupDays:+$("#tFd").value||5,followupMax:+$("#tFm").value,requestDomains:$("#tRd").value.trim()||"hilton.com"}});if(error)return toast(t("errGeneric"));toast(t("saved"));await refresh();return}
 });
 
