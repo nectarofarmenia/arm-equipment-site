@@ -481,20 +481,58 @@ function vHome(){
   const cm=now.getMonth()+1,pyYtd=agg(IS.inv.filter(v=>{const m=monthOf(v)||"";return m.startsWith((cy-1)+"-")&&+m.slice(5,7)<=cm}))._total;
   const g=pyYtd?Math.round((ya._total/pyYtd-1)*100):null;
   const days=new Set(monthInv.flatMap(dayList)).size;
-  const st=curRun?it("r_"+curRun.status):L("Դեռ չի ուղարկվել","Not sent yet");
+  const series=[];for(let m=1;m<=12;m++)series.push(agg(yearInv.filter(v=>monthOf(v)===cy+"-"+pad(m)))._total);
+  const PS=payStatus(String(cy)),unpaidAll=PS.P.reduce((a,n)=>a+Math.max(0,PS.left(n)),0);
+  const me=(curShares()[0]||{}).name||"";
+  // unpaid-shares reminder
+  if(unpaidAll>0){const who=PS.P.filter(n=>PS.left(n)>0);add("gold","💸",L("Չվճարված բաժիններ","Unpaid shares")+` · ${cy} — ${fmt(unpaidAll)} ${t("amd")}`,who.map(n=>n+" "+fmt(PS.left(n))).join(" · "),"income")}
+  A.sort((a,b)=>order[a.lvl]-order[b.lvl]);
   const upc=S.orders.filter(o=>o.status!=="cancelled"&&o.start_date>=todayIso).sort((a,b)=>a.start_date.localeCompare(b.start_date)).slice(0,5);
-  let h=`<div class="hello"><h1>${greet}${name?", "+esc(name):""} 👋</h1><span class="muted">${esc(dstr)}</span></div>`;
-  h+=`<h2 style="margin-top:0">${L("Հրատապ","Needs attention")}${A.length?` <span class="pill ist-manager">${A.length}</span>`:""}</h2>`;
-  h+=A.length?`<div class="alerts">${A.map(x=>`<button class="alert ${x.lvl}" data-hgo="${esc(x.go)}"><span class="ic">${x.ic}</span><span class="tx"><b>${esc(x.title)}</b>${x.sub?`<span>${esc(x.sub)}</span>`:""}</span><span class="go">›</span></button>`).join("")}</div>`:`<div class="ok-all">✓ ${L("Հրատապ ոչինչ չկա։ Ամեն ինչ կարգին է։","Nothing urgent. All good.")}</div>`;
-  h+=`<div class="kpis">
-    <div class="kpi"><span>${esc(monthLabel(ym))}</span><b class="num">${fmt(ma._total)} ${t("amd")}</b><small>${monthInv.length} ${it("nInv")} · ${days} ${L("աշխ. օր","work days")}</small></div>
-    <div class="kpi"><span>${cy} ${L("տարին","year")}</span><b class="num">${fmt(ya._total)} ${t("amd")}</b><small>${g==null?"":(g>=0?"▲ +":"▼ ")+g+"% "+L("նախորդ տարվա նույն ժամանակահատվածի համեմատ","vs same period last year")}</small></div>
-    <div class="kpi"><span>${L("Ամսվա նամակագրություն","This month’s emails")}</span><b style="font-size:1rem">${esc(st)}</b><small>${tp.workflowClient||"Hilton"}</small></div>
-    <div class="kpi"><span>${L("Իմ բաժինը այս ամիս","My share this month")}</span><b class="num">${fmt(ma[(curShares()[0]||{}).name]||0)} ${t("amd")}</b><small>${esc((curShares()[0]||{}).name||"")}</small></div>
+  const spark=(arr,upto)=>{const v=arr.slice(0,upto),mx=Math.max(1,...v),w=120,h=34;return `<svg class="spk" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" points="${v.map((x,i)=>(i*(w/Math.max(1,v.length-1))).toFixed(1)+","+(h-3-(x/mx)*(h-8)).toFixed(1)).join(" ")}"/></svg>`};
+  // ---- hero
+  let h=`<section class="hhero"><div class="aglow g1"></div><div class="aglow g2"></div><div class="hh-tx"><p class="akick">ARMEQUIPMENT · ${esc(dstr)}</p><h1>${greet}${name?", "+esc(name):""} 👋</h1>
+    <p>${A.length?L(`Այսօր ${A.length} հարց քո ուշադրությանն է սպասում։`,`${A.length} item(s) need your attention today.`):L("Հրատապ ոչինչ չկա։ Ամեն ինչ կարգին է։","Nothing urgent. All good.")}</p></div>
+    <div class="aorb" aria-hidden="true"><span class="r1"></span><span class="r2"></span><span class="r3"></span><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg></i></div></section>`;
+  // ---- stat tiles
+  h+=`<div class="stiles">
+    <button class="stile c1" data-hgo="income"><span>${esc(monthLabel(ym))}</span><b class="num">${fmt(ma._total)}</b><small>${monthInv.length} ${it("nInv")} · ${days} ${L("աշխ. օր","work days")}</small>${spark(series,cm)}</button>
+    <button class="stile c2" data-hgo="analytics"><span>${cy} ${L("տարին","year")}</span><b class="num">${fmt(ya._total)}</b><small>${g==null?"&nbsp;":(g>=0?"▲ +":"▼ ")+g+"% "+L("նախորդ տարվա համեմատ","vs last year")}</small>${spark(series.map((x,i,a)=>a.slice(0,i+1).reduce((p,q)=>p+q,0)),cm)}</button>
+    <button class="stile c4" data-hgo="income"><span>${L("Չվճարված բաժիններ","Unpaid shares")} · ${cy}</span><b class="num">${fmt(unpaidAll)}</b><small>${L("վճարված՝","paid:")} ${fmt(PS.P.reduce((a,n)=>a+PS.paid(n),0))}</small></button>
+    <button class="stile c3" data-hgo="income"><span>${L("Իմ բաժինը այս ամիս","My share this month")}</span><b class="num">${fmt(ma[me]||0)}</b><small>${esc(me)} · ${cy}: ${fmt(ya[me]||0)}</small></button>
   </div>`;
-  h+=`<h2>${L("Մոտակա աշխատանքներ","Upcoming work")}</h2>`+(upc.length?`<div class="upc">${upc.map(o=>{const c=S.clients.find(x=>x.id===o.client_id)||{};return `<button class="alert blue" data-hgo="orders"><span class="ic">📅</span><span class="tx"><b>${esc(dateText(o))} · ${esc(c.org||c.full_name||"")}</b><span>${esc([o.venue,o.event_type,o.guests?o.guests+" "+L("մասնակից","guests"):""].filter(Boolean).join(" · "))}</span></span><span class="go">›</span></button>`}).join("")}</div>`:`<p class="muted">${L("Կայքից եկած մոտակա պատվերներ չկան։","No upcoming orders from the website.")}</p>`);
-  h+=`<h2>${L("Արագ անցում","Quick links")}</h2><div class="quick">${[["mail","✉ "+t("tMail")],["invoices","🧾 "+t("tInv")],["calendar","📅 "+t("tCal")],["income","💰 "+t("tInc")],["analytics","📊 "+t("tAna")],["prices","🏷 "+t("tPrices")]].map(([k,l])=>`<button data-hgo="${k}">${esc(l)}</button>`).join("")}</div>`;
+  // ---- alerts + monitoring
+  const ob=IS.outbox,today0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),sentToday=ob.filter(o=>o.status==="sent"&&o.sent_at&&new Date(o.sent_at)>=today0).length,queued=ob.filter(o=>o.status==="queued").length;
+  const lastSent=ob.filter(o=>o.status==="sent"&&o.sent_at).sort((a,b)=>String(b.sent_at).localeCompare(String(a.sent_at)))[0];
+  const botOk=bot&&botAge<=2,stage=!curRun?0:curRun.accountant_reply_at?5:curRun.accountant_sent_at?4:curRun.manager_reply_at?3:curRun.manager_sent_at?2:1;
+  const mrow=(dot,lbl,val,sub)=>`<div class="mrow"><i class="mdot ${dot}"></i><span class="ml">${lbl}${sub?`<small>${sub}</small>`:""}</span><b>${val}</b></div>`;
+  const STG=[L("Չի սկսվել","Not started"),L("Հաշիվներ","Invoices"),L("Էմմային","To manager"),L("Էմման պատասխանել է","Manager replied"),L("Հաշվապահին","To accountant"),L("Ավարտված","Done")];
+  h+=`<div class="hgrid"><section class="panel"><div class="ph"><h2>${L("Հրատապ","Needs attention")}${A.length?` <span class="pill ist-manager">${A.length}</span>`:""}</h2></div>`+
+    (A.length?`<div class="alerts">${A.map(x=>`<button class="alert ${x.lvl}" data-hgo="${esc(x.go)}"><span class="ic">${x.ic}</span><span class="tx"><b>${esc(x.title)}</b>${x.sub?`<span>${esc(x.sub)}</span>`:""}</span><span class="go">›</span></button>`).join("")}</div>`:`<div class="ok-all">✓ ${L("Հրատապ ոչինչ չկա։ Ամեն ինչ կարգին է։","Nothing urgent. All good.")}</div>`)+`</section>
+    <section class="panel"><div class="ph"><h2>${L("Մոնիտորինգ","Monitoring")}</h2></div><div class="mon">
+      ${mrow(botOk?"ok":"bad",L("Gmail ռոբոտ","Gmail robot"),botOk?L("աշխատում է","running"):L("կանգնած է","stopped"),bot&&bot.last_seen?L("վերջին ստուգում՝ ","last check: ")+esc(dtm(bot.last_seen)):"")}
+      ${mrow(errs?"bad":"ok",L("Նամակներ այսօր","Emails today"),sentToday+" "+L("ուղարկված","sent"),(queued?queued+" "+L("հերթում","queued")+" · ":"")+(errs?errs+" "+L("սխալ","failed"):L("սխալ չկա","no errors")))}
+      ${mrow(lastSent?"ok":"idle",L("Վերջին նամակը","Last email"),lastSent?esc(dshort(lastSent.sent_at)):"—",lastSent?esc(String(lastSent.subject||"").replace(/^[a-z_]+:/,"").slice(0,48)):"")}
+      ${mrow(stage>=4?"ok":stage?"wait":"idle",(tp.workflowClient||"Hilton")+" · "+esc(monthLabel(ym)),esc(STG[stage]),`<span class="stg">${[1,2,3,4,5].map(k=>`<i class="${k<=stage?"on":""}"></i>`).join("")}</span>`)}
+      ${mrow(unc.length?"warn":"ok",L("Չստուգված հաշիվներ","Unchecked invoices"),String(unc.length),"")}
+      ${mrow(newO.length?"warn":"ok",L("Նոր պատվերներ","New orders"),String(newO.length),pend.length?pend.length+" "+L("պատվիրատու սպասում է","client(s) waiting"):"")}
+    </div></section></div>`;
+  // ---- unpaid shares + income chart
+  const mx=Math.max(1,...series);
+  h+=`<div class="hgrid"><section class="panel"><div class="ph"><h2>💸 ${L("Բաժիններ","Shares")} · ${cy}</h2><button class="lnk" data-hgo="income">${L("Բացել","Open")} ›</button></div><div class="shp">${PS.P.map((n,i)=>{const tot=PS.A[n]||0,pd=Math.min(tot,PS.paid(n)),pc=tot?Math.round(pd/tot*100):0,lf=PS.left(n);
+      return `<div class="shr2"><div class="shl"><b>${esc(n)}</b><span class="num ${lf>0?"bad":"okc"}">${lf>0?L("մնաց ","left ")+fmt(lf):"✓ "+L("վճարված","paid")}</span></div><div class="pbar"><i class="pb${i%5}" style="width:${pc}%"></i></div><small class="muted num">${fmt(pd)} / ${fmt(tot)} · ${pc}%</small></div>`}).join("")}</div></section>
+    <section class="panel"><div class="ph"><h2>📊 ${L("Եկամուտ ըստ ամիսների","Income by month")} · ${cy}</h2><button class="lnk" data-hgo="analytics">${L("Վերլուծություն","Analytics")} ›</button></div>
+      <div class="mchart">${series.map((x,i)=>`<div class="mc${i+1===cm?" cur":""}${i+1>cm?" fut":""}" title="${esc(MONTHS[lang][i])}: ${fmt(x)}"><span class="mv num">${x?(x>=1e6?(x/1e6).toFixed(1)+"M":Math.round(x/1e3)+"K"):""}</span><i style="height:${Math.max(2,Math.round(x/mx*100))}%"></i><span class="mn">${MONTHS[lang][i].slice(0,3)}</span></div>`).join("")}</div></section></div>`;
+  // ---- upcoming + quick
+  h+=`<div class="hgrid"><section class="panel"><div class="ph"><h2>📅 ${L("Մոտակա աշխատանքներ","Upcoming work")}</h2></div>`+(upc.length?`<div class="upc">${upc.map(o=>{const c=S.clients.find(x=>x.id===o.client_id)||{};return `<button class="alert blue" data-hgo="orders"><span class="ic">📅</span><span class="tx"><b>${esc(dateText(o))} · ${esc(c.org||c.full_name||"")}</b><span>${esc([o.venue,o.event_type,o.guests?o.guests+" "+L("մասնակից","guests"):""].filter(Boolean).join(" · "))}</span></span><span class="go">›</span></button>`}).join("")}</div>`:`<p class="muted" style="margin:0">${L("Կայքից եկած մոտակա պատվերներ չկան։","No upcoming orders from the website.")}</p>`)+`</section>
+    <section class="panel"><div class="ph"><h2>⚡ ${L("Արագ անցում","Quick actions")}</h2></div><div class="qa">${[["mail","c1",'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',t("tMail")],["invoices","c2",'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h7M9 17h5"/>',t("tInv")],["calendar","c3",'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/>',t("tCal")],["income","c4",'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',t("tInc")],["analytics","c5",'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',t("tAna")],["prices","c1",'<path d="M20 12l-8 8-9-9V3h8z"/><circle cx="7.5" cy="7.5" r="1.5"/>',t("tPrices")]].map(([k,c,d,l])=>`<button data-hgo="${k}"><b class="fi ${c}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg></b><span>${esc(l)}</span></button>`).join("")}</div></section></div>`;
   return h}
+/* what is owed / paid per share for a year (ticks + transfers), shared by Home and Income */
+function payStatus(y){const yl=IS.inv.filter(v=>(monthOf(v)||"").startsWith(y+"-")),A=agg(yl),M=IS.payM||{};
+  const P=pNames().filter(n=>!/չբաշխ|unalloc/i.test(n)&&(A[n]||curShares().some(s=>s.name===n)));
+  const lastM=y===todayIso.slice(0,4)?+todayIso.slice(5,7):12,mon=[];for(let m=1;m<=lastM;m++){const ym=y+"-"+pad(m);mon.push({ym,x:agg(yl.filter(v=>monthOf(v)===ym))})}
+  const sent=n=>(IS.pay||[]).filter(x=>payYear(x)===y&&x.name===n).reduce((a,x)=>a+(+x.amount||0),0);
+  const paid=n=>sent(n)+mon.reduce((a,o)=>a+((M[o.ym]||{})[n]?(o.x[n]||0):0),0);
+  return {P,A,paid,left:n=>(A[n]||0)-paid(n)}}
 
 /* ----- taxes, analytics (content to be defined) ----- */
 function vTaxes(){return `<h1>${t("tTax")}</h1><div class="empty">${lang==="en"?"This section is being prepared.":"Այս բաժինը պատրաստվում է։"}</div>`}
