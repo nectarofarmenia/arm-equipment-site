@@ -341,6 +341,13 @@ body.menudrag,body.menudrag *{cursor:grabbing!important;user-select:none}
 .cmenu button{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.92rem;padding:9px 10px;border-radius:9px;cursor:pointer}
 .cmenu button small{color:var(--muted);white-space:nowrap}
 .cmenu button:hover,.cmenu button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}.cmenu button:hover small,.cmenu button.on small{color:rgba(255,255,255,.85)}
+
+/* delete invoice from the list: first tap arms, second tap deletes */
+.invw{display:flex;gap:8px;align-items:stretch}.invw>.inv{flex:1;min-width:0}
+.idel{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;padding:0 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fda4af;cursor:pointer;font:600 .85rem var(--f-body)}
+td .idel{min-height:34px;border-radius:10px}
+.idel span{display:none}.idel:hover{border-color:rgba(244,63,94,.6);background:rgba(244,63,94,.12)}
+.idel.sure{background:#e11d48;border-color:#e11d48;color:#fff}.idel.sure span{display:inline}
 </style>
 </head>
 <body>
@@ -662,6 +669,6 @@ if(sb){
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="invoice-xlsx.js"></script>
-<script src="invoices.js?v=20261117a"></script>
+<script src="invoices.js?v=20261117b"></script>
 </body>
 </html>
