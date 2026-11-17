@@ -224,9 +224,10 @@ function vPayouts(y){
   h+=`<div class="tw"><table class="paytb"><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${P.map(n=>`<th class="r pgrp">${esc(n)}</th>`).join("")}</tr></thead><tbody>`;
   mon.forEach(({m,ym,x})=>{h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${P.map(n=>{const due=x[n]||0,c=cov[n][ym];
     if(!due)return `<td class="r num pgrp muted">0</td>`;const tk=tick(ym,n);
-    const box=`<input type="checkbox" class="pchk" data-ym="${ym}" data-n="${esc(n)}"${tk?" checked":""} aria-label="${esc(n)} ${MONTHS[lang][m-1]} ${L("վճարված","paid")}">`;
-    const cls=tk?"pdone ptick":c>=due?"pdone":c>0?"ppart":"";
-    return `<td class="r num pgrp ${cls}"><label class="pck"><span>${c>=due&&!tk?"✓ ":""}${fmt(due)}${!tk&&c>0&&c<due?`<small>${L("մնաց","left")} ${fmt(due-c)}</small>`:""}</span>${box}</label></td>`}).join("")}</tr>`});
+    const auto=!tk&&c>=due;   // fully covered by recorded transfers → ticked automatically (untick by deleting the transfer)
+    const box=`<input type="checkbox" class="pchk${auto?" pauto":""}" data-ym="${ym}" data-n="${esc(n)}"${tk||auto?" checked":""}${auto?` title="${L("Վճարված է փոխանցումով","Paid by a transfer")}"`:""} aria-label="${esc(n)} ${MONTHS[lang][m-1]} ${L("վճարված","paid")}">`;
+    const cls=tk||auto?"pdone ptick":c>0?"ppart":"";
+    return `<td class="r num pgrp ${cls}"><label class="pck"><span>${fmt(due)}${!tk&&c>0&&c<due?`<small>${L("մնաց","left")} ${fmt(due-c)}</small>`:""}</span>${box}</label></td>`}).join("")}</tr>`});
   h+=`<tr class="psum"><td><b>${L("Ընդամենը","Total")}</b></td><td class="r num"><b>${fmt(A._total)}</b></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(A[n])}</b></td>`).join("")}</tr>`;
   h+=`<tr class="psum ppaid"><td><b>✓ ${L("Վճարված","Paid")}</b></td><td></td>${P.map(n=>`<td class="r num pgrp"><b>${fmt(paid(n))}</b></td>`).join("")}</tr>`;
   h+=`<tr class="psum punpaid"><td><b>${L("Չվճարված","Unpaid")}</b></td><td></td>${P.map(n=>{const d=(A[n]||0)-paid(n);return `<td class="r num pgrp"><b${d<0?' style="color:var(--ok)"':""}>${d<0?"+"+fmt(-d)+L(" ավել"," over"):fmt(d)}</b></td>`}).join("")}</tr></tbody></table></div>`;
@@ -681,6 +682,7 @@ document.addEventListener("click",async e=>{
   if(b.classList.contains("shX")){b.closest(".shr").remove();updSum();return}
 });
 document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}
+  if(e.target.classList.contains("pauto")){e.target.checked=true;toast(lang==="en"?"Paid by a recorded transfer — delete the transfer below to undo":"Վճարված է գրանցված փոխանցումով։ Հանելու համար ջնջիր փոխանցումը ներքևում։");return}
   if(e.target.classList.contains("pchk"))setTick(e.target.dataset.ym,e.target.dataset.n,e.target.checked)});
 document.addEventListener("input",e=>{
   if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value||eqLabel(x)===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
