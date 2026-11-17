@@ -331,6 +331,16 @@ nav.tabs .navarr button:disabled{color:rgba(143,182,255,.3);border-color:rgba(14
 #tabs>button[data-tab]{touch-action:pan-y;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 #tabs>button.dragging{opacity:.9;transform:scale(1.03);background:rgba(61,123,255,.35)!important;box-shadow:0 10px 30px rgba(0,0,0,.4),0 0 0 2px var(--acc)!important;cursor:grabbing;z-index:2;position:relative}
 body.menudrag,body.menudrag *{cursor:grabbing!important;user-select:none}
+
+/* dropdown fields */
+.combo{position:relative;display:flex;min-width:0}
+.combo input{padding-right:40px}
+.cbtn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:9px;background:rgba(255,255,255,.06);color:var(--ink);font-size:1rem;cursor:pointer}
+.cbtn:hover{background:var(--acc);color:#fff}
+.cmenu{position:fixed;z-index:60;overflow-y:auto;background:#0f1c52;border:1px solid rgba(130,160,255,.3);border-radius:14px;padding:6px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.cmenu button{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:transparent;color:var(--ink);font:inherit;font-size:.92rem;padding:9px 10px;border-radius:9px;cursor:pointer}
+.cmenu button small{color:var(--muted);white-space:nowrap}
+.cmenu button:hover,.cmenu button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}.cmenu button:hover small,.cmenu button.on small{color:rgba(255,255,255,.85)}
 </style>
 </head>
 <body>
@@ -652,6 +662,6 @@ if(sb){
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="invoice-xlsx.js"></script>
-<script src="invoices.js?v=20261114h"></script>
+<script src="invoices.js?v=20261117a"></script>
 </body>
 </html>

@@ -142,12 +142,12 @@ function vInvoices(){
   const g={};[...list].sort((a,b)=>(b.start_date||"0").localeCompare(a.start_date||"0")||String(b.num).localeCompare(String(a.num),undefined,{numeric:true})).forEach(v=>{const k=monthOf(v);(g[k]=g[k]||[]).push(v)});
   return h+Object.keys(g).sort((a,b)=>b.localeCompare(a)).map(k=>`<h2>📁 ${esc(monthLabel(k))} · <span class="num">${fmt(agg(g[k])._total)}</span> ${t("amd")}</h2>${wfBar(IS.client,k)}<div class="list">${g[k].map(v=>invCard(v,1)).join("")}</div>`).join("");
 }
-function lineRow(l){return `<div class="iline"><label class="ln">${it("line")}<input class="lName" list="eqNames" value="${esc(l.name||"")}"></label><label>${t("price")}<input class="lPrice" type="number" min="0" inputmode="numeric" value="${l.price??""}"></label><label>${t("qty")}<input class="lQty" type="number" min="0" inputmode="numeric" value="${l.qty??1}"></label><span class="lt num">${fmt((+l.price||0)*(+l.qty||0))}</span><button type="button" class="btn sm danger lX" aria-label="${it("del")}">✕</button></div>`}
+function lineRow(l){return `<div class="iline"><label class="ln">${it("line")}<span class="combo"><input class="lName" data-combo="eq" autocomplete="off" value="${esc(l.name||"")}"><button type="button" class="cbtn" tabindex="-1" aria-label="${lang==="en"?"Show list":"Ցույց տալ ցանկը"}">▾</button></span></label><label>${t("price")}<input class="lPrice" type="number" min="0" inputmode="numeric" value="${l.price??""}"></label><label>${t("qty")}<input class="lQty" type="number" min="0" inputmode="numeric" value="${l.qty??1}"></label><span class="lt num">${fmt((+l.price||0)*(+l.qty||0))}</span><button type="button" class="btn sm danger lX" aria-label="${it("del")}">✕</button></div>`}
 function vInvEditor(){
   const v=IS.edit,isNew=!v.id;
   let h=`<div class="row" style="margin-bottom:12px"><button class="btn sm" id="invBack">‹ ${t("back")}</button><h1 style="margin:0">${isNew?it("newInv").replace("+ ",""):it("invNo")+" #"+esc(v.num)}</h1></div>
-  <form id="fInv" class="card"><div class="fg"><label>${it("client")}<input id="iClient" list="clNames" value="${esc(cl(v))}" required></label><label>${it("num")}<input id="iNum" value="${esc(v.num)}" required></label><label>${it("repMonth")}<input id="iMonth" type="month" value="${esc(v.month||"")}"></label><label>${t("start")}<input id="iS" type="date" value="${esc(v.start_date||"")}"></label><label>${t("end")}<input id="iE" type="date" value="${esc(v.end_date||"")}"></label></div>
-  <datalist id="clNames">${clientNames().map(n=>`<option value="${esc(n)}"></option>`).join("")}</datalist><datalist id="eqNames">${S.equipment.map(e=>`<option value="${esc(e.name_hy)}"></option>`).join("")}</datalist>
+  <form id="fInv" class="card"><div class="fg"><label>${it("client")}<span class="combo"><input id="iClient" data-combo="cl" autocomplete="off" value="${esc(cl(v))}" required><button type="button" class="cbtn" tabindex="-1" aria-label="${lang==="en"?"Show list":"Ցույց տալ ցանկը"}">▾</button></span></label><label>${it("num")}<input id="iNum" value="${esc(v.num)}" required></label><label>${it("repMonth")}<input id="iMonth" type="month" value="${esc(v.month||"")}"></label><label>${t("start")}<input id="iS" type="date" value="${esc(v.start_date||"")}"></label><label>${t("end")}<input id="iE" type="date" value="${esc(v.end_date||"")}"></label></div>
+
   <h2>${t("items")}</h2><div class="ilines" id="iLines">${(v.lines||[]).map(lineRow).join("")}</div><div><button type="button" class="btn sm" id="iAdd">${it("addLine")}</button></div>
   <div class="row" style="margin-top:6px"><span class="muted">${it("total")}</span><b class="num" id="iTot" style="font-size:1.4rem">${fmt(invTotal(v))} ${t("amd")}</b></div><div class="shares" id="iSplit"></div>
   <h2>${it("status")}</h2><div class="filters" id="iSt">${["draft","manager","approved","accountant"].map(s=>`<button type="button" data-ist="${s}" aria-pressed="${(v.status||"draft")===s}">${it("i_"+s)}</button>`).join("")}</div>
@@ -679,7 +679,7 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.target.value;render()}
   if(e.target.classList.contains("pchk"))setTick(e.target.dataset.ym,e.target.dataset.n,e.target.checked)});
 document.addEventListener("input",e=>{
-  if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
+  if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value||eqLabel(x)===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
   if(e.target.closest("#shRows"))updSum();
   if(e.target.id==="iS"&&$("#iE")&&$("#iE").value<e.target.value)$("#iE").value=e.target.value;
 });
@@ -732,3 +732,33 @@ document.addEventListener("visibilitychange",autoRefresh);
   async function chk(){if(busy||document.hidden)return;busy=true;try{const r=await fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"});const h=await r.text();const n=(h.match(/invoices\.js\?v=([^"&]+)/)||[])[1];
     if(n&&n!==v&&!document.querySelector("input:focus,textarea:focus"))location.reload()}catch(e){}busy=false}
   document.addEventListener("visibilitychange",chk);addEventListener("focus",chk);setInterval(chk,10*60*1000)})();
+
+/* ----- dropdown list for equipment / client fields (a native datalist only shows matches of what is already typed) ----- */
+const eqLabel=e=>[(e.name_en||"").trim(),(e.name_hy||"").trim()].filter(Boolean).join(" ");
+(function(){let menu=null,inp=null,act=-1;
+  const opts=kind=>kind==="eq"?S.equipment.map(e=>({v:eqLabel(e),sub:e.price!=null?fmt(e.price)+" "+t("amd"):"",price:e.price})):clientNames().map(n=>({v:n}));
+  const norm=x=>String(x||"").toLowerCase();
+  function close(){if(menu){menu.remove();menu=null;inp=null;act=-1}}
+  function open(input,all){close();inp=input;const q=all?"":norm(input.value).trim();
+    const list=opts(input.dataset.combo).filter(o=>!q||norm(o.v).includes(q)).slice(0,80);if(!list.length)return;
+    menu=document.createElement("div");menu.className="cmenu";menu.setAttribute("role","listbox");
+    menu.innerHTML=list.map((o,i)=>`<button type="button" role="option" data-i="${i}"><span>${esc(o.v)}</span>${o.sub?`<small>${esc(o.sub)}</small>`:""}</button>`).join("");
+    menu._list=list;document.body.append(menu);place()}
+  function place(){if(!menu||!inp)return;const r=inp.closest(".combo").getBoundingClientRect(),below=innerHeight-r.bottom;
+    menu.style.left=r.left+"px";menu.style.width=Math.max(r.width,260)+"px";
+    if(below<240&&r.top>below){menu.style.top="";menu.style.bottom=(innerHeight-r.top+4)+"px";menu.style.maxHeight=Math.min(320,r.top-12)+"px"}
+    else{menu.style.bottom="";menu.style.top=(r.bottom+4)+"px";menu.style.maxHeight=Math.min(320,below-12)+"px"}}
+  function pick(i){const o=menu&&menu._list[i];if(!o)return;const input=inp;input.value=o.v;
+    if(input.dataset.combo==="eq"&&o.price!=null){const pr=input.closest(".iline").querySelector(".lPrice");if(pr)pr.value=o.price}
+    close();input.dispatchEvent(new Event("input",{bubbles:true}));input.focus()}
+  function hi(n){if(!menu)return;const b=[...menu.children];act=(n+b.length)%b.length;b.forEach((x,k)=>x.classList.toggle("on",k===act));b[act].scrollIntoView({block:"nearest"})}
+  document.addEventListener("click",e=>{const b=e.target.closest(".cbtn");if(b){const input=b.parentNode.querySelector("[data-combo]");if(menu&&inp===input)close();else{open(input,true);input.focus()}return}
+    const o=e.target.closest(".cmenu button");if(o){pick(+o.dataset.i);return}
+    if(menu&&!e.target.closest(".combo"))close()});
+  document.addEventListener("input",e=>{if(e.target.dataset&&e.target.dataset.combo&&e.isTrusted)open(e.target,false)});
+  document.addEventListener("keydown",e=>{if(!e.target.dataset||!e.target.dataset.combo)return;
+    if(e.key==="ArrowDown"){e.preventDefault();if(!menu)open(e.target,true);else hi(act+1)}
+    else if(e.key==="ArrowUp"&&menu){e.preventDefault();hi(act-1)}
+    else if(e.key==="Enter"&&menu&&act>=0){e.preventDefault();pick(act)}
+    else if(e.key==="Escape"||e.key==="Tab")close()});
+  addEventListener("scroll",place,true);addEventListener("resize",place)})();
