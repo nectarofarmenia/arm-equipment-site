@@ -663,7 +663,8 @@ document.addEventListener("click",async e=>{
   if(b.id==="invNew"){openInvoice({client:IS.client||"Hilton",num:nextNum(IS.client||"Hilton"),start_date:todayIso,end_date:todayIso,month:null,lines:[{name:"",price:"",qty:1}],status:"draft",note:""});return}
   if(b.dataset.mkinv){const o=S.orders.find(x=>x.id===+b.dataset.mkinv);if(!o)return;const oc=(S.clients.find(c=>c.id===o.client_id)||{}).org||"";openInvoice({client:oc,num:nextNum(oc),start_date:o.start_date,end_date:o.end_date||o.start_date,month:null,order_id:o.id,status:"draft",note:"",lines:(S.items[o.id]||[]).map(i=>({name:i.name_en&&i.name_hy?i.name_en+" / "+i.name_hy:i.name_hy,price:i.price||0,qty:i.qty}))});return}
   if(b.id==="invBack"){IS.edit=null;render();return}
-  if(b.id==="iAdd"){readInv();IS.edit.lines.push({name:"",price:"",qty:1});render();invTotals();return}
+  if(b.id==="iAdd"){readInv();IS.edit.lines.push({name:"",price:"",qty:1});render();invTotals();
+    const rows=document.querySelectorAll("#iLines .iline"),ni=rows[rows.length-1]&&rows[rows.length-1].querySelector(".lName");if(ni){ni.focus();setTimeout(()=>window.eqMenu&&eqMenu(ni,true),0)}return}
   if(b.classList.contains("lX")){readInv();const i=[...document.querySelectorAll("#iLines .iline")].indexOf(b.closest(".iline"));IS.edit.lines.splice(i,1);render();invTotals();return}
   if(b.dataset.ist){readInv();IS.edit.status=b.dataset.ist;document.querySelectorAll("#iSt button").forEach(x=>x.setAttribute("aria-pressed",x===b));return}
   if(b.id==="iWord"){await download(readInv());return}
@@ -685,7 +686,7 @@ document.addEventListener("change",e=>{if(e.target.id==="ySel"){IS.iyear=+e.targ
   if(e.target.classList.contains("pauto")){e.target.checked=true;toast(lang==="en"?"Paid by a recorded transfer — delete the transfer below to undo":"Վճարված է գրանցված փոխանցումով։ Հանելու համար ջնջիր փոխանցումը ներքևում։");return}
   if(e.target.classList.contains("pchk"))setTick(e.target.dataset.ym,e.target.dataset.n,e.target.checked)});
 document.addEventListener("input",e=>{
-  if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const eq=S.equipment.find(x=>x.name_hy===e.target.value||eqLabel(x)===e.target.value);if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
+  if(e.target.closest("#iLines")){if(e.target.classList.contains("lName")){const v0=String(e.target.value).trim().toLowerCase(),eq=v0&&S.equipment.find(x=>[x.name_hy,x.name_en,eqLabel(x)].some(n=>String(n||"").trim().toLowerCase()===v0));if(eq&&eq.price!=null)e.target.closest(".iline").querySelector(".lPrice").value=eq.price}invTotals()}
   if(e.target.closest("#shRows"))updSum();
   if(e.target.id==="iS"&&$("#iE")&&$("#iE").value<e.target.value)$("#iE").value=e.target.value;
 });
@@ -754,13 +755,17 @@ const eqLabel=e=>[(e.name_en||"").trim(),(e.name_hy||"").trim()].filter(Boolean)
     menu.style.left=r.left+"px";menu.style.width=Math.max(r.width,260)+"px";
     if(below<240&&r.top>below){menu.style.top="";menu.style.bottom=(innerHeight-r.top+4)+"px";menu.style.maxHeight=Math.min(320,r.top-12)+"px"}
     else{menu.style.bottom="";menu.style.top=(r.bottom+4)+"px";menu.style.maxHeight=Math.min(320,below-12)+"px"}}
+  window.eqMenu=(input,all)=>open(input,all);
+  /* an empty price → show our price list right away */
+  document.addEventListener("focusin",e=>{const pr=e.target.closest&&e.target.closest("#iLines .lPrice");if(!pr||+pr.value>0)return;
+    const ni=pr.closest(".iline").querySelector(".lName");if(ni){open(ni,true);inp=ni}});
   function pick(i){const o=menu&&menu._list[i];if(!o)return;const input=inp;input.value=o.v;
     if(input.dataset.combo==="eq"&&o.price!=null){const pr=input.closest(".iline").querySelector(".lPrice");if(pr)pr.value=o.price}
     close();input.dispatchEvent(new Event("input",{bubbles:true}));input.focus()}
   function hi(n){if(!menu)return;const b=[...menu.children];act=(n+b.length)%b.length;b.forEach((x,k)=>x.classList.toggle("on",k===act));b[act].scrollIntoView({block:"nearest"})}
   document.addEventListener("click",e=>{const b=e.target.closest(".cbtn");if(b){const input=b.parentNode.querySelector("[data-combo]");if(menu&&inp===input)close();else{open(input,true);input.focus()}return}
     const o=e.target.closest(".cmenu button");if(o){pick(+o.dataset.i);return}
-    if(menu&&!e.target.closest(".combo"))close()});
+    if(menu&&!e.target.closest(".combo")&&!e.target.closest(".lPrice"))close()});
   document.addEventListener("input",e=>{if(e.target.dataset&&e.target.dataset.combo&&e.isTrusted)open(e.target,false)});
   document.addEventListener("keydown",e=>{if(!e.target.dataset||!e.target.dataset.combo)return;
     if(e.key==="ArrowDown"){e.preventDefault();if(!menu)open(e.target,true);else hi(act+1)}
