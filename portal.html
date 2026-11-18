@@ -371,6 +371,12 @@ td .idel{min-height:34px;border-radius:10px}
 }
 @media (prefers-reduced-motion:reduce){body.side nav.tabs{transition:none}}
 @media (max-width:440px){body.side header .brand .word{display:none}}
+
+/* G toggle next to each invoice */
+.igb{display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:0 10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#aebde6;font:800 1rem var(--f-latin);cursor:pointer}
+td .igb{min-height:34px;min-width:34px;border-radius:10px;margin-right:6px}
+.igb:hover{border-color:rgba(245,185,58,.6);color:#fff}
+.igb.on{background:linear-gradient(135deg,#d97706,#f5b93a);border-color:transparent;color:#0a1440;box-shadow:0 4px 14px rgba(245,158,11,.35)}
 </style>
 </head>
 <body>
@@ -699,6 +705,6 @@ if(sb){
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="invoice-xlsx.js"></script>
-<script src="invoices.js?v=20261118a"></script>
+<script src="invoices.js?v=20261118b"></script>
 </body>
 </html>
