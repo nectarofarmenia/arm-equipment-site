@@ -191,7 +191,7 @@ function vIncome(){
   let h=`<div class="filters">${["all",...clientNames()].map(c=>`<button data-pc="${esc(c)}" aria-pressed="${pc===c}">${c==="all"?it("allOrgs"):esc(c)}</button>`).join("")}</div><div class="filters">${["all",...ys].map(y=>`<button data-py="${y}" aria-pressed="${String(sel)===String(y)}">${y==="all"?it("allYears"):y}</button>`).join("")}</div>
   <div class="row" style="margin:6px 0 14px"><b class="num" style="font-size:1.9rem">${fmt(a._total)} ${t("amd")}</b><span class="muted">${it("yearIncome")} · ${list.length}</span></div>${shareCards(a)}`;
   {const un=IS.inv.filter(v=>(v.shares||[]).some(x=>x.name==="Չբաշխված"));if(un.length){const yr=[...new Set(un.map(v=>(monthOf(v)||"").slice(0,4)).filter(Boolean))].sort();
-    h+=`<div class="alert gold" style="margin:6px 0 16px;cursor:default"><span class="ic">🧮</span><span class="tx"><b>${lang==="en"?"Unallocated invoices":"Չբաշխված հաշիվներ"}: ${un.length} · ${fmt(un.reduce((a,v)=>a+invTotal(v),0))} ${t("amd")}</b><span>${esc(yr.join(", "))} · ${lang==="en"?"split them as":"բաշխել որպես"} ${UNALLOC_TO.map(x=>x.name+" "+x.pct+"%").join(", ")}</span></span><button class="btn sm pri" data-unalloc="1">${lang==="en"?"Allocate":"Բաշխել"}</button></div>`}}
+    h+=`<div class="alert gold" style="margin:6px 0 16px;cursor:default"><span class="ic">🧮</span><span class="tx"><b>${lang==="en"?"Unallocated invoices":"Չբաշխված հաշիվներ"}: ${un.length} · ${fmt(un.reduce((a,v)=>a+invTotal(v),0))} ${t("amd")}</b><span>${esc(yr.join(", "))} · ${lang==="en"?"split them as":"բաշխել որպես"} ${UNALLOC_TO.map(x=>x.name+" "+x.pct+"%").join(", ")}</span></span><button class="btn sm pri" data-unalloc="ask">${lang==="en"?"Allocate":"Բաշխել"}</button></div><div id="unConfirm"></div>`}}
   h+=vPayouts(sel!=="all"?String(sel):todayIso.slice(0,4));
   if(sel!=="all"){h+=`<h2>${it("byMonth")} · ${sel}</h2><div class="tw"><table><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${N.map(n=>`<th class="r">${esc(n)}</th>`).join("")}<th class="r">${it("days")}</th></tr></thead><tbody>`;
     for(let m=1;m<=12;m++){const l=list.filter(v=>monthOf(v)===sel+"-"+pad(m)),x=agg(l),dd=new Set(l.flatMap(dayList)).size;h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${N.map(n=>`<td class="r num">${fmt(x[n])}</td>`).join("")}<td class="r num">${dd}</td></tr>`}
@@ -626,10 +626,14 @@ document.addEventListener("click",async e=>{
   if(b.id==="navBack"){history.back();return}
   if(b.id==="navReload"){b.disabled=true;b.style.transform="rotate(180deg)";location.reload();return}
   if(b.id==="navFwd"){history.forward();return}
-  if(b.dataset.unalloc){if(!b.classList.contains("sure")){b.classList.add("sure");b.textContent=lang==="en"?"Sure? Allocate":"Համոզվա՞ծ ես։ Բաշխել";return}
-    const ids=IS.inv.filter(v=>(v.shares||[]).some(x=>x.name==="Չբաշխված")).map(v=>v.id);b.disabled=true;b.textContent="…";let bad=0;
-    for(let i=0;i<ids.length;i+=100){const {error}=await sb.from("invoices").update({shares:UNALLOC_TO}).in("id",ids.slice(i,i+100));if(error)bad++}
-    toast(bad?t("errGeneric"):(lang==="en"?"Allocated ":"Բաշխվեց ")+ids.length);await refresh();return}
+  if(b.dataset.unalloc==="ask"){const box=$("#unConfirm");if(box)box.innerHTML=`<div class="msg err row" style="margin-top:8px">${lang==="en"?"Allocate all unallocated invoices?":"Բաշխե՞լ բոլոր չբաշխված հաշիվները"} <button type="button" class="btn sm pri" data-unalloc="go">${it("yes")}</button><button type="button" class="btn sm" data-unalloc="no">${it("no")}</button></div>`;return}
+  if(b.dataset.unalloc==="no"){$("#unConfirm").innerHTML="";return}
+  if(b.dataset.unalloc==="go"){const ids=IS.inv.filter(v=>(v.shares||[]).some(x=>x.name==="Չբաշխված")).map(v=>v.id);b.disabled=true;b.textContent="…";let done=0,err=null;
+    for(let i=0;i<ids.length;i+=50){const {data,error}=await sb.from("invoices").update({shares:UNALLOC_TO,updated_at:new Date().toISOString()}).in("id",ids.slice(i,i+50)).select("id");if(error){err=error;break}done+=(data||[]).length}
+    if(err){console.warn(err);toast((lang==="en"?"Error: ":"Սխալ՝ ")+(err.message||err.code||""));}
+    else if(!done)toast(lang==="en"?"Nothing was changed (no permission?)":"Ոչինչ չփոխվեց (թույլտվության խնդիր)");
+    else toast((lang==="en"?"Allocated: ":"Բաշխվեց՝ ")+done+" / "+ids.length);
+    await refresh();return}
   if(b.dataset.ig){const v=IS.inv.find(x=>String(x.id)===b.dataset.ig);if(!v)return;const on=!isG(v),shares=on?gShares():null;
     b.disabled=true;const {error}=await sb.from("invoices").update({shares,updated_at:new Date().toISOString()}).eq("id",v.id);b.disabled=false;
     if(error)return toast(t("errGeneric"));v.shares=shares;toast(on?(lang==="en"?"#"+v.num+" → G (tax only)":"#"+v.num+" → G (միայն հարկը)"):(lang==="en"?"#"+v.num+": normal split":"#"+v.num+"՝ սովորական բաշխում"));render();return}
