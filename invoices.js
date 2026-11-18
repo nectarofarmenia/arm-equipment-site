@@ -39,7 +39,8 @@ const isG=v=>(v.shares||[]).some(s=>s.name==="G");
 const gShares=()=>{const tx=curShares().filter(s=>s.tax);const tp=tx.reduce((a,s)=>a+(+s.pct||0),0);return [...tx.map(s=>({...s})),{name:"G",pct:100-tp}]};
 /* old (2013–2016) imported invoices had no known split; Armen chose: 25 / tax 5 / 20 / 50 */
 const UNALLOC_TO=[{name:"Արմեն",pct:25},{name:"Հարկ",pct:5,tax:true},{name:"Էմմա",pct:20},{name:"Խաչիկ",pct:50}];
-const UNALLOC_BY={"OSF Armenia":[{name:"Արմեն",pct:45},{name:"Հարկ",pct:5,tax:true},{name:"Խաչիկ",pct:50}]};   // OSF: Emma was not part of it — her 20% goes to Armen
+const NO_EMMA=[{name:"Արմեն",pct:45},{name:"Հարկ",pct:5,tax:true},{name:"Խաչիկ",pct:50}];   // Emma was not part of these — her 20% goes to Armen
+const UNALLOC_BY={"OSF Armenia":NO_EMMA,"Congress":NO_EMMA};
 const unallocTo=v=>UNALLOC_BY[cl(v)]||UNALLOC_TO;
 function split(v){const tt=invTotal(v),o={};invShares(v).forEach(s=>o[s.name]=(o[s.name]||0)+Math.round(tt*s.pct/100));return o}
 function dayList(v){if(!v.start_date)return[];const out=[],a=new Date(v.start_date+"T12:00"),b=new Date((v.end_date||v.start_date)+"T12:00");for(let d=new Date(a);d<=b&&out.length<62;d.setDate(d.getDate()+1))out.push(isoD(d));return out}
