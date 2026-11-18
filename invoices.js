@@ -37,6 +37,8 @@ const invShares=v=>v.shares&&v.shares.length?v.shares:curShares();
 /* "G" invoices: the money goes to another person (G); only the tax share is kept */
 const isG=v=>(v.shares||[]).some(s=>s.name==="G");
 const gShares=()=>{const tx=curShares().filter(s=>s.tax);const tp=tx.reduce((a,s)=>a+(+s.pct||0),0);return [...tx.map(s=>({...s})),{name:"G",pct:100-tp}]};
+/* old (2013–2016) imported invoices had no known split; Armen chose: 25 / tax 5 / 20 / 50 */
+const UNALLOC_TO=[{name:"Արմեն",pct:25},{name:"Հարկ",pct:5,tax:true},{name:"Էմմա",pct:20},{name:"Խաչիկ",pct:50}];
 function split(v){const tt=invTotal(v),o={};invShares(v).forEach(s=>o[s.name]=(o[s.name]||0)+Math.round(tt*s.pct/100));return o}
 function dayList(v){if(!v.start_date)return[];const out=[],a=new Date(v.start_date+"T12:00"),b=new Date((v.end_date||v.start_date)+"T12:00");for(let d=new Date(a);d<=b&&out.length<62;d.setDate(d.getDate()+1))out.push(isoD(d));return out}
 const monthOf=v=>v.month||(v.end_date||v.start_date||"").slice(0,7)||null;
@@ -188,6 +190,8 @@ function vIncome(){
   const a=agg(list),N=pNames();
   let h=`<div class="filters">${["all",...clientNames()].map(c=>`<button data-pc="${esc(c)}" aria-pressed="${pc===c}">${c==="all"?it("allOrgs"):esc(c)}</button>`).join("")}</div><div class="filters">${["all",...ys].map(y=>`<button data-py="${y}" aria-pressed="${String(sel)===String(y)}">${y==="all"?it("allYears"):y}</button>`).join("")}</div>
   <div class="row" style="margin:6px 0 14px"><b class="num" style="font-size:1.9rem">${fmt(a._total)} ${t("amd")}</b><span class="muted">${it("yearIncome")} · ${list.length}</span></div>${shareCards(a)}`;
+  {const un=IS.inv.filter(v=>(v.shares||[]).some(x=>x.name==="Չբաշխված"));if(un.length){const yr=[...new Set(un.map(v=>(monthOf(v)||"").slice(0,4)).filter(Boolean))].sort();
+    h+=`<div class="alert gold" style="margin:6px 0 16px;cursor:default"><span class="ic">🧮</span><span class="tx"><b>${lang==="en"?"Unallocated invoices":"Չբաշխված հաշիվներ"}: ${un.length} · ${fmt(un.reduce((a,v)=>a+invTotal(v),0))} ${t("amd")}</b><span>${esc(yr.join(", "))} · ${lang==="en"?"split them as":"բաշխել որպես"} ${UNALLOC_TO.map(x=>x.name+" "+x.pct+"%").join(", ")}</span></span><button class="btn sm pri" data-unalloc="1">${lang==="en"?"Allocate":"Բաշխել"}</button></div>`}}
   h+=vPayouts(sel!=="all"?String(sel):todayIso.slice(0,4));
   if(sel!=="all"){h+=`<h2>${it("byMonth")} · ${sel}</h2><div class="tw"><table><thead><tr><th>${it("month")}</th><th class="r">${it("total")}</th>${N.map(n=>`<th class="r">${esc(n)}</th>`).join("")}<th class="r">${it("days")}</th></tr></thead><tbody>`;
     for(let m=1;m<=12;m++){const l=list.filter(v=>monthOf(v)===sel+"-"+pad(m)),x=agg(l),dd=new Set(l.flatMap(dayList)).size;h+=`<tr><td>${MONTHS[lang][m-1]}</td><td class="r num">${fmt(x._total)}</td>${N.map(n=>`<td class="r num">${fmt(x[n])}</td>`).join("")}<td class="r num">${dd}</td></tr>`}
@@ -622,6 +626,10 @@ document.addEventListener("click",async e=>{
   if(b.id==="navBack"){history.back();return}
   if(b.id==="navReload"){b.disabled=true;b.style.transform="rotate(180deg)";location.reload();return}
   if(b.id==="navFwd"){history.forward();return}
+  if(b.dataset.unalloc){if(!b.classList.contains("sure")){b.classList.add("sure");b.textContent=lang==="en"?"Sure? Allocate":"Համոզվա՞ծ ես։ Բաշխել";return}
+    const ids=IS.inv.filter(v=>(v.shares||[]).some(x=>x.name==="Չբաշխված")).map(v=>v.id);b.disabled=true;b.textContent="…";let bad=0;
+    for(let i=0;i<ids.length;i+=100){const {error}=await sb.from("invoices").update({shares:UNALLOC_TO}).in("id",ids.slice(i,i+100));if(error)bad++}
+    toast(bad?t("errGeneric"):(lang==="en"?"Allocated ":"Բաշխվեց ")+ids.length);await refresh();return}
   if(b.dataset.ig){const v=IS.inv.find(x=>String(x.id)===b.dataset.ig);if(!v)return;const on=!isG(v),shares=on?gShares():null;
     b.disabled=true;const {error}=await sb.from("invoices").update({shares,updated_at:new Date().toISOString()}).eq("id",v.id);b.disabled=false;
     if(error)return toast(t("errGeneric"));v.shares=shares;toast(on?(lang==="en"?"#"+v.num+" → G (tax only)":"#"+v.num+" → G (միայն հարկը)"):(lang==="en"?"#"+v.num+": normal split":"#"+v.num+"՝ սովորական բաշխում"));render();return}
