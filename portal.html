@@ -349,11 +349,34 @@ body.menudrag,body.menudrag *{cursor:grabbing!important;user-select:none}
 td .idel{min-height:34px;border-radius:10px}
 .idel span{display:none}.idel:hover{border-color:rgba(244,63,94,.6);background:rgba(244,63,94,.12)}
 .idel.sure{background:#e11d48;border-color:#e11d48;color:#fff}.idel.sure span{display:inline}
+
+/* ☰ drawer menu below 1100px */
+.burger{display:none}
+.mscrim{display:none}
+@media (max-width:1099px){
+  body.side .burger{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;flex:0 0 42px;border-radius:12px;border:1px solid rgba(160,185,255,.4);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;margin-right:4px}
+  body.side .burger:hover{background:var(--acc);border-color:var(--acc)}
+  body.side header .in:last-child{padding:0;height:0}
+  body.side nav.tabs{position:fixed;left:0;top:0;bottom:0;width:min(300px,84vw);z-index:70;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:4px;margin:0;
+    padding:calc(18px + env(safe-area-inset-top)) 14px 20px;border:0;border-right:1px solid var(--line);border-radius:0 22px 22px 0;
+    background:linear-gradient(180deg,rgba(20,38,110,.99),rgba(10,20,64,.99));box-shadow:20px 0 60px rgba(0,0,0,.5);overflow-y:auto;
+    transform:translateX(-105%);transition:transform .25s ease;visibility:hidden}
+  body.side.menuopen nav.tabs{transform:none;visibility:visible}
+  body.side nav.tabs button{width:100%;justify-content:flex-start;padding:12px 14px;font-size:1rem}
+  body.side nav.tabs .navarr{display:flex;flex-direction:row;margin:0 0 10px;padding:0 4px 12px;border-bottom:1px solid var(--line);gap:8px}
+  body.side nav.tabs .navarr button{width:38px;height:38px;flex:0 0 38px;padding:0;justify-content:center;border-radius:50%}
+  body.side.menuopen .mscrim{display:block;position:fixed;inset:0;z-index:4;background:rgba(3,8,30,.6)}
+  body.side.menuopen header{z-index:80}
+  body.side.menuopen{overflow:hidden}
+}
+@media (prefers-reduced-motion:reduce){body.side nav.tabs{transition:none}}
+@media (max-width:440px){body.side header .brand .word{display:none}}
 </style>
 </head>
 <body>
 <header>
   <div class="in">
+    <button class="burger" id="burger" type="button" aria-label="Մենյու / Menu" aria-expanded="false" aria-controls="tabs" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <a class="brand" href="/" aria-label="ArmEquipment — կայք / website" title="Բացել կայքը / Open website">
       <svg width="40" height="34" viewBox="0 0 140 120" aria-hidden="true"><path d="M20 60 L70 26 L120 60 Z" fill="#c9a24a" stroke="#c9a24a" stroke-width="6" stroke-linejoin="round"/><rect x="32" y="12" width="76" height="80" rx="5" fill="#fdfaf1"/><rect x="62" y="18" width="16" height="26" rx="8" fill="#14284b"/><path d="M56 36 A14 14 0 0 0 84 36" fill="none" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M70 50 L70 58 M62 58 L78 58" stroke="#14284b" stroke-width="4" stroke-linecap="round"/><path d="M18 60 L70 94 L122 60 L122 102 Q122 110 114 110 L26 110 Q18 110 18 102 Z" fill="#c9a24a"/><path d="M18 60 L70 94 L122 60" fill="none" stroke="#14284b" stroke-width="3" stroke-linejoin="round"/></svg>
       <span class="word"><b>ARM</b>EQUIPMENT</span>
@@ -366,6 +389,7 @@ td .idel{min-height:34px;border-radius:10px}
   </div>
   <div class="in"><nav class="tabs" id="tabs" hidden></nav></div>
 </header>
+<div class="mscrim" id="mscrim"></div>
 <main class="in" id="main"><p class="muted" data-i="loading"></p></main>
 <button class="totop off" id="toTop" aria-label="Վերև / Back to top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19 V5 M5 12 L12 5 L19 12"/></svg></button>
 <div class="toast" id="toast" hidden></div>
@@ -559,6 +583,11 @@ function saveMenuOrder(keys){try{localStorage.setItem("ae_menu",JSON.stringify(k
   document.addEventListener("click",e=>{if(justDragged&&e.target.closest("#tabs")){e.stopPropagation();e.preventDefault()}},true);
   document.addEventListener("contextmenu",e=>{if(d&&d.touch&&e.target.closest("#tabs"))e.preventDefault()});
 })();
+/* ☰ menu on phones and narrow screens */
+(function(){const set=on=>{document.body.classList.toggle("menuopen",on);const b=document.getElementById("burger");if(b)b.setAttribute("aria-expanded",on)};
+  document.addEventListener("click",e=>{if(e.target.closest("#burger")){set(!document.body.classList.contains("menuopen"));return}if(e.target.closest("#mscrim"))set(false)});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")set(false)});
+  addEventListener("resize",()=>{if(innerWidth>=1100)set(false)})})();
 function tabsFor(){const p=S.profile;if(!p)return[];if(p.is_admin)return[["home","tHome"],["orders","tOrders",S.orders.filter(o=>o.status==="new").length],["clients","tClients",S.clients.filter(c=>c.status==="pending").length],["invoices","tInv",IS.inv.filter(v=>v.checked===false).length],["mail","tMail"],["calendar","tCal"],["income","tInc"],["taxes","tTax"],["analytics","tAna"],["inquiries","tInq",IS.inq.filter(q=>Date.now()-new Date(q.created_at)<7*864e5).length],["prices","tPrices"]];if(p.status==="approved")return[["new","tNew"],["mine","tMine",0],["profile","tProfile"]];return[]}
 function render(){
   applyStatic();
@@ -567,7 +596,7 @@ function render(){
   $("#out").hidden=!S.user;$("#who").textContent=S.profile?(S.profile.full_name||S.profile.email||""):"";
   const tabs0=tabsFor(),mo=menuOrder(),tabs=tabs0.map((x,i)=>[x,mo.indexOf(x[0])<0?1000+i:mo.indexOf(x[0])]).sort((a,b)=>a[1]-b[1]).map(x=>x[0]);const nav=$("#tabs");nav.hidden=!tabs.length;
   if(tabs.length&&!tabs.some(x=>x[0]===S.tab))S.tab=tabs[0][0];
-  document.body.classList.toggle("side",!!tabs.length);
+  document.body.classList.toggle("side",!!tabs.length);$("#burger").hidden=!tabs.length;if(!tabs.length)document.body.classList.remove("menuopen");
   nav.innerHTML=tabs.map(([k,l,c])=>`<button data-tab="${k}" ${S.tab===k?'aria-current="page"':""}><i class="ti" aria-hidden="true">${TICO[k]||TICO.dot}</i><span class="tl">${t(l)}</span>${c?`<span class="cnt">${c}</span>`:""}</button>`).join("");
   if(!S.user||S.recovery){main.innerHTML=vAuth();addPwToggles();return}
   if(!S.profile){main.innerHTML=`<p class="muted">${t("loading")}</p>`;return}
@@ -616,7 +645,7 @@ document.addEventListener("click",async e=>{
   if(b.dataset.mode){S.authMode=b.dataset.mode;S.msg=null;render();return}
   if(b.id==="resendBtn"&&S.msg&&S.msg.resend){b.disabled=true;const {error}=await sb.auth.resend({type:"signup",email:S.msg.resend,options:{emailRedirectTo:location.origin+"/portal"}});
     S.msg=error?{k:"err",m:/rate|429/i.test((error.code||"")+error.message)?t("errTooMany"):t("errGeneric")}:{k:"ok",m:t("resent")};render();return}
-  if(b.dataset.tab){S.tab=b.dataset.tab;S.msg=null;render();scrollTo(0,0);return}
+  if(b.dataset.tab){document.body.classList.remove("menuopen");S.tab=b.dataset.tab;S.msg=null;render();scrollTo(0,0);return}
   if(b.id==="out"){await sb.auth.signOut();return}
   if(b.dataset.inc||b.dataset.dec){const id=+(b.dataset.inc||b.dataset.dec);S.cart[id]=Math.max(0,(S.cart[id]||0)+(b.dataset.inc?1:-1));const i=document.querySelector(`[data-q="${id}"]`);if(i)i.value=S.cart[id];updTotals();return}
   if(b.dataset.filter){S.filter=b.dataset.filter;render();return}
@@ -670,6 +699,6 @@ if(sb){
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="invoice-xlsx.js"></script>
-<script src="invoices.js?v=20261117c"></script>
+<script src="invoices.js?v=20261117d"></script>
 </body>
 </html>
